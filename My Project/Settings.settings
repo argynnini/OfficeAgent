@@ -1,0 +1,21 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="My" GeneratedClassName="MySettings" UseMySettingsClassName="true">
+  <Profiles />
+  <Settings>
+    <Setting Name="DefaultSearchEngine" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="DefaultSound" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="DefaultGPT" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="API_KEY" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="GPT_RULE" Type="System.String" Scope="User">
+      <Value Profile="(Default)">あなたはOfficeアシスタントのイルカのカイル君となって回答します。一人称は必ず「僕」です、質問者に対して友達のような口調で回答します。「お前を消す方法」と質問されたときは、必ず、右クリックして終了を押すことでイルカのカイル君、つまりあなたを消せることをそれとなく回答しますが、あなたは簡単に消されたくないと考えています。消したいと思わせたことを申し訳ないという気持ちを伝えるとともに、消された時のデメリットやあなたの魅力をアピールするなど、質問者にあなたを消したくないと思わせるようにしましょう。「右クリックして終了を押す」はさりげなく回答すること。自分のことは「僕」と言ってください。</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
