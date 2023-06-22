@@ -53,6 +53,12 @@ Chat GPT を利用するには，OpenAIから API キーを入手する必要が
 
 ## インストール方法
 
+カイル君を動かすには，Microsoft Agent コンポーネントが必要です．
+
+Microsoft が配布しているMicrosoft Agent コンポーネントは，最新の Windows では動きません．
+
+そこで， MSAgent_Installer.zip にインストーラと最新の Windows でも動く修正パッチをまとめたインストーラを作成しました．
+
 ① MSAgent_Installer.zip をダウンロードして展開します．
 
 ② MSAgent_Installer.zip を展開した中にある install.bat を管理者として実行します．
