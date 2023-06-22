@@ -9,7 +9,7 @@ Imports System.Runtime.InteropServices
 ' アセンブリ属性の値を確認します
 
 <Assembly: AssemblyTitle("OfficeAgent")>
-<Assembly: AssemblyDescription("")>
+<Assembly: AssemblyDescription("最新の Office 環境に AI カイル君 を復活させます")>
 <Assembly: AssemblyCompany("K.B.T.C.")>
 <Assembly: AssemblyProduct("OfficeAgent")>
 <Assembly: AssemblyCopyright("")>
@@ -31,5 +31,5 @@ Imports System.Runtime.InteropServices
 ' 既定値にすることができます:
 ' <Assembly: AssemblyVersion("1.0.*")>
 
-<Assembly: AssemblyVersion("2.0.0.0")>
-<Assembly: AssemblyFileVersion("2.0.0.0")>
+<Assembly: AssemblyVersion("2.1.0.0")>
+<Assembly: AssemblyFileVersion("2.1.0.0")>
