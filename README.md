@@ -47,6 +47,47 @@ LinuxやMacでの動作確認はしていません．
 
 Chat GPT を利用するには，OpenAIから API キーを入手する必要があります．（無料）
 
+## インストール方法
+
+① MSAgent_Installer.zip をダウンロードして展開します．
+
+② MSAgent_Installer.zip を展開した中にある install.bat を管理者として実行します．
+
+③ OfficeAgent2.1.0.exe をダウンロードして実行します．
+
+④ Word， Excel， PowerPoint などの Office 製品を起動します．
+
+⑤ 出現したカイル君を右クリックして，設定を開きます．
+
+⑥ OpenAI API Key に OpenAI の API キーを入力します．
+
+⑦ Chat GPT で検索できるようになります．
+
+## OpenAI API キー
+OpenAI の API キーは以下の リンク から取得できます．
+
+[OpenAI API](https://openai.com/blog/openai-api)
+
+## 自動起動方法
+
+PC の起動時に自動起動させるには，スタートアップフォルダに OfficeAgent2.1.0.exe を置きます．
+
+C:\Users\Username\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\
+
+## 動かないときは．．．
+
+### 起動時に「An application is attempting to load a Microsoft Agent character from an untrusted Web site.」と出る場合
+
+![タイトルなし](https://github.com/argynnini/OfficeAgent/assets/88919409/79fedcbd-98a0-433f-b577-38651708032d)
+
+C:\Windows\msagent\chars\ フォルダの中にある 「DOLPHIN.ACS」を右クリックしてプロパティを開きます．
+
+全般タブの中のセキュリティの「許可する」にチェックを入れてOKを押します．
+
+![](https://github.com/argynnini/OfficeAgent/assets/88919409/2a3fbdc2-f8ca-42f6-a9ef-18ae70e7d6a8)
+
+エラーが出た場合は「再試行」をクリックして「許可」をクリックします．
+
 # License
  
 "Ofice Agent" は [MIT ライセンス](https://en.wikipedia.org/wiki/MIT_License) です．
