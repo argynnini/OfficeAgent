@@ -1,7 +1,8 @@
 # OfficeAgent
 最新の Office 環境に カイル君 を復活させるプロジェクト
 
-![](https://user-images.githubusercontent.com/88919409/157601288-e0f37334-2096-4d91-850e-c50ebc8ab983.png)
+![](https://github.com/argynnini/OfficeAgent/assets/88919409/80188b9f-33b5-4bfb-91b4-70326f58bb7d)
+
 
 賢くなったカイル君とお話ししよう！！
 
@@ -12,6 +13,7 @@ ChatGPT の力を経て質問になんでも答えられます．
 
 ## 起動
 カイル君を起動するとバックグラウンドで常駐し，Word，Excel，PowerPoint などのOfficeソフトが起動すると姿を現してくれます．
+
 終了すると姿を消します．
 
 ## 検索
@@ -19,6 +21,8 @@ ChatGPT の力を経て質問になんでも答えられます．
 
 ### Chat GPT
 吹き出しに入力して「検索」を押すと，カイル君が一生懸命考えて答えを出してくれます．
+
+![](https://user-images.githubusercontent.com/88919409/157601288-e0f37334-2096-4d91-850e-c50ebc8ab983.png)
 ![](https://user-images.githubusercontent.com/88919409/157601800-533733f4-6e5e-46b9-a15a-85387cb01637.png)
 ![](https://github.com/argynnini/OfficeAgent/assets/88919409/cc98eb84-cb5a-401c-9f97-2c58e666b3da)
 
