@@ -5,6 +5,7 @@ Public Class MainWindow
     '生命、宇宙、そして万物についての究極の疑問の答え = 42
 
     Public response As String = Nothing
+    Public keyFlag As Boolean = False
 
     <StructLayout(LayoutKind.Sequential)>
     Structure RECT
@@ -128,12 +129,12 @@ Public Class MainWindow
     End Sub
 
     '検索ボックス入力時
-    Private Sub SearchBox_KeyPress(ByVal sender As Object, ByVal e As KeyPressEventArgs） Handles SearchBox.KeyPress
+    Private Sub SearchBox_KeyPress(sender As Object, e As KeyPressEventArgs） Handles SearchBox.KeyPress
         If e.KeyChar = vbCr Then e.Handled = True
     End Sub
 
     '検索ボックス入力時
-    Private Sub SearchBox_TextUpdate(ByVal sender As Object, ByVal e As EventArgs） Handles SearchBox.KeyPress
+    Private Sub SearchBox_TextUpdate(sender As Object, e As EventArgs） Handles SearchBox.KeyDown
         With AxAgent.Characters("OfficeAgent")
             .Balloon.Visible = False
             .Play("Writing")
@@ -324,101 +325,118 @@ Public Class MainWindow
     'アプリ起動監視
     Private Sub Timer1_Tick_1(sender As Object, e As EventArgs) Handles Timer1.Tick
         Dim process_is_launch As Boolean = False
-        For Each var In Watch_Process
+        For Each var In Watch_Process ' 起動プロセスの監視
             process_is_launch = process_is_launch Or (Process.GetProcessesByName(var).Length > 0)
         Next
-        If process_is_launch = True Then
+        If process_is_launch Then ' 起動してたら
             If AxAgent.Characters("OfficeAgent").Visible = False Then 'イルカが既出でない場合
                 With AxAgent.Characters("OfficeAgent")
                     .Show(True) 'イルカを出す
                     .Play("Greeting")
                 End With
             End If
-            Timer1.Interval = 150
+            Timer1.Interval = 150 '終了監視インターバル
             Dim ProcessID As IntPtr = 0
             Dim udtWindowRect As RECT
             GetWindowRect(GetForegroundWindow(), udtWindowRect)     'アクティブウィンドウの座標取得
             GetWindowThreadProcessId(GetForegroundWindow(), ProcessID)     'アクティブウィンドウの取得
-            With udtWindowRect
+            With udtWindowRect ' 移動したウィンドウの座標表示
                 'Debug.WriteLine(Process.GetProcessById(ProcessID).ProcessName &
                 '                ".exe (" & .Left & "," & .Top & ")-" & "(" & .Right & "," & .Bottom & ")")
             End With
-            If 0 <= Array.IndexOf(Watch_Process, Process.GetProcessById(ProcessID).ProcessName) Then 'ウィンドウがアクティブのとき
-                If GetAsyncKeyState(Keys.ControlKey) < 0 And GetAsyncKeyState(Keys.S) < 0 Then     '保存
-                    With AxAgent.Characters("OfficeAgent")
-                        .StopAll()
-                        .Play("Save")
-                    End With
-                ElseIf GetAsyncKeyState(Keys.ControlKey) < 0 And GetAsyncKeyState(Keys.P) < 0 Then '印刷
-                    With AxAgent.Characters("OfficeAgent")
-                        .StopAll()
-                        .Play("Print")
-                    End With
-                ElseIf GetAsyncKeyState(Keys.ControlKey) < 0 And GetAsyncKeyState(Keys.A) < 0 Then '全選択
-                    With AxAgent.Characters("OfficeAgent")
-                        .StopAll()
-                        .Play("LookUp")
-                    End With
-                ElseIf GetAsyncKeyState(Keys.ControlKey) < 0 And GetAsyncKeyState(Keys.O) < 0 Then '開く
-                    With AxAgent.Characters("OfficeAgent")
-                        .StopAll()
-                        .Play("GetAttention")
-                        .Play("GetAttention")
-                    End With
-                ElseIf GetAsyncKeyState(Keys.ControlKey) < 0 And GetAsyncKeyState(Keys.F) < 0 Then '検索
-                    With AxAgent.Characters("OfficeAgent")
-                        .StopAll()
-                        .Play("Processing")
-                    End With
-                ElseIf GetAsyncKeyState(Keys.ControlKey) < 0 And GetAsyncKeyState(Keys.N) < 0 Then '新規
-                    With AxAgent.Characters("OfficeAgent")
-                        .StopAll()
-                        .Play("Alert")
-                    End With
-                ElseIf GetAsyncKeyState(Keys.ControlKey) < 0 And GetAsyncKeyState(Keys.W) < 0 Then '閉切
-                    With AxAgent.Characters("OfficeAgent")
-                        .StopAll()
-                        .Play("GetWizardy")
-                    End With
-                ElseIf GetAsyncKeyState(Keys.ControlKey) < 0 And GetAsyncKeyState(Keys.D) < 0 Then '複製
-                    With AxAgent.Characters("OfficeAgent")
-                        .StopAll()
-                        .Play("GestureRight")
-                    End With
-                    'ElseIf GetAsyncKeyState(Keys.ControlKey) < 0 And GetAsyncKeyState(Keys.C) < 0 Then '複写
-                    '    With AxAgent.Characters("OfficeAgent")
-                    '        .StopAll()
-                    '        .Play("Alert")
-                    '    End With
-                ElseIf GetAsyncKeyState(Keys.ControlKey) < 0 And GetAsyncKeyState(Keys.X) < 0 Then '切取
-                    With AxAgent.Characters("OfficeAgent")
-                        .StopAll()
-                        .Play("LookRight")
-                    End With
-                    'ElseIf GetAsyncKeyState(Keys.ControlKey) < 0 And GetAsyncKeyState(Keys.V) < 0 Then '貼付
-                    '    With AxAgent.Characters("OfficeAgent")
-                    '        .StopAll()
-                    '        .Play("LookRight")
-                    '    End With
-                ElseIf GetAsyncKeyState(Keys.ControlKey) < 0 And GetAsyncKeyState(Keys.Y) < 0 Then '再度
-                    With AxAgent.Characters("OfficeAgent")
-                        .StopAll()
-                        .Play("GestureDown")
-                    End With
-                ElseIf GetAsyncKeyState(Keys.F1) < 0 Then                                          '援助
-                    With AxAgent.Characters("OfficeAgent")
-                        .StopAll()
-                        .Play("Explain")
-                    End With
-                ElseIf GetAsyncKeyState(Keys.F12) < 0 Then                                         '名前をつけて保存
-                    With AxAgent.Characters("OfficeAgent")
-                        .StopAll()
-                        .Play("Wave")
-                    End With
-                End If
+            If 0 <= Array.IndexOf(Watch_Process, Process.GetProcessById(ProcessID).ProcessName) Then 'ウィンドウがアクティブのときアニメーション
+                With AxAgent.Characters("OfficeAgent")
+                    If GetAsyncKeyState(Keys.ControlKey) < 0 Then ' コントロールキーが押されているか
+                        If GetAsyncKeyState(Keys.S) < 0 Then     '保存
+                            If Not keyFlag Then
+                                keyFlag = True
+                                .StopAll()
+                                .Play("Save")
+                            End If
+                        ElseIf GetAsyncKeyState(Keys.P) < 0 Then '印刷
+                            If Not keyFlag Then
+                                keyFlag = True
+                                .StopAll()
+                                .Play("Print")
+                            End If
+                        ElseIf GetAsyncKeyState(Keys.A) < 0 Then '全選択
+                            If Not keyFlag Then
+                                keyFlag = True
+                                .StopAll()
+                                .Play("LookUp")
+                            End If
+                        ElseIf GetAsyncKeyState(Keys.O) < 0 Then '開く
+                            If Not keyFlag Then
+                                keyFlag = True
+                                .StopAll()
+                                .Play("GetAttention")
+                                .Play("GetAttention")
+                            End If
+                        ElseIf GetAsyncKeyState(Keys.F) < 0 Then '検索
+                            If Not keyFlag Then
+                                keyFlag = True
+                                .StopAll()
+                                .Play("Processing")
+                            End If
+                        ElseIf GetAsyncKeyState(Keys.N) < 0 Then '新規
+                            If Not keyFlag Then
+                                keyFlag = True
+                                .StopAll()
+                                .Play("Alert")
+                            End If
+                        ElseIf GetAsyncKeyState(Keys.W) < 0 Then '閉切
+                            If Not keyFlag Then
+                                keyFlag = True
+                                .StopAll()
+                                .Play("GetWizardy")
+                            End If
+                        ElseIf GetAsyncKeyState(Keys.D) < 0 Then '複製
+                            If Not keyFlag Then
+                                keyFlag = True
+                                .StopAll()
+                                .Play("GestureRight")
+                            End If
+                            'ElseIf GetAsyncKeyState(Keys.C) < 0 Then '複写
+                            '   If Not keyFlag Then
+                            '       keyFlag = True
+                            '       .StopAll()
+                            '       .Play("Alert")
+                            '   End If
+                        ElseIf GetAsyncKeyState(Keys.X) < 0 Then '切取
+                            .StopAll()
+                            .Play("LookRight")
+                            'ElseIf GetAsyncKeyState(Keys.V) < 0 Then '貼付
+                            '   If Not keyFlag Then
+                            '       keyFlag = True
+                            '       .StopAll()
+                            '       .Play("LookRight")
+                            '   End If
+                        ElseIf GetAsyncKeyState(Keys.Y) < 0 Then '再度
+                            If Not keyFlag Then
+                                keyFlag = True
+                                .StopAll()
+                                .Play("GestureDown")
+                            End If
+                        ElseIf GetAsyncKeyState(Keys.F1) < 0 Then '援助
+                            If Not keyFlag Then
+                                keyFlag = True
+                                .StopAll()
+                                .Play("Explain")
+                            End If
+                        ElseIf GetAsyncKeyState(Keys.F12) < 0 Then '名前をつけて保存
+                            If Not keyFlag Then
+                                keyFlag = True
+                                .StopAll()
+                                .Play("Wave")
+                            End If
+                        Else
+                            keyFlag = False ' キーが離されたとき
+                        End If
+                    End If
+                End With
             End If
         Else
-            If AxAgent.Characters("OfficeAgent").Visible = True Then 'イルカが既出な場合
+            If AxAgent.Characters("OfficeAgent").Visible = True Then 'アプリケーション閉じたときイルカが既出な場合
                 With AxAgent.Characters("OfficeAgent")
                     .Balloon.Visible = False
                     .Play("Goodbye")
@@ -426,7 +444,7 @@ Public Class MainWindow
                 End With
             End If
             Hide() '吹き出しを隠す
-            Timer1.Interval = 800
+            Timer1.Interval = 800 ' 起動監視インターバル
         End If
     End Sub
 End Class

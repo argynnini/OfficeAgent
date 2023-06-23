@@ -33,6 +33,7 @@ Partial Class MainWindow
         Me.AgentMenu = New System.Windows.Forms.ContextMenuStrip(Me.components)
         Me.SearchEngine = New System.Windows.Forms.ToolStripComboBox()
         Me.Animation = New System.Windows.Forms.ToolStripComboBox()
+        Me.Separator1 = New System.Windows.Forms.ToolStripSeparator()
         Me.MenuSetting = New System.Windows.Forms.ToolStripMenuItem()
         Me.Separator2 = New System.Windows.Forms.ToolStripSeparator()
         Me.MenuExit = New System.Windows.Forms.ToolStripMenuItem()
@@ -40,7 +41,6 @@ Partial Class MainWindow
         Me.Timer1 = New System.Windows.Forms.Timer(Me.components)
         Me.BindingSource1 = New System.Windows.Forms.BindingSource(Me.components)
         Me.ElementHost1 = New System.Windows.Forms.Integration.ElementHost()
-        Me.Separator1 = New System.Windows.Forms.ToolStripSeparator()
         CType(Me.AxAgent, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.AgentMenu.SuspendLayout()
         CType(Me.BindingSource1, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -123,7 +123,7 @@ Partial Class MainWindow
         Me.AgentMenu.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.SearchEngine, Me.Animation, Me.Separator1, Me.MenuSetting, Me.Separator2, Me.MenuExit})
         Me.AgentMenu.Name = "AgentMenu"
         Me.AgentMenu.ShowImageMargin = False
-        Me.AgentMenu.Size = New System.Drawing.Size(157, 136)
+        Me.AgentMenu.Size = New System.Drawing.Size(157, 114)
         '
         'SearchEngine
         '
@@ -139,6 +139,11 @@ Partial Class MainWindow
         Me.Animation.Name = "Animation"
         Me.Animation.Size = New System.Drawing.Size(121, 23)
         Me.Animation.Sorted = True
+        '
+        'Separator1
+        '
+        Me.Separator1.Name = "Separator1"
+        Me.Separator1.Size = New System.Drawing.Size(153, 6)
         '
         'MenuSetting
         '
@@ -177,11 +182,6 @@ Partial Class MainWindow
         Me.ElementHost1.TabIndex = 0
         Me.ElementHost1.Text = "ElementHost1"
         Me.ElementHost1.Child = Nothing
-        '
-        'Separator1
-        '
-        Me.Separator1.Name = "Separator1"
-        Me.Separator1.Size = New System.Drawing.Size(153, 6)
         '
         'MainWindow
         '
