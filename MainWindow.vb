@@ -1,4 +1,5 @@
 ﻿Imports System.Runtime.InteropServices
+Imports System.Text
 Imports OpenAI_API
 
 Public Class MainWindow
@@ -6,6 +7,7 @@ Public Class MainWindow
 
     Public response As String = Nothing
     Public keyFlag As Boolean = False
+    Public preBallon As Boolean = False
 
     <StructLayout(LayoutKind.Sequential)>
     Structure RECT
@@ -128,10 +130,10 @@ Public Class MainWindow
         Timer1.Start()
     End Sub
 
-    '検索ボックス入力時
-    Private Sub SearchBox_KeyPress(sender As Object, e As KeyPressEventArgs） Handles SearchBox.KeyPress
-        If e.KeyChar = vbCr Then e.Handled = True
-    End Sub
+    ''検索ボックス入力時
+    'Private Sub SearchBox_KeyPress(sender As Object, e As KeyPressEventArgs） Handles SearchBox.KeyPress
+    '    If e.KeyChar = vbCr Then e.Handled = True
+    'End Sub
 
     '検索ボックス入力時
     Private Sub SearchBox_TextUpdate(sender As Object, e As EventArgs） Handles SearchBox.KeyDown
@@ -147,28 +149,37 @@ Public Class MainWindow
             .StopAll()
             .Play("RestPose")
             .Balloon.Visible = False
+            Select Case e.button
+                Case 1 '左クリック時
+                    Location = New Point(.Left - 150, .Top - 150)
+                    AgentMenu.Hide()
+                    Me.Opacity = 100
+                    Show()
+                    Exit Select
+                Case 2 '右クリック時
+                    Animation.SelectedIndex = Animation.Items.Count() - 1 'アニメーションを既定の選択にする
+                    AgentMenu.Show(Cursor.Position.X, Cursor.Position.Y)
+                    Exit Select
+                Case 4 '真中クリック時
+                    If response IsNot Nothing Then
+                        Clipboard.SetText(response)
+                        .Balloon.FontSize = 10
+                        Hide()
+                        .StopAll()
+                        ' バルーンの表示文字数変更(行数の値は 1 ~ 128 で、1 行あたりの文字数は 8 から 255 の範囲にする必要があります。)
+                        .Balloon.Style = (.Balloon.Style And &HFFFFFF) + (1 * (2 ^ 24)) ' 行数
+                        .Balloon.Style = (.Balloon.Style And &HFF00FFFF) + (22 * (2 ^ 16)) ' 文字数(日本語の場合半分になる)
+                        .Speak("コピーしました！")
+                        .Play("GestureDown")
+                    End If
+                    Exit Select
+            End Select
         End With
-        Select Case e.button
-            Case 1 '左クリック時
-                Location = New Point(AxAgent.Characters("OfficeAgent").Left - 150, AxAgent.Characters("OfficeAgent").Top - 150)
-                AgentMenu.Hide()
-                Me.Opacity = 100
-                Show()
-                Exit Select
-            Case 2 '右クリック時
-                Animation.SelectedIndex = Animation.Items.Count() - 1 'アニメーションを既定の選択にする
-                AgentMenu.Show(Cursor.Position.X, Cursor.Position.Y)
-                Exit Select
-            Case 4 '真中クリック時
-                Clipboard.SetText(response)
-                AxAgent.Characters("OfficeAgent").Play("GestureDown")
-                Exit Select
-        End Select
     End Sub
 
     'Agentドラッグ時
     Private Sub Agent_Dragstart(sender As Object, e As AxAgentObjects._AgentEvents_DragStartEvent) Handles AxAgent.DragStart
-        AxAgent.Characters("OfficeAgent").Balloon.Visible = False
+        preBallon = AxAgent.Characters("OfficeAgent").Balloon.Visible
         Hide()
     End Sub
 
@@ -207,14 +218,31 @@ Public Class MainWindow
                 Hide()
                 .StopAll()
                 .Play("RestPose")
+                Dim enc As Encoding = Encoding.GetEncoding("shift_jis")
+
+                Dim CharNum As Integer = 100 ' enc.GetByteCount(response.ToString.Replace(vbLf, "").Replace(vbCr, "").Replace(vbCrLf, ""))
+                If enc.GetByteCount(response) < CharNum Then '文字数少ないとき
+                    CharNum = enc.GetByteCount(response)
+                    If CharNum < 10 Then '10文字以下のとき
+                        CharNum = 10
+                    End If
+                End If
+                Dim LineNum As Integer = Int((enc.GetByteCount(response) / CharNum + 1) * 1.25)
+                If LineNum > 127 Then '文字数少ないとき
+                    LineNum = 127
+                End If
+                Debug.WriteLine("文字数 " + enc.GetByteCount(response).ToString)
+                Debug.WriteLine("行字数 " + CharNum.ToString)
+                Debug.WriteLine("全行数 " + LineNum.ToString)
                 ' バルーンの表示文字数変更(行数の値は 1 ~ 128 で、1 行あたりの文字数は 8 から 255 の範囲にする必要があります。)
-                .Balloon.Style = (.Balloon.Style And &HFFFFFF) + (50 * (2 ^ 24)) ' 行数
-                .Balloon.Style = (.Balloon.Style And &HFF00FFFF) + (64 * (2 ^ 16)) ' 文字数(日本語の場合半分になる)
+                .Balloon.Style = (.Balloon.Style And &B1)
+                .Balloon.Style = (.Balloon.Style And &HFF00FFFF) + (CharNum * (2 ^ 16)) ' 文字数(日本語の場合半分になる)
+                .Balloon.Style = (.Balloon.Style And &HFFFFFF) + (LineNum * (2 ^ 24)) ' 行数
+                Console.WriteLine("質問 " + SearchBox.Text.ToString) ' 質問内容
+                Console.WriteLine("回答 " + response.ToString) ' 回答内容
+
                 ' しゃべる
                 .Speak(response)
-
-                Console.WriteLine(response) ' 回答内容
-
             Else ' 普通に検索のとき
                 Hide()
                 .StopAll()
@@ -230,7 +258,7 @@ Public Class MainWindow
                 End If
                 '選択された検索エンジン
                 Debug.WriteLine(SearchEngine.SelectedIndex)
-                Process.Start(Search_Name(SearchEngine.SelectedIndex, 1).ToString & Web.HttpUtility.UrlEncode(SearchBox.Text.ToString))
+                Process.Start(Search_Name(SearchEngine.SelectedIndex, 1).ToString & Web.HttpUtility.UrlEncode(SearchBox.Text.ToString.Replace(Environment.NewLine, " ")))
                 .Play("RestPose")
             End If
         End With
