@@ -380,6 +380,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\吹き出し.bmp" />
+    <Content Include=".gitignore" />
     <Content Include="coronavirus-covid-19.ico" />
     <Content Include="icon.ico" />
     <Content Include="カイル.ico" />
