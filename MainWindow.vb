@@ -1,6 +1,8 @@
 ﻿Imports System.Runtime.InteropServices
 Imports System.Text
 Imports OpenAI_API
+Imports System.Windows
+Imports System.Management
 
 Public Class MainWindow
     '生命、宇宙、そして万物についての究極の疑問の答え = 42
@@ -47,6 +49,14 @@ Public Class MainWindow
     Private Shared Function IsIconic(hwnd As Long) As Long
     End Function
 
+    '画面拡大率取得
+    Function GetWindowMag() As Single
+        Dim dpiMag As Double = SystemParameters.PrimaryScreenHeight  ' 拡大時の画面高さ(Pixel)
+        Dim dpi As Double = Screen.PrimaryScreen.Bounds.Height       ' 画面の設定(Pixel)
+        Dim dpiMagRate As Double = dpi / dpiMag
+        Return dpiMagRate
+    End Function
+
     '起動監視ソフト名
     Private ReadOnly Watch_Process As String() = New String() {'"OfficeAgent", "AgentSvr",
                                                 "WINWORD", "EXCEL", "POWERPNT",
@@ -60,7 +70,7 @@ Public Class MainWindow
                                                {"Yahoo!", "https://search.yahoo.co.jp/search?p="},
                                                {"YouTube", "https://www.youtube.com/search?q="},
                                                {"ニコニコ動画", "https://www.nicovideo.jp/search/"},
-                                               {"Twitter", "https://twitter.com/search?q="},
+                                               {"X", "https://x.com/search?q="},
                                                {"Googleマップ", "https://www.google.com/maps/search/"},
                                                {"Amazon", "https://www.amazon.co.jp/s?k="},
                                                {"楽天市場", "https://search.rakuten.co.jp/search/mall/"},
@@ -78,17 +88,18 @@ Public Class MainWindow
             .Balloon.Visible = False '吹き出しを非表示にする
             .AutoPopupMenu = False 'デフォルトの右クリックメニューを無効にする
             .SoundEffectsOn = True '音を有効にする
-            .Top = Screen.PrimaryScreen.Bounds.Height - .OriginalHeight - 100 'AgentのY座標をスクリーンの高さ-Agentの高さ-100に設定
-            .Left = Screen.PrimaryScreen.Bounds.Width - .OriginalWidth - 50 'AgentのX座標をスクリーンの幅-Agentの幅-50に設定
+            Debug.WriteLine(GetWindowMag())
+            .Top = (Screen.PrimaryScreen.Bounds.Height - .OriginalHeight - 100) / GetWindowMag() 'AgentのY座標をスクリーンの高さ-Agentの高さ-100に設定
+            .Left = (Screen.PrimaryScreen.Bounds.Width - .OriginalWidth - 50) / GetWindowMag() 'AgentのX座標をスクリーンの幅-Agentの幅-50に設定
             .Balloon.FontCharSet = 128
             .Hide(True) 'イルカを出す
         End With 'Agentに対して終了
         ShowInTaskbar = False 'タスクバーに非表示
         FormBorderStyle = FormBorderStyle.None 'フォームの境界線をなくす
-        Size = New Size(300, 170) '大きさを変更
+        Size = New Drawing.Size(300, 170) '大きさを変更
         StartPosition = FormStartPosition.Manual 'フォームの表示位置をマニュアルに設定
-        Location = New Point(AxAgent.Characters("OfficeAgent").Left - 150,
-                             AxAgent.Characters("OfficeAgent").Top - 150) 'Agentを表示
+        Location = New Drawing.Point((AxAgent.Characters("OfficeAgent").Left - 150 / GetWindowMag()),
+                                     (AxAgent.Characters("OfficeAgent").Top - 150 / GetWindowMag())) 'Agentを表示
         Search.BackColor = Color.FromArgb(255, 255, 154) '検索ボタンの背景色を設定
         CloseApp.BackColor = Color.FromArgb(255, 255, 154) '閉じるボタンの背景色を設定
         Label1.BackColor = Color.FromArgb(255, 255, 154) '検索ボタンの背景色を設定
@@ -151,7 +162,7 @@ Public Class MainWindow
             .Balloon.Visible = False
             Select Case e.button
                 Case 1 '左クリック時
-                    Location = New Point(.Left - 150, .Top - 150)
+                    Location = New System.Drawing.Point(.Left - 150, .Top - 150)
                     AgentMenu.Hide()
                     Me.Opacity = 100
                     Show()
@@ -162,7 +173,7 @@ Public Class MainWindow
                     Exit Select
                 Case 4 '真中クリック時
                     If response IsNot Nothing Then
-                        Clipboard.SetText(response)
+                        Forms.Clipboard.SetText(response)
                         .Balloon.FontSize = 10
                         Hide()
                         .StopAll()
@@ -185,83 +196,87 @@ Public Class MainWindow
 
     'Agentドラッグ終了時
     Private Sub Agent_DragEnd(sender As Object, e As AxAgentObjects._AgentEvents_DragCompleteEvent) Handles AxAgent.DragComplete
-        Location = New Point(AxAgent.Characters("OfficeAgent").Left - 150, AxAgent.Characters("OfficeAgent").Top - 150)
+        Location = New Drawing.Point(AxAgent.Characters("OfficeAgent").Left - 150, AxAgent.Characters("OfficeAgent").Top - 150)
         'Show()
     End Sub
 
     '検索クリック時
     Private Async Sub Search_Click(sender As Object, e As EventArgs) Handles Search.Click
-        With AxAgent.Characters("OfficeAgent")
-            If My.Settings.DefaultGPT Then ' GPTのとき
-                ' APIキー
-                Dim api = New OpenAIAPI(apiKeys:=My.Settings.API_KEY)
-                Dim chat = api.Chat.CreateConversation()
+        Try
+            With AxAgent.Characters("OfficeAgent")
+                If My.Settings.DefaultGPT Then ' GPTのとき
+                    ' APIキー
+                    Dim api = New OpenAIAPI(apiKeys:=My.Settings.API_KEY)
+                    Dim chat = api.Chat.CreateConversation()
 
-                ' イルカのふりをさせる
-                chat.AppendSystemMessage(My.Settings.GPT_RULE)
+                    ' イルカのふりをさせる
+                    chat.AppendSystemMessage(My.Settings.GPT_RULE)
 
-                ' 質問
-                chat.AppendUserInput(SearchBox.Text.ToString)
+                    ' 質問
+                    chat.AppendUserInput(SearchBox.Text.ToString)
 
-                .Balloon.FontSize = 10
-                Hide()
-                .StopAll()
-                ' バルーンの表示文字数変更(行数の値は 1 ~ 128 で、1 行あたりの文字数は 8 から 255 の範囲にする必要があります。)
-                .Balloon.Style = (.Balloon.Style And &HFFFFFF) + (1 * (2 ^ 24)) ' 行数
-                .Balloon.Style = (.Balloon.Style And &HFF00FFFF) + (20 * (2 ^ 16)) ' 文字数(日本語の場合半分になる)
-                .Think("考え中．．．")
-                .Play("Thinking")
-
-                ' 回答
-                response = Await chat.GetResponseFromChatbotAsync()
-                .Balloon.FontSize = 12
-                Hide()
-                .StopAll()
-                .Play("RestPose")
-                Dim enc As Encoding = Encoding.GetEncoding("shift_jis")
-
-                Dim CharNum As Integer = 100 ' enc.GetByteCount(response.ToString.Replace(vbLf, "").Replace(vbCr, "").Replace(vbCrLf, ""))
-                If enc.GetByteCount(response) < CharNum Then '文字数少ないとき
-                    CharNum = enc.GetByteCount(response)
-                    If CharNum < 10 Then '10文字以下のとき
-                        CharNum = 10
-                    End If
-                End If
-                Dim LineNum As Integer = Int((enc.GetByteCount(response) / CharNum + 1) * 1.25)
-                If LineNum > 127 Then '文字数少ないとき
-                    LineNum = 127
-                End If
-                Debug.WriteLine("文字数 " + enc.GetByteCount(response).ToString)
-                Debug.WriteLine("行字数 " + CharNum.ToString)
-                Debug.WriteLine("全行数 " + LineNum.ToString)
-                ' バルーンの表示文字数変更(行数の値は 1 ~ 128 で、1 行あたりの文字数は 8 から 255 の範囲にする必要があります。)
-                .Balloon.Style = (.Balloon.Style And &B1)
-                .Balloon.Style = (.Balloon.Style And &HFF00FFFF) + (CharNum * (2 ^ 16)) ' 文字数(日本語の場合半分になる)
-                .Balloon.Style = (.Balloon.Style And &HFFFFFF) + (LineNum * (2 ^ 24)) ' 行数
-                Console.WriteLine("質問 " + SearchBox.Text.ToString) ' 質問内容
-                Console.WriteLine("回答 " + response.ToString) ' 回答内容
-
-                ' しゃべる
-                .Speak(response)
-            Else ' 普通に検索のとき
-                Hide()
-                .StopAll()
-                If SearchBox.Text.Trim = "" Then
-                    .Play("RestPose")
-                    Return
-                End If
-                If SearchBox.Text = "お前を消す方法" Then
+                    .Balloon.FontSize = 10
                     Hide()
+                    .StopAll()
+                    ' バルーンの表示文字数変更(行数の値は 1 ~ 128 で、1 行あたりの文字数は 8 から 255 の範囲にする必要があります。)
+                    .Balloon.Style = (.Balloon.Style And &HFFFFFF) + (1 * (2 ^ 24)) ' 行数
+                    .Balloon.Style = (.Balloon.Style And &HFF00FFFF) + (20 * (2 ^ 16)) ' 文字数(日本語の場合半分になる)
+                    .Think("考え中．．．")
+                    .Play("Thinking")
+
+                    ' 回答
+                    response = Await chat.GetResponseFromChatbotAsync()
                     .Balloon.FontSize = 12
-                    .Speak("質問の意味がわかりません。")
-                    .Play("wave")
+                    Hide()
+                    .StopAll()
+                    .Play("RestPose")
+                    Dim enc As Encoding = Encoding.GetEncoding("shift_jis")
+
+                    Dim CharNum As Integer = 100 ' enc.GetByteCount(response.ToString.Replace(vbLf, "").Replace(vbCr, "").Replace(vbCrLf, ""))
+                    If enc.GetByteCount(response) < CharNum Then '文字数少ないとき
+                        CharNum = enc.GetByteCount(response)
+                        If CharNum < 10 Then '10文字以下のとき
+                            CharNum = 10
+                        End If
+                    End If
+                    Dim LineNum As Integer = Int((enc.GetByteCount(response) / CharNum + 1) * 1.25)
+                    If LineNum > 127 Then '文字数少ないとき
+                        LineNum = 127
+                    End If
+                    Debug.WriteLine("文字数 " + enc.GetByteCount(response).ToString)
+                    Debug.WriteLine("行字数 " + CharNum.ToString)
+                    Debug.WriteLine("全行数 " + LineNum.ToString)
+                    ' バルーンの表示文字数変更(行数の値は 1 ~ 128 で、1 行あたりの文字数は 8 から 255 の範囲にする必要があります。)
+                    .Balloon.Style = (.Balloon.Style And &B1)
+                    .Balloon.Style = (.Balloon.Style And &HFF00FFFF) + (CharNum * (2 ^ 16)) ' 文字数(日本語の場合半分になる)
+                    .Balloon.Style = (.Balloon.Style And &HFFFFFF) + (LineNum * (2 ^ 24)) ' 行数
+                    Console.WriteLine("質問 " + SearchBox.Text.ToString) ' 質問内容
+                    Console.WriteLine("回答 " + response.ToString) ' 回答内容
+
+                    ' しゃべる
+                    .Speak(response)
+                Else ' 普通に検索のとき
+                    Hide()
+                    .StopAll()
+                    If SearchBox.Text.Trim = "" Then
+                        .Play("RestPose")
+                        Return
+                    End If
+                    If SearchBox.Text = "お前を消す方法" Then
+                        Hide()
+                        .Balloon.FontSize = 12
+                        .Speak("質問の意味がわかりません。")
+                        .Play("wave")
+                    End If
+                    '選択された検索エンジン
+                    Debug.WriteLine(SearchEngine.SelectedIndex)
+                    Process.Start(Search_Name(SearchEngine.SelectedIndex, 1).ToString & Web.HttpUtility.UrlEncode(SearchBox.Text.ToString.Replace(Environment.NewLine, " ")))
+                    .Play("RestPose")
                 End If
-                '選択された検索エンジン
-                Debug.WriteLine(SearchEngine.SelectedIndex)
-                Process.Start(Search_Name(SearchEngine.SelectedIndex, 1).ToString & Web.HttpUtility.UrlEncode(SearchBox.Text.ToString.Replace(Environment.NewLine, " ")))
-                .Play("RestPose")
-            End If
-        End With
+            End With
+        Catch ex As Exception
+            Forms.MessageBox.Show("エラーが発生しました: " & ex.Message)
+        End Try
     End Sub
 
     '閉じるクリック時
@@ -298,9 +313,9 @@ Public Class MainWindow
             .Hide(True)
         End With
         Do While AxAgent.Characters("OfficeAgent").Visible = True
-            Threading.Thread.Sleep(50)
+            System.Threading.Thread.Sleep(50)
         Loop
-        Application.Exit()
+        Forms.Application.Exit()
     End Sub
 
     'アニメーション

@@ -1,0 +1,6 @@
+*.Zone.Identifier
+*.vscode
+bin/
+obj/
+*.user
+.vs/
