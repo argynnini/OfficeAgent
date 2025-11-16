@@ -1,6 +1,6 @@
 ﻿Imports System.Runtime.InteropServices
 Imports System.Text
-Imports OpenAI_API
+Imports OpenAI.Chat
 Imports System.Windows
 Imports System.Management
 
@@ -66,11 +66,11 @@ Public Class MainWindow
 
     '検索サイト
     Private ReadOnly Search_Name(,) As String = New String(,) {
-                                               {"Google", "https://www.google.co.jp/search?q="},
+                                               {"Google", "https://www.google.com/search?q="},
                                                {"Yahoo!", "https://search.yahoo.co.jp/search?p="},
                                                {"YouTube", "https://www.youtube.com/search?q="},
                                                {"ニコニコ動画", "https://www.nicovideo.jp/search/"},
-                                               {"X", "https://x.com/search?q="},
+                                               {"X (Twitter)", "https://x.com/search?q="},
                                                {"Googleマップ", "https://www.google.com/maps/search/"},
                                                {"Amazon", "https://www.amazon.co.jp/s?k="},
                                                {"楽天市場", "https://search.rakuten.co.jp/search/mall/"},
@@ -206,14 +206,10 @@ Public Class MainWindow
             With AxAgent.Characters("OfficeAgent")
                 If My.Settings.DefaultGPT Then ' GPTのとき
                     ' APIキー
-                    Dim api = New OpenAIAPI(apiKeys:=My.Settings.API_KEY)
-                    Dim chat = api.Chat.CreateConversation()
+                    Dim client = New ChatClient("gpt-4-turbo", My.Settings.API_KEY)
 
                     ' イルカのふりをさせる
-                    chat.AppendSystemMessage(My.Settings.GPT_RULE)
-
-                    ' 質問
-                    chat.AppendUserInput(SearchBox.Text.ToString)
+                    'client.AppendSystemMessage(My.Settings.GPT_RULE)
 
                     .Balloon.FontSize = 10
                     Hide()
@@ -225,7 +221,8 @@ Public Class MainWindow
                     .Play("Thinking")
 
                     ' 回答
-                    response = Await chat.GetResponseFromChatbotAsync()
+                    Dim completion = Await client.CompleteChatAsync(SearchBox.Text.ToString)
+                    response = completion.ToString
                     .Balloon.FontSize = 12
                     Hide()
                     .StopAll()
@@ -270,7 +267,10 @@ Public Class MainWindow
                     End If
                     '選択された検索エンジン
                     Debug.WriteLine(SearchEngine.SelectedIndex)
-                    Process.Start(Search_Name(SearchEngine.SelectedIndex, 1).ToString & Web.HttpUtility.UrlEncode(SearchBox.Text.ToString.Replace(Environment.NewLine, " ")))
+                    Dim psi As New ProcessStartInfo(Search_Name(SearchEngine.SelectedIndex, 1).ToString & Web.HttpUtility.UrlEncode(SearchBox.Text.ToString.Replace(Environment.NewLine, " "))) With {
+                        .UseShellExecute = True
+                    }
+                    Process.Start(psi)
                     .Play("RestPose")
                 End If
             End With

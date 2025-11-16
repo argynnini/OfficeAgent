@@ -42,8 +42,14 @@
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Costura.Fody" Version="5.7.0" />
-    <PackageReference Include="Fody" Version="6.7.0" />
+    <PackageReference Include="Costura.Fody" Version="6.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <!--<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>-->
+    </PackageReference>
+    <PackageReference Include="Fody" Version="6.9.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.0" />
@@ -56,8 +62,9 @@
     <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Primitives" Version="10.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="OpenAI" Version="1.7.2" />
+    <PackageReference Include="OpenAI" Version="2.7.0" />
     <PackageReference Include="Microsoft.AspNetCore.SystemWebAdapters" Version="2.1.0" />
+    <PackageReference Include="System.Management" Version="10.0.0" />
   </ItemGroup>
   <ItemGroup>
     <Import Include="System.Drawing" />
@@ -110,7 +117,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include=".gitignore" />
-    <Content Include="coronavirus-covid-19.ico" />
     <Content Include="icon.ico" />
     <Content Include="カイル.ico" />
   </ItemGroup>

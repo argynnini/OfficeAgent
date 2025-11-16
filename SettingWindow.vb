@@ -1,4 +1,5 @@
 ﻿Imports AxAgentObjects
+Imports Microsoft.AspNetCore.Server.Kestrel
 
 Public Class SettingWindow
 
@@ -55,11 +56,17 @@ Public Class SettingWindow
 
     ' バージョンクリック時
     Private Sub LinkLabelGitHub_LinkClicked(sender As Object, e As LinkLabelLinkClickedEventArgs) Handles LinkLabelGitHub.LinkClicked
-        Process.Start("https://github.com/argynnini/OfficeAgent")
+        Dim psi As New ProcessStartInfo("https://github.com/argynnini/OfficeAgent") With {
+                        .UseShellExecute = True
+                    }
+        Process.Start(psi)
     End Sub
 
     ' API取得クリック時
     Private Sub LinkAPI_LinkClicked(sender As Object, e As LinkLabelLinkClickedEventArgs) Handles LinkAPI.LinkClicked
-        Process.Start("https://openai.com/blog/openai-api")
+        Dim psi As New ProcessStartInfo("https://openai.com/blog/openai-api") With {
+            .UseShellExecute = True
+        }
+        Process.Start(psi)
     End Sub
 End Class
