@@ -51,9 +51,6 @@
     <PackageReference Include="Microsoft.Extensions.Primitives" Version="10.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="OpenAI" Version="1.7.2" />
-    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="10.0.0" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
-    <PackageReference Include="System.Runtime.Handles" Version="4.3.0" />
     <PackageReference Include="Microsoft.AspNetCore.SystemWebAdapters" Version="2.1.0" />
   </ItemGroup>
   <ItemGroup>
