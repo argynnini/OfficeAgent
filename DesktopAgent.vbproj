@@ -25,6 +25,12 @@
     <UseWPF>true</UseWPF>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
     <ApplicationIcon>カイル.ico</ApplicationIcon>
+    <AssemblyTitle>OfficeAgent</AssemblyTitle>
+    <Description>最新の Office 環境に AI カイル君 を復活させます</Description>
+    <Company>K.B.T.C.</Company>
+    <Product>OfficeAgent</Product>
+    <AssemblyVersion>2.2.0.0</AssemblyVersion>
+    <FileVersion>2.2.0.0</FileVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DocumentationFile>OfficeAgent.xml</DocumentationFile>
