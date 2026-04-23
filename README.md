@@ -43,7 +43,7 @@ ChatGPT の力を経て質問になんでも答えられます．
 # 動作環境
  
 * Microsoft Windows 10 以降
-* Microsoft .NET Framework 4.8
+* Microsoft .NET CORE 10.0
 
 # 注意
 
