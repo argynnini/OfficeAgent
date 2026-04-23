@@ -9,5 +9,14 @@
     <ErrorReportUrlHistory />
     <FallbackCulture>ja-JP</FallbackCulture>
     <VerifyUploadedFiles>false</VerifyUploadedFiles>
+    <_LastSelectedProfileId>C:\Users\HP\source\repos\OfficeAgent\My Project\PublishProfiles\FolderProfile.pubxml</_LastSelectedProfileId>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Update="MainWindow.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="SettingWindow.vb">
+      <SubType>Form</SubType>
+    </Compile>
+  </ItemGroup>
 </Project>

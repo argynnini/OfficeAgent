@@ -22,196 +22,198 @@ Partial Class MainWindow
     'コード エディターを使って変更しないでください。
     <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
-        Me.components = New System.ComponentModel.Container()
+        components = New ComponentModel.Container()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(MainWindow))
-        Me.AxAgent = New AxAgentObjects.AxAgent()
-        Me.NotifyIcon = New System.Windows.Forms.NotifyIcon(Me.components)
-        Me.SearchBox = New System.Windows.Forms.TextBox()
-        Me.Search = New System.Windows.Forms.Button()
-        Me.Label1 = New System.Windows.Forms.Label()
-        Me.CloseApp = New System.Windows.Forms.Button()
-        Me.AgentMenu = New System.Windows.Forms.ContextMenuStrip(Me.components)
-        Me.SearchEngine = New System.Windows.Forms.ToolStripComboBox()
-        Me.Animation = New System.Windows.Forms.ToolStripComboBox()
-        Me.Separator1 = New System.Windows.Forms.ToolStripSeparator()
-        Me.MenuSetting = New System.Windows.Forms.ToolStripMenuItem()
-        Me.Separator2 = New System.Windows.Forms.ToolStripSeparator()
-        Me.MenuExit = New System.Windows.Forms.ToolStripMenuItem()
-        Me.ToolTip = New System.Windows.Forms.ToolTip(Me.components)
-        Me.Timer1 = New System.Windows.Forms.Timer(Me.components)
-        Me.BindingSource1 = New System.Windows.Forms.BindingSource(Me.components)
-        Me.ElementHost1 = New System.Windows.Forms.Integration.ElementHost()
-        CType(Me.AxAgent, System.ComponentModel.ISupportInitialize).BeginInit()
-        Me.AgentMenu.SuspendLayout()
-        CType(Me.BindingSource1, System.ComponentModel.ISupportInitialize).BeginInit()
-        Me.SuspendLayout()
-        '
-        'AxAgent
-        '
-        Me.AxAgent.Enabled = True
-        Me.AxAgent.Location = New System.Drawing.Point(228, 9)
-        Me.AxAgent.Name = "AxAgent"
-        Me.AxAgent.OcxState = CType(resources.GetObject("AxAgent.OcxState"), System.Windows.Forms.AxHost.State)
-        Me.AxAgent.Size = New System.Drawing.Size(32, 32)
-        Me.AxAgent.TabIndex = 0
-        '
-        'NotifyIcon
-        '
-        Me.NotifyIcon.BalloonTipIcon = System.Windows.Forms.ToolTipIcon.Info
-        Me.NotifyIcon.BalloonTipText = "Google 検索できます。"
-        Me.NotifyIcon.BalloonTipTitle = "カイル君"
-        Me.NotifyIcon.Icon = CType(resources.GetObject("NotifyIcon.Icon"), System.Drawing.Icon)
-        Me.NotifyIcon.Text = "カイル君"
-        Me.NotifyIcon.Visible = True
-        '
-        'SearchBox
-        '
-        Me.SearchBox.AllowDrop = True
-        Me.SearchBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
-        Me.SearchBox.Font = New System.Drawing.Font("MS UI Gothic", 12.0!)
-        Me.SearchBox.Location = New System.Drawing.Point(10, 40)
-        Me.SearchBox.MaxLength = 10000
-        Me.SearchBox.Multiline = True
-        Me.SearchBox.Name = "SearchBox"
-        Me.SearchBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
-        Me.SearchBox.Size = New System.Drawing.Size(280, 60)
-        Me.SearchBox.TabIndex = 1
-        Me.SearchBox.Text = "ここに質問文を入力し、［検索］ をクリックしてください！"
-        '
-        'Search
-        '
-        Me.Search.BackColor = System.Drawing.Color.Beige
-        Me.Search.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None
-        Me.Search.FlatStyle = System.Windows.Forms.FlatStyle.Flat
-        Me.Search.Font = New System.Drawing.Font("MS UI Gothic", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(128, Byte))
-        Me.Search.Location = New System.Drawing.Point(175, 105)
-        Me.Search.Margin = New System.Windows.Forms.Padding(1)
-        Me.Search.Name = "Search"
-        Me.Search.Size = New System.Drawing.Size(110, 25)
-        Me.Search.TabIndex = 2
-        Me.Search.Text = "検索(&S)"
-        Me.Search.UseVisualStyleBackColor = False
-        '
-        'Label1
-        '
-        Me.Label1.AutoSize = True
-        Me.Label1.BackColor = System.Drawing.Color.Beige
-        Me.Label1.FlatStyle = System.Windows.Forms.FlatStyle.System
-        Me.Label1.Font = New System.Drawing.Font("MS UI Gothic", 15.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(128, Byte))
-        Me.Label1.Location = New System.Drawing.Point(10, 15)
-        Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(206, 21)
-        Me.Label1.TabIndex = 0
-        Me.Label1.Text = "何について調べますか？"
-        '
-        'CloseApp
-        '
-        Me.CloseApp.BackColor = System.Drawing.Color.Beige
-        Me.CloseApp.DialogResult = System.Windows.Forms.DialogResult.Cancel
-        Me.CloseApp.FlatStyle = System.Windows.Forms.FlatStyle.Flat
-        Me.CloseApp.Font = New System.Drawing.Font("MS UI Gothic", 12.0!)
-        Me.CloseApp.Location = New System.Drawing.Point(15, 105)
-        Me.CloseApp.Margin = New System.Windows.Forms.Padding(1)
-        Me.CloseApp.Name = "CloseApp"
-        Me.CloseApp.Size = New System.Drawing.Size(110, 25)
-        Me.CloseApp.TabIndex = 3
-        Me.CloseApp.Text = "閉じる(&C)"
-        Me.CloseApp.UseVisualStyleBackColor = False
-        '
-        'AgentMenu
-        '
-        Me.AgentMenu.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.SearchEngine, Me.Animation, Me.Separator1, Me.MenuSetting, Me.Separator2, Me.MenuExit})
-        Me.AgentMenu.Name = "AgentMenu"
-        Me.AgentMenu.ShowImageMargin = False
-        Me.AgentMenu.Size = New System.Drawing.Size(157, 114)
-        '
-        'SearchEngine
-        '
-        Me.SearchEngine.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.SearchEngine.FlatStyle = System.Windows.Forms.FlatStyle.Flat
-        Me.SearchEngine.Name = "SearchEngine"
-        Me.SearchEngine.Size = New System.Drawing.Size(121, 23)
-        '
-        'Animation
-        '
-        Me.Animation.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.Animation.FlatStyle = System.Windows.Forms.FlatStyle.Flat
-        Me.Animation.Name = "Animation"
-        Me.Animation.Size = New System.Drawing.Size(121, 23)
-        Me.Animation.Sorted = True
-        '
-        'Separator1
-        '
-        Me.Separator1.Name = "Separator1"
-        Me.Separator1.Size = New System.Drawing.Size(153, 6)
-        '
-        'MenuSetting
-        '
-        Me.MenuSetting.AutoToolTip = True
-        Me.MenuSetting.Name = "MenuSetting"
-        Me.MenuSetting.Size = New System.Drawing.Size(156, 22)
-        Me.MenuSetting.Text = "設定"
-        Me.MenuSetting.ToolTipText = "設定"
-        '
-        'Separator2
-        '
-        Me.Separator2.Name = "Separator2"
-        Me.Separator2.Size = New System.Drawing.Size(153, 6)
-        '
-        'MenuExit
-        '
-        Me.MenuExit.AutoToolTip = True
-        Me.MenuExit.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text
-        Me.MenuExit.Name = "MenuExit"
-        Me.MenuExit.Size = New System.Drawing.Size(156, 22)
-        Me.MenuExit.Text = "終了"
-        '
-        'ToolTip
-        '
-        Me.ToolTip.ForeColor = System.Drawing.SystemColors.ControlText
-        '
-        'Timer1
-        '
-        Me.Timer1.Interval = 800
-        '
-        'ElementHost1
-        '
-        Me.ElementHost1.Location = New System.Drawing.Point(0, 0)
-        Me.ElementHost1.Name = "ElementHost1"
-        Me.ElementHost1.Size = New System.Drawing.Size(200, 100)
-        Me.ElementHost1.TabIndex = 0
-        Me.ElementHost1.Text = "ElementHost1"
-        Me.ElementHost1.Child = Nothing
-        '
-        'MainWindow
-        '
-        Me.AcceptButton = Me.Search
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 12.0!)
-        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.BackColor = System.Drawing.Color.Beige
-        Me.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom
-        Me.CancelButton = Me.CloseApp
-        Me.ClientSize = New System.Drawing.Size(300, 140)
-        Me.Controls.Add(Me.CloseApp)
-        Me.Controls.Add(Me.Label1)
-        Me.Controls.Add(Me.Search)
-        Me.Controls.Add(Me.SearchBox)
-        Me.Controls.Add(Me.AxAgent)
-        Me.Cursor = System.Windows.Forms.Cursors.Default
-        Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None
-        Me.MaximizeBox = False
-        Me.MinimizeBox = False
-        Me.Name = "MainWindow"
-        Me.ShowIcon = False
-        Me.ShowInTaskbar = False
-        Me.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide
-        Me.Text = "Form1"
-        Me.TopMost = True
-        CType(Me.AxAgent, System.ComponentModel.ISupportInitialize).EndInit()
-        Me.AgentMenu.ResumeLayout(False)
-        CType(Me.BindingSource1, System.ComponentModel.ISupportInitialize).EndInit()
-        Me.ResumeLayout(False)
-        Me.PerformLayout()
+        AxAgent = New AxAgentObjects.AxAgent()
+        NotifyIcon = New NotifyIcon(components)
+        SearchBox = New TextBox()
+        Search = New Button()
+        Label1 = New Label()
+        CloseApp = New Button()
+        AgentMenu = New ContextMenuStrip(components)
+        SearchEngine = New ToolStripComboBox()
+        Animation = New ToolStripComboBox()
+        Separator1 = New ToolStripSeparator()
+        MenuSetting = New ToolStripMenuItem()
+        Separator2 = New ToolStripSeparator()
+        MenuExit = New ToolStripMenuItem()
+        ToolTip = New ToolTip(components)
+        Timer1 = New Timer(components)
+        BindingSource1 = New BindingSource(components)
+        ElementHost1 = New Integration.ElementHost()
+        CType(AxAgent, ComponentModel.ISupportInitialize).BeginInit()
+        AgentMenu.SuspendLayout()
+        CType(BindingSource1, ComponentModel.ISupportInitialize).BeginInit()
+        SuspendLayout()
+        ' 
+        ' AxAgent
+        ' 
+        AxAgent.Enabled = True
+        AxAgent.Location = New Point(228, 9)
+        AxAgent.Margin = New Padding(4, 5, 4, 5)
+        AxAgent.Name = "AxAgent"
+        AxAgent.OcxState = CType(resources.GetObject("AxAgent.OcxState"), AxHost.State)
+        AxAgent.Size = New Size(32, 32)
+        AxAgent.TabIndex = 0
+        ' 
+        ' NotifyIcon
+        ' 
+        NotifyIcon.BalloonTipIcon = ToolTipIcon.Info
+        NotifyIcon.BalloonTipText = "Google 検索できます。"
+        NotifyIcon.BalloonTipTitle = "カイル君"
+        NotifyIcon.Icon = CType(resources.GetObject("NotifyIcon.Icon"), Icon)
+        NotifyIcon.Text = "カイル君"
+        NotifyIcon.Visible = True
+        ' 
+        ' SearchBox
+        ' 
+        SearchBox.AllowDrop = True
+        SearchBox.BorderStyle = BorderStyle.FixedSingle
+        SearchBox.Font = New Font("MS UI Gothic", 12F)
+        SearchBox.Location = New Point(15, 60)
+        SearchBox.Margin = New Padding(4, 5, 4, 5)
+        SearchBox.MaxLength = 10000
+        SearchBox.Multiline = True
+        SearchBox.Name = "SearchBox"
+        SearchBox.ScrollBars = ScrollBars.Vertical
+        SearchBox.Size = New Size(350, 60)
+        SearchBox.TabIndex = 1
+        SearchBox.Text = "ここに質問文を入力し、［検索］ をクリックしてください！"
+        ' 
+        ' Search
+        ' 
+        Search.BackColor = Color.Beige
+        Search.BackgroundImageLayout = ImageLayout.None
+        Search.FlatStyle = FlatStyle.Flat
+        Search.Font = New Font("MS UI Gothic", 11F)
+        Search.Location = New Point(220, 130)
+        Search.Margin = New Padding(1, 2, 1, 2)
+        Search.Name = "Search"
+        Search.Size = New Size(130, 35)
+        Search.TabIndex = 2
+        Search.Text = "検索(&S)"
+        Search.UseVisualStyleBackColor = False
+        ' 
+        ' Label1
+        ' 
+        Label1.AutoSize = True
+        Label1.BackColor = Color.Beige
+        Label1.FlatStyle = FlatStyle.System
+        Label1.Font = New Font("MS UI Gothic", 15.75F, FontStyle.Regular, GraphicsUnit.Point, CByte(128))
+        Label1.Location = New Point(13, 25)
+        Label1.Margin = New Padding(4, 0, 4, 0)
+        Label1.Name = "Label1"
+        Label1.Size = New Size(265, 27)
+        Label1.TabIndex = 0
+        Label1.Text = "何について調べますか？"
+        ' 
+        ' CloseApp
+        ' 
+        CloseApp.BackColor = Color.Beige
+        CloseApp.DialogResult = DialogResult.Cancel
+        CloseApp.FlatStyle = FlatStyle.Flat
+        CloseApp.Font = New Font("MS UI Gothic", 11F)
+        CloseApp.Location = New Point(20, 130)
+        CloseApp.Margin = New Padding(1, 2, 1, 2)
+        CloseApp.Name = "CloseApp"
+        CloseApp.Size = New Size(130, 35)
+        CloseApp.TabIndex = 3
+        CloseApp.Text = "閉じる(&C)"
+        CloseApp.UseVisualStyleBackColor = False
+        ' 
+        ' AgentMenu
+        ' 
+        AgentMenu.ImageScalingSize = New Size(20, 20)
+        AgentMenu.Items.AddRange(New ToolStripItem() {SearchEngine, Animation, Separator1, MenuSetting, Separator2, MenuExit})
+        AgentMenu.Name = "AgentMenu"
+        AgentMenu.ShowImageMargin = False
+        AgentMenu.Size = New Size(157, 128)
+        ' 
+        ' SearchEngine
+        ' 
+        SearchEngine.DropDownStyle = ComboBoxStyle.DropDownList
+        SearchEngine.FlatStyle = FlatStyle.Flat
+        SearchEngine.Name = "SearchEngine"
+        SearchEngine.Size = New Size(121, 28)
+        ' 
+        ' Animation
+        ' 
+        Animation.DropDownStyle = ComboBoxStyle.DropDownList
+        Animation.FlatStyle = FlatStyle.Flat
+        Animation.Name = "Animation"
+        Animation.Size = New Size(121, 28)
+        Animation.Sorted = True
+        ' 
+        ' Separator1
+        ' 
+        Separator1.Name = "Separator1"
+        Separator1.Size = New Size(153, 6)
+        ' 
+        ' MenuSetting
+        ' 
+        MenuSetting.AutoToolTip = True
+        MenuSetting.Name = "MenuSetting"
+        MenuSetting.Size = New Size(156, 24)
+        MenuSetting.Text = "設定"
+        MenuSetting.ToolTipText = "設定"
+        ' 
+        ' Separator2
+        ' 
+        Separator2.Name = "Separator2"
+        Separator2.Size = New Size(153, 6)
+        ' 
+        ' MenuExit
+        ' 
+        MenuExit.AutoToolTip = True
+        MenuExit.DisplayStyle = ToolStripItemDisplayStyle.Text
+        MenuExit.Name = "MenuExit"
+        MenuExit.Size = New Size(156, 24)
+        MenuExit.Text = "終了"
+        ' 
+        ' ToolTip
+        ' 
+        ToolTip.ForeColor = SystemColors.ControlText
+        ' 
+        ' Timer1
+        ' 
+        Timer1.Interval = 800
+        ' 
+        ' ElementHost1
+        ' 
+        ElementHost1.Location = New Point(0, 0)
+        ElementHost1.Name = "ElementHost1"
+        ElementHost1.TabIndex = 0
+        ElementHost1.Text = "ElementHost1"
+        ' 
+        ' MainWindow
+        ' 
+        AcceptButton = Search
+        AutoScaleDimensions = New SizeF(120F, 120F)
+        AutoScaleMode = AutoScaleMode.Dpi
+        BackColor = Color.Beige
+        BackgroundImageLayout = ImageLayout.Zoom
+        CancelButton = CloseApp
+        ClientSize = New Size(380, 180)
+        Controls.Add(CloseApp)
+        Controls.Add(Label1)
+        Controls.Add(Search)
+        Controls.Add(SearchBox)
+        Controls.Add(AxAgent)
+        FormBorderStyle = FormBorderStyle.None
+        Margin = New Padding(4, 5, 4, 5)
+        MaximizeBox = False
+        MinimizeBox = False
+        Name = "MainWindow"
+        ShowIcon = False
+        ShowInTaskbar = False
+        SizeGripStyle = SizeGripStyle.Hide
+        Text = "Form1"
+        TopMost = True
+        CType(AxAgent, ComponentModel.ISupportInitialize).EndInit()
+        AgentMenu.ResumeLayout(False)
+        CType(BindingSource1, ComponentModel.ISupportInitialize).EndInit()
+        ResumeLayout(False)
+        PerformLayout()
 
     End Sub
 
