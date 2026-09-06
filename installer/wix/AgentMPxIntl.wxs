@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  AgentMPx.dll（Agent Custom Proxy / AgentNotifySink / AgentCharacterのプロキシ実装）と
+  AgtIntl.dll（言語リソースDLL、日本語(0x0411)・英語(0x0409)対応）のCOM登録。
+
+  この2つはinstaller\vendor\MSAgent\の.reg（MSAgent_x86/x64.reg）には含まれておらず、
+  msAgentCoreComponents.exe / msAgentCoreComponentsJP.exe が同梱の.infからregsvr32で
+  自己登録する分。実機（このアプリを実際にinstall.bat経由でインストール済みの開発機）の
+  レジストリを直接確認して書き起こした（reg_to_wix.pyの対象外、手書き）。
+
+  実機で確認した実際の登録先は HKLM\SOFTWARE\Classes\Wow6432Node\CLSID のみ（HKCR直下や
+  HKCUには無い）。これは32bit専用DLLをregsvr32(32bit版)が登録した結果で、x64 OSでは
+  Wow6432Nodeに、x86 OSでは（Wow6432Nodeというリダイレクト自体が存在しないため）
+  素のCLSIDに書き込まれる。そのためx64/x86で別ComponentGroupに分けている。
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Fragment>
+    <!-- x64 OS: Wow6432Node配下に登録する -->
+    <ComponentGroup Id="MSAgentMPxIntl_x64" Directory="WindowsFolder">
+      <Component Id="MPxIntl_x64_4BAC124B" Guid="C1A2B3D4-1111-4A11-9A11-1A2B3C4D5E01">
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Wow6432Node\CLSID\{4BAC124B-78C8-11D1-B9A8-00C04FD97575}">
+          <RegistryValue Type="string" Value="Agent Custom Proxy Class" KeyPath="yes" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Wow6432Node\CLSID\{4BAC124B-78C8-11D1-B9A8-00C04FD97575}\InprocServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\AgentMPx.dll" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="MPxIntl_x64_D45FD31D" Guid="C1A2B3D4-1111-4A11-9A11-1A2B3C4D5E02">
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Wow6432Node\CLSID\{D45FD31D-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="AgentNotifySink Custom Proxy Class" KeyPath="yes" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Wow6432Node\CLSID\{D45FD31D-5C6E-11D1-9EC1-00C04FD7081F}\InprocServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\AgentMPx.dll" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="MPxIntl_x64_D45FD31E" Guid="C1A2B3D4-1111-4A11-9A11-1A2B3C4D5E03">
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Wow6432Node\CLSID\{D45FD31E-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="AgentCharacter Custom Proxy Class" KeyPath="yes" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Wow6432Node\CLSID\{D45FD31E-5C6E-11D1-9EC1-00C04FD7081F}\InprocServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\AgentMPx.dll" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="MPxIntl_x64_C3480409" Guid="C1A2B3D4-1111-4A11-9A11-1A2B3C4D5E04">
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Wow6432Node\CLSID\{C3480409-A7F8-11D1-AA75-00C04FA34D72}">
+          <RegistryValue Type="string" Value="Microsoft Agent International DLL for Language 0x0409" KeyPath="yes" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Wow6432Node\CLSID\{C3480409-A7F8-11D1-AA75-00C04FA34D72}\InprocServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\AgtIntl.dll" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Wow6432Node\CLSID\{C3480409-A7F8-11D1-AA75-00C04FA34D72}\MiscStatus">
+          <RegistryValue Type="string" Value="0" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Wow6432Node\CLSID\{C3480409-A7F8-11D1-AA75-00C04FA34D72}\MiscStatus\1">
+          <RegistryValue Type="string" Value="132497" />
+        </RegistryKey>
+      </Component>
+      <Component Id="MPxIntl_x64_C3480411" Guid="C1A2B3D4-1111-4A11-9A11-1A2B3C4D5E05">
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Wow6432Node\CLSID\{C3480411-A7F8-11D1-AA75-00C04FA34D72}">
+          <RegistryValue Type="string" Value="Microsoft Agent International DLL for Language 0x0411" KeyPath="yes" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Wow6432Node\CLSID\{C3480411-A7F8-11D1-AA75-00C04FA34D72}\InprocServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\AgtIntl.dll" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Wow6432Node\CLSID\{C3480411-A7F8-11D1-AA75-00C04FA34D72}\MiscStatus">
+          <RegistryValue Type="string" Value="0" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Wow6432Node\CLSID\{C3480411-A7F8-11D1-AA75-00C04FA34D72}\MiscStatus\1">
+          <RegistryValue Type="string" Value="132497" />
+        </RegistryKey>
+      </Component>
+    </ComponentGroup>
+
+    <!-- x86 OS: Wow6432Nodeというリダイレクトが存在しないため、素のCLSID配下に登録する -->
+    <ComponentGroup Id="MSAgentMPxIntl_x86" Directory="WindowsFolder">
+      <Component Id="MPxIntl_x86_4BAC124B" Guid="C1A2B3D4-2222-4A11-9A11-1A2B3C4D5E01">
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\CLSID\{4BAC124B-78C8-11D1-B9A8-00C04FD97575}">
+          <RegistryValue Type="string" Value="Agent Custom Proxy Class" KeyPath="yes" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\CLSID\{4BAC124B-78C8-11D1-B9A8-00C04FD97575}\InprocServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\AgentMPx.dll" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="MPxIntl_x86_D45FD31D" Guid="C1A2B3D4-2222-4A11-9A11-1A2B3C4D5E02">
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\CLSID\{D45FD31D-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="AgentNotifySink Custom Proxy Class" KeyPath="yes" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\CLSID\{D45FD31D-5C6E-11D1-9EC1-00C04FD7081F}\InprocServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\AgentMPx.dll" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="MPxIntl_x86_D45FD31E" Guid="C1A2B3D4-2222-4A11-9A11-1A2B3C4D5E03">
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\CLSID\{D45FD31E-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="AgentCharacter Custom Proxy Class" KeyPath="yes" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\CLSID\{D45FD31E-5C6E-11D1-9EC1-00C04FD7081F}\InprocServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\AgentMPx.dll" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="MPxIntl_x86_C3480409" Guid="C1A2B3D4-2222-4A11-9A11-1A2B3C4D5E04">
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\CLSID\{C3480409-A7F8-11D1-AA75-00C04FA34D72}">
+          <RegistryValue Type="string" Value="Microsoft Agent International DLL for Language 0x0409" KeyPath="yes" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\CLSID\{C3480409-A7F8-11D1-AA75-00C04FA34D72}\InprocServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\AgtIntl.dll" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\CLSID\{C3480409-A7F8-11D1-AA75-00C04FA34D72}\MiscStatus">
+          <RegistryValue Type="string" Value="0" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\CLSID\{C3480409-A7F8-11D1-AA75-00C04FA34D72}\MiscStatus\1">
+          <RegistryValue Type="string" Value="132497" />
+        </RegistryKey>
+      </Component>
+      <Component Id="MPxIntl_x86_C3480411" Guid="C1A2B3D4-2222-4A11-9A11-1A2B3C4D5E05">
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\CLSID\{C3480411-A7F8-11D1-AA75-00C04FA34D72}">
+          <RegistryValue Type="string" Value="Microsoft Agent International DLL for Language 0x0411" KeyPath="yes" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\CLSID\{C3480411-A7F8-11D1-AA75-00C04FA34D72}\InprocServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\AgtIntl.dll" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\CLSID\{C3480411-A7F8-11D1-AA75-00C04FA34D72}\MiscStatus">
+          <RegistryValue Type="string" Value="0" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\CLSID\{C3480411-A7F8-11D1-AA75-00C04FA34D72}\MiscStatus\1">
+          <RegistryValue Type="string" Value="132497" />
+        </RegistryKey>
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>

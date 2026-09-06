@@ -1,0 +1,16 @@
+<Project Sdk="WixToolset.Sdk/7.0.0">
+  <PropertyGroup>
+    <OutputName>MSAgentRuntime</OutputName>
+    <OutputType>Package</OutputType>
+    <Platforms>AnyCPU</Platforms>
+    <OutputPath>..\..\</OutputPath>
+    <Cultures>ja-JP</Cultures>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\Directories.wxs" />
+    <Compile Include="..\MSAgentRuntime.wxs" />
+    <Compile Include="..\AgentMPxIntl.wxs" />
+    <Compile Include="..\generated\MSAgentRegistry.x64.wxs" />
+    <Compile Include="..\generated\MSAgentRegistry.x86.wxs" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,20 @@
+<Project Sdk="WixToolset.Sdk/7.0.0">
+  <PropertyGroup>
+    <OutputName>OfficeAgentSetup</OutputName>
+    <OutputType>Bundle</OutputType>
+    <Platforms>AnyCPU</Platforms>
+    <OutputPath>..\..\</OutputPath>
+    <Cultures>ja-JP</Cultures>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\Bundle.wxs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="WixToolset.BootstrapperApplications.wixext" Version="7.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- ProjectReference先の$(var.<プロジェクト名>.TargetPath)をBundle.wxsから参照する -->
+    <ProjectReference Include="..\MSAgentRuntime.Proj\MSAgentRuntime.wixproj" />
+    <ProjectReference Include="..\OfficeAgentAddins.Proj\OfficeAgentAddins.wixproj" />
+  </ItemGroup>
+</Project>

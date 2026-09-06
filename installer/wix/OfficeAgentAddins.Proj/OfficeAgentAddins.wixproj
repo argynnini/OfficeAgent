@@ -1,0 +1,30 @@
+<Project Sdk="WixToolset.Sdk/7.0.0">
+  <PropertyGroup>
+    <OutputName>OfficeAgentAddins</OutputName>
+    <OutputType>Package</OutputType>
+    <Platforms>AnyCPU</Platforms>
+    <OutputPath>..\..\</OutputPath>
+    <Cultures>ja-JP</Cultures>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\Directories.wxs" />
+    <Compile Include="..\OfficeAgentAddins.wxs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="WixToolset.Util.wixext" Version="7.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- OfficeAgentAddins.wxsはsrc\*\bin\Releaseをワイルドカードでハーベストするため、
+         MSBuildにこれをビルド順序の依存関係として認識させる必要がある（さもないと
+         ビルド順序次第でVBアドイン側より先にハーベストが走り、空/古い内容の.msiが
+         できてしまう不具合が実際に発生した）。ReferenceOutputAssembly=falseにして、
+         ビルド順序の強制だけを行い、アセンブリ参照としては解決しない
+         （このwixprojはWixToolset.Sdkのdotnet buildで動くが、参照先のVSTO vbprojは
+         .NET Framework版MSBuildが必要なため、実行はビルドスクリプト側で
+         必ずVisual StudioのMSBuild.exeを使うこと。dotnet buildでは参照先が
+         ビルドできず失敗する） -->
+    <ProjectReference Include="..\..\..\src\OfficeAgent.Word.AddIn\OfficeAgent.Word.AddIn.vbproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\..\src\OfficeAgent.Excel.AddIn\OfficeAgent.Excel.AddIn.vbproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\..\src\OfficeAgent.PowerPoint.AddIn\OfficeAgent.PowerPoint.AddIn.vbproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+</Project>

@@ -12,9 +12,9 @@ ChatGPT の力を経て質問になんでも答えられます．
 # 使い方
 
 ## 起動
-カイル君を起動するとバックグラウンドで常駐し，Word，Excel，PowerPoint などのOfficeソフトが起動すると姿を現してくれます．
+OfficeAgent は Word，Excel，PowerPoint の VSTO アドインとして動作します．インストールしておけば，各 Office ソフトを起動するだけでカイル君が自動的に姿を現してくれます．
 
-終了すると姿を消します．
+Office ソフトを終了すると（他の Office ソフトが起動していない場合は）姿を消します．
 
 ## 検索
 カイル君をクリックすると吹き出しが表示されます．
@@ -40,6 +40,23 @@ ChatGPT の力を経て質問になんでも答えられます．
 
 ![](https://github.com/argynnini/OfficeAgent/assets/88919409/cb384fdb-5e3f-4495-98fb-8e44208a9dd5)
 
+## リボンからの操作
+
+Word / Excel / PowerPoint の「表示」タブに「カイル君」グループが追加されます．
+
+* 検索方法（OpenAI GPT / Groq / ウェブ検索）の切り替え
+* サウンドのオン・オフ
+* カイル君の表示 / 終了（表示中はボタンが「終了」に変わります）
+* 詳細設定（サイドパネルの表示切り替え）
+
+## 詳細設定（サイドパネル）
+
+カイル君を右クリックして「設定」を選ぶと，その Office ソフトのサイドパネル（作業ウィンドウ）に詳細設定が表示されます．リボンの「詳細設定」ボタンからも同じパネルを開閉できます．
+
+* 検索方法・API キー・モデル名
+* カイル君の性格（プロンプト）
+* サウンド／起動時に表示 の切り替え
+
 # 動作環境
  
 * Microsoft Windows 10 以降
@@ -63,7 +80,7 @@ Microsoft が配布しているMicrosoft Agent コンポーネントは，最新
 
 ② MSAgent_Installer.zip を展開した中にある install.bat を管理者として実行します．
 
-③ OfficeAgent2.1.0.exe をダウンロードして実行します．
+③ 使いたい Office ソフト（Word / Excel / PowerPoint）に対応する OfficeAgent アドインをインストールします．
 
 ④ Word， Excel， PowerPoint などの Office 製品を起動します．
 
@@ -73,16 +90,12 @@ Microsoft が配布しているMicrosoft Agent コンポーネントは，最新
 
 ⑦ Chat GPT で検索できるようになります．
 
+VSTO アドインとして登録されるため，PC やOffice ソフトの起動時に自動的に読み込まれます．スタートアップフォルダなどへの登録は不要です．
+
 ## OpenAI API キー
 OpenAI の API キーは以下の リンク から取得できます．
 
 [OpenAI API](https://openai.com/blog/openai-api)
-
-## 自動起動方法
-
-PC の起動時に自動起動させるには，スタートアップフォルダに OfficeAgent2.1.0.exe を置きます．
-
-C:\Users\Username\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\
 
 ## 動かないときは．．．
 
