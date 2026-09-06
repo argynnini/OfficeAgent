@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  OfficeAgentアドイン本体（Word/Excel/PowerPoint、Milestone 2）のMSI。
+  ClickOnceは使わず、%ProgramFiles%\OfficeAgent\<App>\ に直接ファイルを配置し、
+  HKCU\Software\Microsoft\Office\<App>\Addins\<ProgId> に
+  Manifest=...\<App>.vsto|vstolocal 形式でVSTOアドインとして直接登録する。
+
+  実機検証済み: この方式でOfficeは実際にアドインをロードする。ただし各アドインの
+  マニフェスト署名に使っている自己署名テスト証明書（<App>_TemporaryKey.pfx）が
+  信頼済み発行元ストアに無いと、初回に「発行元を確認できません」という確認ダイアログが
+  出る。これを避けるため、対応する.cer（公開鍵のみ、certs\に配置）を
+  LocalMachine\TrustedPublisherストアにインストール時にインポートする
+  （certutil.exe -addstore、WixQuietExec経由）。
+
+  DOLPHIN.ACS/FINFIN.ACSはWord/Excel/PowerPointで重複させず、共通の
+  %ProgramFiles%\OfficeAgent\assets\ に1セットだけ配置する
+  （OfficeAgent.Core.vbのResolveAcsPathが "..\assets" を検索候補に含む設計になっている）。
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+  <Package Name="OfficeAgent Add-ins"
+           Manufacturer="OfficeAgent"
+           Version="3.0.0.0"
+           UpgradeCode="5D2E8F1A-6B3C-4D9E-8A1F-2C3B4D5E6F7A"
+           Scope="perMachine"
+           Codepage="65001">
+
+    <MajorUpgrade DowngradeErrorMessage="より新しいバージョンのOfficeAgentが既にインストールされています。" />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Feature Id="WordAddin" Title="OfficeAgent for Word" Level="1">
+      <ComponentGroupRef Id="AddinFiles_Word" />
+      <ComponentGroupRef Id="AddinFiles_Assets" />
+      <ComponentRef Id="AddinRegistry_Word" />
+      <ComponentRef Id="TrustCert_Word" />
+    </Feature>
+
+    <Feature Id="ExcelAddin" Title="OfficeAgent for Excel" Level="1">
+      <ComponentGroupRef Id="AddinFiles_Excel" />
+      <ComponentGroupRef Id="AddinFiles_Assets" />
+      <ComponentRef Id="AddinRegistry_Excel" />
+      <ComponentRef Id="TrustCert_Excel" />
+    </Feature>
+
+    <Feature Id="PowerPointAddin" Title="OfficeAgent for PowerPoint" Level="1">
+      <ComponentGroupRef Id="AddinFiles_PowerPoint" />
+      <ComponentGroupRef Id="AddinFiles_Assets" />
+      <ComponentRef Id="AddinRegistry_PowerPoint" />
+      <ComponentRef Id="TrustCert_PowerPoint" />
+    </Feature>
+
+    <!-- CustomAction/InstallExecuteSequenceはFragmentに書いただけでは
+         どこからも参照されずWiXのリンカーに除外されてしまうため、ここで明示的に取り込む -->
+    <CustomActionRef Id="ImportWordCert" />
+    <CustomActionRef Id="ImportExcelCert" />
+    <CustomActionRef Id="ImportPowerPointCert" />
+  </Package>
+
+  <Fragment>
+    <!-- Word本体のビルド出力一式。DOLPHIN.ACS/FINFIN.ACSはassets側に一本化するため除外する -->
+    <ComponentGroup Id="AddinFiles_Word" Directory="ADDIN_WORD">
+      <Files Include="..\..\src\OfficeAgent.Word.AddIn\bin\Release\**">
+        <Exclude Files="..\..\src\OfficeAgent.Word.AddIn\bin\Release\DOLPHIN.ACS" />
+        <Exclude Files="..\..\src\OfficeAgent.Word.AddIn\bin\Release\FINFIN.ACS" />
+      </Files>
+    </ComponentGroup>
+
+    <!-- Excel本体のビルド出力一式。DOLPHIN.ACS/FINFIN.ACSはassets側に一本化するため除外する -->
+    <ComponentGroup Id="AddinFiles_Excel" Directory="ADDIN_EXCEL">
+      <Files Include="..\..\src\OfficeAgent.Excel.AddIn\bin\Release\**">
+        <Exclude Files="..\..\src\OfficeAgent.Excel.AddIn\bin\Release\DOLPHIN.ACS" />
+        <Exclude Files="..\..\src\OfficeAgent.Excel.AddIn\bin\Release\FINFIN.ACS" />
+      </Files>
+    </ComponentGroup>
+
+    <!-- PowerPoint本体のビルド出力一式。DOLPHIN.ACS/FINFIN.ACSはassets側に一本化するため除外する -->
+    <ComponentGroup Id="AddinFiles_PowerPoint" Directory="ADDIN_POWERPOINT">
+      <Files Include="..\..\src\OfficeAgent.PowerPoint.AddIn\bin\Release\**">
+        <Exclude Files="..\..\src\OfficeAgent.PowerPoint.AddIn\bin\Release\DOLPHIN.ACS" />
+        <Exclude Files="..\..\src\OfficeAgent.PowerPoint.AddIn\bin\Release\FINFIN.ACS" />
+      </Files>
+    </ComponentGroup>
+
+    <!-- 共通アセット（.acs）。今はリポジトリ直下のassets\から取得する -->
+    <ComponentGroup Id="AddinFiles_Assets" Directory="ADDIN_ASSETS">
+      <Files Include="..\..\assets\*.ACS" />
+    </ComponentGroup>
+
+    <!-- Office各アプリへのVSTOアドイン登録（HKCU、ユーザー単位）。ファイルComponentとは別にする
+         （per-machineパッケージ内でHKCUデータとHKLM/ファイルデータを同一Componentに
+         　混在させるとICE57で弾かれるため、AgentMPxIntl.wxsと同じ理由で分離している） -->
+    <Component Id="AddinRegistry_Word" Directory="ADDIN_WORD" Guid="7A1B2C3D-4E5F-4061-8A2B-3C4D5E6F7A81">
+      <RegistryKey Root="HKCU" Key="Software\Microsoft\Office\Word\Addins\OfficeAgent.Word.AddIn">
+        <RegistryValue Name="FriendlyName" Type="string" Value="OfficeAgent" />
+        <RegistryValue Name="Description" Type="string" Value="OfficeAgentアドイン（Word用）" />
+        <RegistryValue Name="LoadBehavior" Type="integer" Value="3" KeyPath="yes" />
+        <RegistryValue Name="Manifest" Type="string" Value="[ADDIN_WORD]OfficeAgent.Word.AddIn.vsto|vstolocal" />
+      </RegistryKey>
+    </Component>
+
+    <Component Id="AddinRegistry_Excel" Directory="ADDIN_EXCEL" Guid="7A1B2C3D-4E5F-4062-8A2B-3C4D5E6F7A82">
+      <RegistryKey Root="HKCU" Key="Software\Microsoft\Office\Excel\Addins\OfficeAgent.Excel.AddIn">
+        <RegistryValue Name="FriendlyName" Type="string" Value="OfficeAgent" />
+        <RegistryValue Name="Description" Type="string" Value="OfficeAgentアドイン（Excel用）" />
+        <RegistryValue Name="LoadBehavior" Type="integer" Value="3" KeyPath="yes" />
+        <RegistryValue Name="Manifest" Type="string" Value="[ADDIN_EXCEL]OfficeAgent.Excel.AddIn.vsto|vstolocal" />
+      </RegistryKey>
+    </Component>
+
+    <Component Id="AddinRegistry_PowerPoint" Directory="ADDIN_POWERPOINT" Guid="7A1B2C3D-4E5F-4063-8A2B-3C4D5E6F7A83">
+      <RegistryKey Root="HKCU" Key="Software\Microsoft\Office\PowerPoint\Addins\OfficeAgent.PowerPoint.AddIn">
+        <RegistryValue Name="FriendlyName" Type="string" Value="OfficeAgent" />
+        <RegistryValue Name="Description" Type="string" Value="OfficeAgentアドイン（PowerPoint用）" />
+        <RegistryValue Name="LoadBehavior" Type="integer" Value="3" KeyPath="yes" />
+        <RegistryValue Name="Manifest" Type="string" Value="[ADDIN_POWERPOINT]OfficeAgent.PowerPoint.AddIn.vsto|vstolocal" />
+      </RegistryKey>
+    </Component>
+
+    <!-- 各アドインのマニフェスト署名用自己署名証明書をLocalMachine\TrustedPublisherへインポートし、
+         初回起動時の「発行元を確認できません」プロンプトを回避する -->
+    <Component Id="TrustCert_Word" Directory="ADDIN_WORD" Guid="9C1D2E3F-4051-4263-8475-6879A0B1C2D3">
+      <File Id="CertFile_Word" Source="$(sys.SOURCEFILEDIR)certs\OfficeAgent.Word.AddIn.cer" KeyPath="yes" />
+    </Component>
+
+    <Component Id="TrustCert_Excel" Directory="ADDIN_EXCEL" Guid="9C1D2E3F-4051-4264-8475-6879A0B1C2D4">
+      <File Id="CertFile_Excel" Source="$(sys.SOURCEFILEDIR)certs\OfficeAgent.Excel.AddIn.cer" KeyPath="yes" />
+    </Component>
+
+    <Component Id="TrustCert_PowerPoint" Directory="ADDIN_POWERPOINT" Guid="9C1D2E3F-4051-4265-8475-6879A0B1C2D5">
+      <File Id="CertFile_PowerPoint" Source="$(sys.SOURCEFILEDIR)certs\OfficeAgent.PowerPoint.AddIn.cer" KeyPath="yes" />
+    </Component>
+  </Fragment>
+
+  <Fragment>
+    <CustomAction Id="SetImportWordCert"
+                  Property="ImportWordCert"
+                  Value="&quot;certutil.exe&quot; -f -addstore TrustedPublisher &quot;[#CertFile_Word]&quot;" />
+    <CustomAction Id="ImportWordCert"
+                  BinaryRef="Wix4UtilCA_X86"
+                  DllEntry="WixQuietExec"
+                  Execute="deferred"
+                  Return="check"
+                  Impersonate="no" />
+
+    <CustomAction Id="SetImportExcelCert"
+                  Property="ImportExcelCert"
+                  Value="&quot;certutil.exe&quot; -f -addstore TrustedPublisher &quot;[#CertFile_Excel]&quot;" />
+    <CustomAction Id="ImportExcelCert"
+                  BinaryRef="Wix4UtilCA_X86"
+                  DllEntry="WixQuietExec"
+                  Execute="deferred"
+                  Return="check"
+                  Impersonate="no" />
+
+    <CustomAction Id="SetImportPowerPointCert"
+                  Property="ImportPowerPointCert"
+                  Value="&quot;certutil.exe&quot; -f -addstore TrustedPublisher &quot;[#CertFile_PowerPoint]&quot;" />
+    <CustomAction Id="ImportPowerPointCert"
+                  BinaryRef="Wix4UtilCA_X86"
+                  DllEntry="WixQuietExec"
+                  Execute="deferred"
+                  Return="check"
+                  Impersonate="no" />
+
+    <InstallExecuteSequence>
+      <Custom Action="SetImportWordCert" Before="ImportWordCert" />
+      <Custom Action="ImportWordCert" After="InstallFiles" Condition="NOT Installed" />
+      <Custom Action="SetImportExcelCert" Before="ImportExcelCert" />
+      <Custom Action="ImportExcelCert" After="ImportWordCert" Condition="NOT Installed" />
+      <Custom Action="SetImportPowerPointCert" Before="ImportPowerPointCert" />
+      <Custom Action="ImportPowerPointCert" After="ImportExcelCert" Condition="NOT Installed" />
+    </InstallExecuteSequence>
+  </Fragment>
+</Wix>

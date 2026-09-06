@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MS Agentランタイム（レガシーActiveXコントロール本体）を最新Windowsに導入するMSI。
+  installer\vendor\MSAgent\install.bat の手動手順をWiXのComponent/RegistryKeyに
+  置き換えたもの。
+
+  x64\MSAgent と x86\MSAgent の中身はバイト単位で完全に同一（32bit版バイナリ）であることを
+  確認済みなので、"MSAgent" 側は常に1セットだけ（x86フォルダを正としてハーベスト）インストールする。
+  "MSAgent64"（ネイティブ64bit版、x64のみ）とレジストリ（x86/x64で参照パスが異なる）だけを
+  Featureのレベル条件（VersionNT64）で出し分ける。これによりx86/x64を1本のMSIにまとめられる
+  （以前x64\MSAgentとx86\MSAgentを別々にハーベストしていた際は、内容が同一なのに別コンポーネント
+  　として扱おうとしたためWiXの自動GUID生成が衝突していた）。
+
+  レジストリ部分は reg_to_wix.py で installer\vendor\MSAgent\x86|x64\MSAgent_x86|x64.reg
+  から自動生成した generated\MSAgentRegistry.x86|x64.wxs を参照する（手編集しないこと。
+  .regを更新したら reg_to_wix.py を再実行して作り直す）。
+
+  AgentMPx.dll/AgtIntl.dllとそのCOM登録（AgentMPxIntl.wxs）は上記の.regには含まれておらず、
+  msAgentCoreComponents.exe/msAgentCoreComponentsJP.exeが同梱の.infからregsvr32で
+  自己登録する分。実機（install.bat経由でインストール済みの開発機）のレジストリを直接確認して
+  手書きで書き起こした。詳細はAgentMPxIntl.wxsのコメント参照。
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="MS Agent Runtime for OfficeAgent"
+           Manufacturer="OfficeAgent"
+           Version="1.0.0.0"
+           UpgradeCode="8F1C2B7E-4A3D-4E9B-9C1A-2B6F7D8E9A10"
+           Scope="perMachine">
+
+    <MajorUpgrade DowngradeErrorMessage="より新しいバージョンのMS Agent Runtimeが既にインストールされています。" />
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- MSAgent(32bit版)本体: x86/x64どちらのOSでも常にインストールする -->
+    <Feature Id="RuntimeCommon" Title="MS Agent Runtime" Level="1">
+      <ComponentGroupRef Id="MSAgentFiles_MSAgent" />
+    </Feature>
+
+    <!-- x64 OSのときだけ: ネイティブ64bit版ファイル + x64用レジストリ（Wow6432Node分含む） -->
+    <Feature Id="RuntimeX64Only" Title="MS Agent Runtime (x64専用分)" Level="0">
+      <Level Value="1" Condition="VersionNT64" />
+      <ComponentGroupRef Id="MSAgentFiles_MSAgent64" />
+      <ComponentGroupRef Id="MSAgentRegistry_x64" />
+      <ComponentGroupRef Id="MSAgentMPxIntl_x64" />
+    </Feature>
+
+    <!-- x86 OSのときだけ: x86用レジストリ -->
+    <Feature Id="RuntimeX86Only" Title="MS Agent Runtime (x86専用分)" Level="0">
+      <Level Value="1" Condition="NOT VersionNT64" />
+      <ComponentGroupRef Id="MSAgentRegistry_x86" />
+      <ComponentGroupRef Id="MSAgentMPxIntl_x86" />
+    </Feature>
+  </Package>
+
+  <Fragment>
+    <!-- x64\MSAgentとx86\MSAgentは内容が同一なので、x86側を正としてハーベストする -->
+    <ComponentGroup Id="MSAgentFiles_MSAgent" Directory="WINDOWS_MSAGENT">
+      <Files Include="vendor\MSAgent\x86\MSAgent\**" />
+    </ComponentGroup>
+    <ComponentGroup Id="MSAgentFiles_MSAgent64" Directory="WINDOWS_MSAGENT64">
+      <Files Include="vendor\MSAgent\x64\MSAgent64\**" />
+    </ComponentGroup>
+  </Fragment>
+</Wix>

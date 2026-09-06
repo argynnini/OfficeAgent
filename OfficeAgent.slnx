@@ -1,0 +1,13 @@
+<Solution>
+  <Project Path="src\OfficeAgent.Core\OfficeAgent.Core.vbproj" Id="38937e41-94db-4306-bc35-72b35a38224e" />
+  <Project Path="src\OfficeAgent.Word.AddIn\OfficeAgent.Word.AddIn.vbproj" Id="0913c2db-4ad0-42d9-8e95-e5ea2ad72c8b" />
+  <Project Path="src\OfficeAgent.Excel.AddIn\OfficeAgent.Excel.AddIn.vbproj" Id="8c2cd725-0889-40e6-bdb3-41fc6b86dc5f" />
+  <Project Path="src\OfficeAgent.PowerPoint.AddIn\OfficeAgent.PowerPoint.AddIn.vbproj" Id="af15b47a-0839-48ac-ab3a-3888b433cf46" />
+  <Folder Name="/ソリューション項目/">
+    <File Path=".gitignore" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="installer\wix\MSAgentRuntime.Proj\MSAgentRuntime.wixproj" Type="b7dd6f7e-def8-4e67-b5b7-07ef123db6f0" />
+  <Project Path="installer\wix\OfficeAgentAddins.Proj\OfficeAgentAddins.wixproj" Type="b7dd6f7e-def8-4e67-b5b7-07ef123db6f0" />
+  <Project Path="installer\wix\OfficeAgentSetup.Proj\OfficeAgentSetup.wixproj" Type="b7dd6f7e-def8-4e67-b5b7-07ef123db6f0" />
+</Solution>

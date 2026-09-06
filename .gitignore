@@ -4,3 +4,14 @@ bin/
 obj/
 *.user
 .vs/
+packages/
+
+# WiX Toolset ローカルツールキャッシュ
+.wix/
+
+# インストーラビルド生成物
+installer/*.msi
+installer/*.exe
+installer/*.wixpdb
+installer/*.zip
+installer/wix/generated/

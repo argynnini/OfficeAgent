@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui" onLoad="Ribbon_Load">
+  <ribbon>
+    <tabs>
+      <tab idMso="TabView">
+        <group id="grpKyle" label="OfficeAgent">
+          <button id="btnShowHide" getLabel="ShowHide_GetLabel" size="large" getImage="ShowHide_GetImage" onAction="ShowHide_Click" />
+          <toggleButton id="tglDetail" label="詳細設定" size="large" imageMso="ApplicationOptionsDialog" onAction="Detail_Toggle" getPressed="Detail_GetPressed" />
+        </group>
+      </tab>
+    </tabs>
+  </ribbon>
+</customUI>

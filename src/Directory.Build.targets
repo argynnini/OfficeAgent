@@ -1,0 +1,48 @@
+<Project>
+  <!--
+    GenerateBindingRedirects(VSTOアドインではライブラリでも強制的に実行される)は、
+    app.configの<runtime>要素を独自リダイレクト情報だけで再構築するため、
+    こちらで書いた<generatePublisherEvidence>のようなカスタム要素を丸ごと消してしまう。
+    そのため、リダイレクト生成後に同要素を出力先のapp.configへ再注入する。
+  -->
+  <UsingTask
+      TaskName="RestoreGeneratePublisherEvidence"
+      TaskFactory="RoslynCodeTaskFactory"
+      AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <ConfigFile ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.Xml.Linq" />
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+        if (!File.Exists(ConfigFile)) return true;
+
+        var doc = XDocument.Load(ConfigFile);
+        var runtime = doc.Root.Element("runtime");
+        if (runtime == null)
+        {
+            runtime = new XElement("runtime");
+            doc.Root.AddFirst(runtime);
+        }
+
+        var gpe = runtime.Element("generatePublisherEvidence");
+        if (gpe == null)
+        {
+            runtime.AddFirst(new XElement("generatePublisherEvidence", new XAttribute("enabled", "false")));
+        }
+        else
+        {
+            gpe.SetAttributeValue("enabled", "false");
+        }
+
+        doc.Save(ConfigFile);
+        ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="RestoreGeneratePublisherEvidenceInAppConfig" AfterTargets="GenerateBindingRedirectsUpdateAppConfig" Condition="'@(AppConfigWithTargetPath)' != ''">
+    <RestoreGeneratePublisherEvidence ConfigFile="%(AppConfigWithTargetPath.FullPath)" />
+  </Target>
+</Project>

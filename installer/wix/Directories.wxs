@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- MSAgentランタイム/OfficeAgentアドイン共通のインストール先ディレクトリ定義 -->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Fragment>
+    <StandardDirectory Id="WindowsFolder">
+      <Directory Id="WINDOWS_MSAGENT" Name="MSAgent" />
+      <Directory Id="WINDOWS_MSAGENT64" Name="MSAgent64" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramFilesFolder">
+      <!-- INSTALLFOLDER自体はレジストリのみのComponent（ファイルを持たない）のホーム先としても使う -->
+      <Directory Id="INSTALLFOLDER" Name="OfficeAgent">
+        <Directory Id="ADDIN_WORD" Name="Word" />
+        <Directory Id="ADDIN_EXCEL" Name="Excel" />
+        <Directory Id="ADDIN_POWERPOINT" Name="PowerPoint" />
+        <!-- DOLPHIN.ACS/FINFIN.ACSはWord/Excel/PowerPointで重複させず、ここに1セットだけ置く -->
+        <Directory Id="ADDIN_ASSETS" Name="assets" />
+      </Directory>
+    </StandardDirectory>
+  </Fragment>
+</Wix>

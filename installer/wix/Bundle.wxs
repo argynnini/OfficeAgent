@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MSAgentランタイム(MSAgentRuntime.msi)とOfficeAgentアドイン本体(OfficeAgentAddins.msi)を
+  1本のセットアップ(OfficeAgentSetup.exe)にまとめるBundle(Burn)。
+  これまで別々に配布していた2本のMSIを、順番にサイレント実行するチェーンとして束ねるだけで、
+  各MSI自体の中身（Feature/Component構成）には手を加えない。
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal">
+  <Bundle Name="OfficeAgent"
+          Manufacturer="OfficeAgent"
+          Version="3.0.0.0"
+          UpgradeCode="3F4A5B6C-7D8E-49F0-A1B2-C3D4E5F6A7B8"
+          IconSourceFile="$(sys.SOURCEFILEDIR)..\..\assets\カイル.ico">
+
+    <BootstrapperApplication>
+      <!-- 組み込みのhyperlinkSidebarLicenseテーマは、Progressページだけサイド画像を
+           使わず小さいロゴ(logo.png)のままでデザインが統一されない。
+           theme\CustomTheme.xml はそれをコピーし、ProgressページだけInstall/Success等と
+           同じサイド画像レイアウトに直したもの（他のページは組み込みテーマのまま） -->
+      <!-- インストール先はビルド時に各MSI(Directories.wxs)側で固定済みで、
+           Optionsページのインストール先変更はMSIに反映されない作りのため、
+           SuppressOptionsUI="yes"でOptionsボタン/画面自体を無効化する。
+           代わりにWelcome画面にインストール先を固定テキストで表示する
+           （CustomTheme.xmlのInstallLocationLabel参照）。 -->
+      <bal:WixStandardBootstrapperApplication Theme="hyperlinkSidebarLicense" LicenseUrl=""
+                                                LogoSideFile="$(sys.SOURCEFILEDIR)images\SetupSide.bmp"
+                                                ThemeFile="$(sys.SOURCEFILEDIR)theme\CustomTheme.xml"
+                                                LocalizationFile="$(sys.SOURCEFILEDIR)theme\CustomTheme.wxl"
+                                                SuppressOptionsUI="yes"
+                                                ShowVersion="yes" />
+    </BootstrapperApplication>
+
+    <Chain>
+      <!-- MSAgentランタイム（ActiveXコントロール本体）を先に導入する -->
+      <MsiPackage SourceFile="$(var.MSAgentRuntime.TargetPath)" />
+      <!-- 続けてOfficeAgentのWord/Excel/PowerPointアドイン一式を導入する -->
+      <MsiPackage SourceFile="$(var.OfficeAgentAddins.TargetPath)" />
+    </Chain>
+  </Bundle>
+</Wix>
