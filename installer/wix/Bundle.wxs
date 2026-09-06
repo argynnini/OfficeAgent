@@ -9,7 +9,7 @@
      xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal">
   <Bundle Name="OfficeAgent"
           Manufacturer="OfficeAgent"
-          Version="1.0.0.0"
+          Version="3.0.0.0"
           UpgradeCode="3F4A5B6C-7D8E-49F0-A1B2-C3D4E5F6A7B8"
           IconSourceFile="$(sys.SOURCEFILEDIR)..\..\assets\カイル.ico">
 

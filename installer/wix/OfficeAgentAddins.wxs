@@ -19,7 +19,7 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
   <Package Name="OfficeAgent Add-ins"
            Manufacturer="OfficeAgent"
-           Version="1.0.0.0"
+           Version="3.0.0.0"
            UpgradeCode="5D2E8F1A-6B3C-4D9E-8A1F-2C3B4D5E6F7A"
            Scope="perMachine"
            Codepage="65001">
