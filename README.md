@@ -166,8 +166,4 @@ MSAgent ランタイム（ActiveX コントロール本体）が入っていな�
 ## インストーラーのビルド
 `OfficeAgent.slnx` には WiX のインストーラープロジェクト（`MSAgentRuntime` / `OfficeAgentAddins` / `OfficeAgentSetup`）も含まれているため，Visual Studio でビルドするだけで `OfficeAgentSetup.exe`（MSAgent ランタイム＋Word/Excel/PowerPoint アドインの統合インストーラー）まで生成されます．
 
-実際のインストール／アンインストール動作の確認は，HKCR への COM 登録や `C:\Windows\MSAgent` 配下へのファイル配置，Office レジストリの変更を伴うため，必ず使い捨ての VM などクリーンな環境で行ってください．
-
-# License
- 
-"Ofice Agent" は [MIT ライセンス](https://en.wikipedia.org/wiki/MIT_License) です．
+実際のインストール／アンインストール動作の確認は，HKCR への COM 登録や `C:\Windows\MSAgent` 配下へのファイル配置，Office レジストリの変更を伴うため，必ずクリーンな環境で行ってください．
