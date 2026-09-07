@@ -8,6 +8,19 @@
           <toggleButton id="tglDetail" label="詳細設定" size="large" imageMso="ApplicationOptionsDialog" onAction="Detail_Toggle" getPressed="Detail_GetPressed" />
         </group>
       </tab>
+      <tab idMso="TabSlideShow">
+        <group id="grpKyleSlideShow" label="OfficeAgent">
+          <toggleButton id="tglHideDuringSlideShow" label="発表中は非表示" size="large" imageMso="SlideHide" onAction="HideDuringSlideShow_Toggle" getPressed="HideDuringSlideShow_GetPressed" />
+          <checkBox id="chkShowSlideNumber" label="スライド番号表示" onAction="ShowSlideNumber_Toggle" getPressed="ShowSlideNumber_GetPressed" />
+          <checkBox id="chkShowElapsedTime" label="発表時間表示" onAction="ShowElapsedTime_Toggle" getPressed="ShowElapsedTime_GetPressed" />
+          <checkBox id="chkShowLapTime" label="スライドラップ表示" onAction="ShowLapTime_Toggle" getPressed="ShowLapTime_GetPressed" />
+        </group>
+      </tab>
+      <tab idMso="TabFormulas">
+        <group id="grpKyleFormulas" label="OfficeAgent">
+          <toggleButton id="tglFormulaErrorDetection" label="数式エラー検知" size="large" imageMso="ErrorChecking" onAction="FormulaErrorDetection_Toggle" getPressed="FormulaErrorDetection_GetPressed" />
+        </group>
+      </tab>
     </tabs>
   </ribbon>
 </customUI>

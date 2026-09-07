@@ -32,6 +32,7 @@ Partial Public Class ThisAddIn
         AddHandler Me.Application.PresentationPrint, AddressOf OnAfterPrint
         AddHandler Me.Application.SlideShowBegin, AddressOf OnSlideShowBegin
         AddHandler Me.Application.SlideShowEnd, AddressOf OnSlideShowEnd
+        AddHandler Me.Application.SlideShowNextSlide, AddressOf OnSlideShowNextSlide
         AddHandler Me.Application.NewPresentation, AddressOf OnOpen
         AddHandler Me.Application.PresentationOpen, AddressOf OnOpen
         AddHandler Me.Application.PresentationBeforeClose, AddressOf OnBeforeClose
@@ -132,11 +133,18 @@ Partial Public Class ThisAddIn
             _agentForm.HideForSlideShow()
         Else
             _agentForm.PlayConfiguredAnimation("SlideShowBegin")
+            _agentForm.StartSlideShowOverlay(wn.Presentation.Slides.Count, wn.View.Slide.SlideIndex)
         End If
+    End Sub
+
+    ' スライドが切り替わるたびに、オーバーレイのスライド番号・ラップタイムを更新する
+    Private Sub OnSlideShowNextSlide(wn As Microsoft.Office.Interop.PowerPoint.SlideShowWindow)
+        If _agentForm IsNot Nothing Then _agentForm.NotifySlideShowSlideChanged(wn.View.Slide.SlideIndex)
     End Sub
 
     Private Sub OnSlideShowEnd(pres As Microsoft.Office.Interop.PowerPoint.Presentation)
         If _agentForm IsNot Nothing Then
+            _agentForm.StopSlideShowOverlay()
             If AgentSettings.HideAgentDuringSlideShow Then _agentForm.ShowAfterSlideShow()
 
             ' 発表時間の吹き出しを先に表示してから、その再生キューに続けて

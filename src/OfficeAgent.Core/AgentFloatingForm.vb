@@ -35,6 +35,13 @@ Public Class AgentFloatingForm
     Private Const PresentationBalloonLifetimeMs As Integer = 30000
     Private WithEvents _presentationBalloonTimer As New Windows.Forms.Timer With {.Interval = PresentationBalloonLifetimeMs}
 
+    ' スライドショー中、スライド番号／発表時間／ラップタイムを吹き出しに常時表示するオーバーレイ用タイマー
+    Private WithEvents _slideShowOverlayTimer As New Windows.Forms.Timer With {.Interval = 1000}
+    Private _slideShowElapsedStopwatch As Stopwatch
+    Private _slideShowLapStopwatch As Stopwatch
+    Private _slideShowCurrentSlide As Integer
+    Private _slideShowTotalSlides As Integer
+
     ' Word/Excel/PowerPointの実行ファイル名。キャラクターは複数のOfficeプロセス間で共有されるため、
     ' 「自分のプロセスだけ」ではなくこれらのいずれかが起動中かどうかで判定する
     Private Shared ReadOnly HostProcessNames() As String = {"WINWORD", "EXCEL", "POWERPNT"}
@@ -616,6 +623,79 @@ Public Class AgentFloatingForm
         _presentationBalloonTimer.Stop()
         _presentationBalloonTimer.Start()
     End Sub
+
+    ' スライドショー開始時（ThisAddIn側のSlideShowBeginハンドラから呼ぶ）。
+    ' 設定でどれか1つでも表示項目が有効になっていればオーバーレイ更新タイマーを開始する
+    Public Sub StartSlideShowOverlay(totalSlides As Integer, currentSlide As Integer)
+        _slideShowTotalSlides = totalSlides
+        _slideShowCurrentSlide = currentSlide
+        _slideShowElapsedStopwatch = Stopwatch.StartNew()
+        _slideShowLapStopwatch = Stopwatch.StartNew()
+
+        If Not OverlayEnabled() Then Return
+        UpdateSlideShowOverlay()
+        _slideShowOverlayTimer.Start()
+    End Sub
+
+    ' スライドが切り替わるたび（ThisAddIn側のSlideShowNextSlideハンドラから呼ぶ）に
+    ' ラップタイム（このスライドに来てからの経過時間）をリセットする
+    Public Sub NotifySlideShowSlideChanged(currentSlide As Integer)
+        _slideShowCurrentSlide = currentSlide
+        _slideShowLapStopwatch?.Restart()
+        If OverlayEnabled() Then UpdateSlideShowOverlay()
+    End Sub
+
+    ' スライドショー終了時（ThisAddIn側のSlideShowEndハンドラから、AnnouncePresentationTimeより前に呼ぶ）
+    Public Sub StopSlideShowOverlay()
+        _slideShowOverlayTimer.Stop()
+        _slideShowElapsedStopwatch = Nothing
+        _slideShowLapStopwatch = Nothing
+    End Sub
+
+    ' リボンのチェックボックスが切り替えられた直後、表示中のオーバーレイに即座に反映させる
+    Public Sub RefreshSlideShowOverlay()
+        If _slideShowElapsedStopwatch Is Nothing Then Return
+        If OverlayEnabled() Then
+            UpdateSlideShowOverlay()
+            If Not _slideShowOverlayTimer.Enabled Then _slideShowOverlayTimer.Start()
+        Else
+            _slideShowOverlayTimer.Stop()
+        End If
+    End Sub
+
+    Private Function OverlayEnabled() As Boolean
+        Return AgentSettings.ShowSlideNumberDuringSlideShow OrElse
+               AgentSettings.ShowElapsedTimeDuringSlideShow OrElse
+               AgentSettings.ShowLapTimeDuringSlideShow
+    End Function
+
+    Private Sub SlideShowOverlayTimer_Tick(sender As Object, e As EventArgs) Handles _slideShowOverlayTimer.Tick
+        UpdateSlideShowOverlay()
+    End Sub
+
+    Private Sub UpdateSlideShowOverlay()
+        Dim parts As New List(Of String)
+        If AgentSettings.ShowSlideNumberDuringSlideShow Then parts.Add($"{_slideShowCurrentSlide}/{_slideShowTotalSlides}枚")
+        If AgentSettings.ShowElapsedTimeDuringSlideShow AndAlso _slideShowElapsedStopwatch IsNot Nothing Then parts.Add($"経過{FormatShort(_slideShowElapsedStopwatch.Elapsed)}")
+        If AgentSettings.ShowLapTimeDuringSlideShow AndAlso _slideShowLapStopwatch IsNot Nothing Then parts.Add($"このスライド{FormatShort(_slideShowLapStopwatch.Elapsed)}")
+        If parts.Count = 0 Then Return
+
+        Try
+            With AxAgent.Characters("OfficeAgent")
+                .StopAll()
+                .Balloon.FontSize = 10
+                .Speak(String.Join("  ", parts))
+            End With
+        Catch ex As COMException
+            ' 全Officeウィンドウ最小化時などAxAgentの描画サーフェスが無効な状態で
+            ' 呼ばれることがあるため、失敗は無視する
+        End Try
+    End Sub
+
+    Private Shared Function FormatShort(elapsed As TimeSpan) As String
+        If elapsed.Hours > 0 Then Return $"{elapsed.Hours}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}"
+        Return $"{elapsed.Minutes}:{elapsed.Seconds:D2}"
+    End Function
 
     ' 発表時間の吹き出しを表示してから約30秒経ったら自動的に閉じる
     Private Sub PresentationBalloonTimer_Tick(sender As Object, e As EventArgs) Handles _presentationBalloonTimer.Tick

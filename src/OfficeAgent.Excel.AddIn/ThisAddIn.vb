@@ -5,6 +5,15 @@ Partial Public Class ThisAddIn
     Private _agentForm As OfficeAgent.Core.AgentFloatingForm
     Private _settingsTaskPane As Microsoft.Office.Tools.CustomTaskPane
 
+    ' 数式エラーとして検知する文字列（Excelはロケールに関わらずこの表記のまま）
+    Private ReadOnly FormulaErrorTexts As String() = {"#DIV/0!", "#N/A", "#NAME?", "#NULL!", "#NUM!", "#REF!", "#VALUE!", "#SPILL!", "#CALC!", "#GETTING_DATA"}
+    ' 変更セルが多すぎる（大量ペースト等）場合はエラー検知をスキップする
+    Private Const MaxFormulaErrorCheckCells As Integer = 500
+    ' 同じセルのエラーを連続で通知しないためのクールダウン（秒）
+    Private Const FormulaErrorNotifyCooldownSeconds As Double = 30
+    Private _lastFormulaErrorAddress As String
+    Private _lastFormulaErrorNotifyTime As DateTime
+
     Protected Overrides Function CreateRibbonExtensibilityObject() As Microsoft.Office.Core.IRibbonExtensibility
         Return New AgentRibbon()
     End Function
@@ -35,6 +44,7 @@ Partial Public Class ThisAddIn
         AddHandler Me.Application.ProtectedViewWindowOpen, AddressOf OnProtectedViewWindowOpen
         AddHandler Me.Application.WorkbookNewSheet, AddressOf OnWorkbookNewSheet
         AddHandler Me.Application.WindowActivate, AddressOf OnWindowActivateOrDeactivate
+        AddHandler Me.Application.SheetChange, AddressOf OnSheetChange
     End Sub
 
     Public ReadOnly Property IsSettingsPaneVisible As Boolean
@@ -135,6 +145,32 @@ Partial Public Class ThisAddIn
 
     Private Sub OnWindowActivateOrDeactivate(wb As Microsoft.Office.Interop.Excel.Workbook, wn As Microsoft.Office.Interop.Excel.Window)
         If _agentForm IsNot Nothing Then _agentForm.PlayLookAnimationTowardWindow(New IntPtr(CInt(wn.Hwnd)))
+    End Sub
+
+    ' 変更されたセルに数式エラー（#REF!等）が含まれていたら通知する。
+    ' 大量ペースト時の負荷、同一セルへの通知連発を避けるため件数上限とクールダウンを設ける
+    Private Sub OnSheetChange(sh As Object, target As Microsoft.Office.Interop.Excel.Range)
+        Try
+            If target.Cells.Count > MaxFormulaErrorCheckCells Then Return
+
+            Dim errorCell As Microsoft.Office.Interop.Excel.Range = Nothing
+            For Each cell As Microsoft.Office.Interop.Excel.Range In target.Cells
+                If Array.IndexOf(FormulaErrorTexts, cell.Text.ToString()) >= 0 Then
+                    errorCell = cell
+                    Exit For
+                End If
+            Next
+            If errorCell Is Nothing Then Return
+
+            Dim address = errorCell.Address(False, False)
+            If address = _lastFormulaErrorAddress AndAlso (DateTime.Now - _lastFormulaErrorNotifyTime).TotalSeconds < FormulaErrorNotifyCooldownSeconds Then Return
+
+            _lastFormulaErrorAddress = address
+            _lastFormulaErrorNotifyTime = DateTime.Now
+            If _agentForm IsNot Nothing Then _agentForm.PlayConfiguredAnimation("FormulaError")
+        Catch ex As Exception
+            ' セル操作中の一時的なCOM例外等は無視する
+        End Try
     End Sub
 
     Private Sub ThisAddIn_Shutdown() Handles Me.Shutdown

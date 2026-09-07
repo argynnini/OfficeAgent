@@ -50,6 +50,35 @@ Public Class AgentSettings
         End Set
     End Property
 
+    ' 以下3つは、スライドショー中にカイルの吹き出しを一定間隔で更新して常時表示する
+    ' オーバーレイ機能のON/OFF（PowerPointの「スライド ショー」リボンから切替）
+    Public Shared Property ShowSlideNumberDuringSlideShow As Boolean
+        Get
+            Return CBool(GetValue("ShowSlideNumberDuringSlideShow", False))
+        End Get
+        Set(value As Boolean)
+            SetValue("ShowSlideNumberDuringSlideShow", value)
+        End Set
+    End Property
+
+    Public Shared Property ShowElapsedTimeDuringSlideShow As Boolean
+        Get
+            Return CBool(GetValue("ShowElapsedTimeDuringSlideShow", False))
+        End Get
+        Set(value As Boolean)
+            SetValue("ShowElapsedTimeDuringSlideShow", value)
+        End Set
+    End Property
+
+    Public Shared Property ShowLapTimeDuringSlideShow As Boolean
+        Get
+            Return CBool(GetValue("ShowLapTimeDuringSlideShow", False))
+        End Get
+        Set(value As Boolean)
+            SetValue("ShowLapTimeDuringSlideShow", value)
+        End Set
+    End Property
+
     ' AI（Groq/OpenAI）への検索チャット送信時、ホストアプリで選択中のテキストがあれば
     ' それを質問文に含めて送信するかどうか（ウェブ検索モードでは使用しない）
     Public Shared Property IncludeSelectionInSearch As Boolean

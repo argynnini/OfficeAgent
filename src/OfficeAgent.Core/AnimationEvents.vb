@@ -47,6 +47,7 @@ Public Module AnimationEvents
         New EventDef With {.EventKey = "SlideShowEnd", .DisplayName = "スライド終了(Esc)", .DefaultAnimationByCharacter = Anim("Congratulate"), .DefaultEnabled = True, .AppliesTo = {HostApp.PowerPoint}},
         New EventDef With {.EventKey = "ProtectedViewWindowOpen", .DisplayName = "保護ビュー表示", .DefaultAnimationByCharacter = Anim("Explain"), .DefaultEnabled = True},
         New EventDef With {.EventKey = "WorkbookNewSheet", .DisplayName = "シート追加(Shift+F11)", .DefaultAnimationByCharacter = Anim("GetAttention"), .DefaultEnabled = True, .AppliesTo = {HostApp.Excel}},
+        New EventDef With {.EventKey = "FormulaError", .DisplayName = "数式エラー検知", .DefaultAnimationByCharacter = Anim("Alert", "Wave"), .DefaultEnabled = True, .AppliesTo = {HostApp.Excel}},
         New EventDef With {.EventKey = "PresentationNewSlide", .DisplayName = "スライド追加(Ctrl+M)", .DefaultAnimationByCharacter = Anim("Alert", "Wave"), .DefaultEnabled = True, .AppliesTo = {HostApp.PowerPoint}}
     }
 

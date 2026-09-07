@@ -373,6 +373,7 @@ Public Class AgentSettingsPane
     Private Sub CheckBoxHideDuringSlideShow_CheckedChanged(sender As Object, e As EventArgs) Handles CheckBoxHideDuringSlideShow.CheckedChanged
         If _loading Then Return
         AgentSettings.HideAgentDuringSlideShow = CheckBoxHideDuringSlideShow.Checked
+        AgentRibbon.Instance?.InvalidateRibbon()
     End Sub
 
     Private Sub CheckBoxIncludeSelection_CheckedChanged(sender As Object, e As EventArgs) Handles CheckBoxIncludeSelection.CheckedChanged
@@ -464,6 +465,7 @@ Public Class AgentSettingsPane
     Private Sub DataGridViewAnimationEvents_CellValueChanged(sender As Object, e As DataGridViewCellEventArgs) Handles DataGridViewAnimationEvents.CellValueChanged
         If _loading OrElse e.RowIndex < 0 Then Return
         SaveAnimationEventsGrid()
+        AgentRibbon.Instance?.InvalidateRibbon()
     End Sub
 
     Private Sub DataGridViewAnimationEvents_CellContentClick(sender As Object, e As DataGridViewCellEventArgs) Handles DataGridViewAnimationEvents.CellContentClick

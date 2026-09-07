@@ -68,6 +68,56 @@ Public Class AgentRibbon
         ToggleSettingsPaneAction?.Invoke()
     End Sub
 
+    ' ── スライドショー中は非表示（PowerPointの「スライド ショー」タブ） ──────
+    Public Function HideDuringSlideShow_GetPressed(control As Office.IRibbonControl) As Boolean
+        Return AgentSettings.HideAgentDuringSlideShow
+    End Function
+
+    Public Sub HideDuringSlideShow_Toggle(control As Office.IRibbonControl, pressed As Boolean)
+        AgentSettings.HideAgentDuringSlideShow = pressed
+    End Sub
+
+    ' ── スライドショー中のオーバーレイ表示項目 ──────────────
+    Public Function ShowSlideNumber_GetPressed(control As Office.IRibbonControl) As Boolean
+        Return AgentSettings.ShowSlideNumberDuringSlideShow
+    End Function
+
+    Public Sub ShowSlideNumber_Toggle(control As Office.IRibbonControl, pressed As Boolean)
+        AgentSettings.ShowSlideNumberDuringSlideShow = pressed
+        OfficeAgent.Core.AgentFloatingForm.Instance?.RefreshSlideShowOverlay()
+    End Sub
+
+    Public Function ShowElapsedTime_GetPressed(control As Office.IRibbonControl) As Boolean
+        Return AgentSettings.ShowElapsedTimeDuringSlideShow
+    End Function
+
+    Public Sub ShowElapsedTime_Toggle(control As Office.IRibbonControl, pressed As Boolean)
+        AgentSettings.ShowElapsedTimeDuringSlideShow = pressed
+        OfficeAgent.Core.AgentFloatingForm.Instance?.RefreshSlideShowOverlay()
+    End Sub
+
+    Public Function ShowLapTime_GetPressed(control As Office.IRibbonControl) As Boolean
+        Return AgentSettings.ShowLapTimeDuringSlideShow
+    End Function
+
+    Public Sub ShowLapTime_Toggle(control As Office.IRibbonControl, pressed As Boolean)
+        AgentSettings.ShowLapTimeDuringSlideShow = pressed
+        OfficeAgent.Core.AgentFloatingForm.Instance?.RefreshSlideShowOverlay()
+    End Sub
+
+    ' ── 数式エラー検知（Excelの「数式」タブ） ──────────────
+    Public Function FormulaErrorDetection_GetPressed(control As Office.IRibbonControl) As Boolean
+        Return OfficeAgent.Core.AnimationEvents.GetSetting("FormulaError", AgentSettings.CharacterId).Enabled
+    End Function
+
+    Public Sub FormulaErrorDetection_Toggle(control As Office.IRibbonControl, pressed As Boolean)
+        Dim current = OfficeAgent.Core.AnimationEvents.GetSetting("FormulaError", AgentSettings.CharacterId)
+        OfficeAgent.Core.AnimationEvents.SaveAll(
+            New List(Of (EventKey As String, Enabled As Boolean, Animation As String)) From {
+                ("FormulaError", pressed, current.Animation)
+            }, AgentSettings.CharacterId)
+    End Sub
+
 #End Region
 
 #Region "ヘルパー"
