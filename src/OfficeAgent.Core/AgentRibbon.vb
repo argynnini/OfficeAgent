@@ -16,6 +16,9 @@ Public Class AgentRibbon
     Public Sub New()
     End Sub
 
+    ' ホストアプリに存在しないidMsoタブ（例: Word視点でのTabSlideShow/TabFormulas）への
+    ' 参照は、Officeのリボンエンジンによって単に無視されるだけで実害はない（実機検証で確認済み）。
+    ' そのため全ホストアプリ共通の1つのXMLをそのまま返す
     Public Function GetCustomUI(ByVal ribbonID As String) As String Implements Office.IRibbonExtensibility.GetCustomUI
         Return GetResourceText("RibbonUI.xml")
     End Function

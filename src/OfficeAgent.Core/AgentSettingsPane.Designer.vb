@@ -35,6 +35,7 @@ Partial Class AgentSettingsPane
         Me.TextBoxModel = New System.Windows.Forms.TextBox()
         Me.CheckBoxIncludeSelection = New System.Windows.Forms.CheckBox()
         Me.SectionPersonality = New System.Windows.Forms.Label()
+        Me.LinkResetRule = New System.Windows.Forms.LinkLabel()
         Me.Label1 = New System.Windows.Forms.Label()
         Me.TextBoxRule = New System.Windows.Forms.TextBox()
         Me.LabelDefaultSearchEngine = New System.Windows.Forms.Label()
@@ -83,7 +84,7 @@ Partial Class AgentSettingsPane
         Me.ComboBoxCharacter.FlatStyle = System.Windows.Forms.FlatStyle.Flat
         Me.ComboBoxCharacter.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
         Me.ComboBoxCharacter.FormattingEnabled = True
-        Me.ComboBoxCharacter.Items.AddRange(New Object() {"カイル", "フィンフィン"})
+        ' 項目は実行時にAgentSettingsPane.PopulateCharacterCombo()が探索パス上の.acsから作り直す
         Me.ComboBoxCharacter.Location = New System.Drawing.Point(16, 60)
         Me.ComboBoxCharacter.Name = "ComboBoxCharacter"
         Me.ComboBoxCharacter.Size = New System.Drawing.Size(222, 23)
@@ -283,6 +284,18 @@ Partial Class AgentSettingsPane
         Me.SectionPersonality.TabIndex = 12
         Me.SectionPersonality.Text = "OfficeAgentの性格"
         '
+        'LinkResetRule
+        '
+        Me.LinkResetRule.Anchor = System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right
+        Me.LinkResetRule.AutoSize = True
+        Me.LinkResetRule.Font = New System.Drawing.Font("Yu Gothic UI", 7.5!)
+        Me.LinkResetRule.LinkColor = System.Drawing.Color.FromArgb(0, 120, 212)
+        Me.LinkResetRule.Location = New System.Drawing.Point(163, 308)
+        Me.LinkResetRule.Name = "LinkResetRule"
+        Me.LinkResetRule.TabIndex = 20
+        Me.LinkResetRule.TabStop = True
+        Me.LinkResetRule.Text = "既定に戻す"
+        '
         'Label1
         '
         Me.Label1.AutoSize = True
@@ -414,6 +427,7 @@ Partial Class AgentSettingsPane
         Me.Controls.Add(Me.TextBoxModel)
         Me.Controls.Add(Me.CheckBoxIncludeSelection)
         Me.Controls.Add(Me.SectionPersonality)
+        Me.Controls.Add(Me.LinkResetRule)
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.TextBoxRule)
         Me.Controls.Add(Me.LabelDefaultSearchEngine)
@@ -450,6 +464,7 @@ Partial Class AgentSettingsPane
     Friend WithEvents TextBoxModel As TextBox
     Friend WithEvents CheckBoxIncludeSelection As CheckBox
     Friend WithEvents SectionPersonality As Label
+    Friend WithEvents LinkResetRule As LinkLabel
     Friend WithEvents Label1 As Label
     Friend WithEvents TextBoxRule As TextBox
     Friend WithEvents LabelDefaultSearchEngine As Label

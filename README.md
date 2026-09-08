@@ -132,7 +132,7 @@ Groq の API キーは以下の リンク から取得できます．
 
 ![タイトルなし](https://github.com/argynnini/OfficeAgent/assets/88919409/79fedcbd-98a0-433f-b577-38651708032d)
 
-%ProgramFiles%\OfficeAgent\assets\ フォルダの中にある 「DOLPHIN.ACS」を右クリックしてプロパティを開きます．
+%ProgramFiles%\OfficeAgent\agents\ フォルダの中にある 「DOLPHIN.ACS」を右クリックしてプロパティを開きます．
 
 全般タブの中のセキュリティの「許可する」にチェックを入れてOKを押します．
 
@@ -146,7 +146,7 @@ Groq の API キーは以下の リンク から取得できます．
 * `src/OfficeAgent.Core` — Word / Excel / PowerPoint 共通のロジック（エージェント表示，AI チャット，設定パネル，アニメーション制御など）をまとめたクラスライブラリ
 * `src/OfficeAgent.Word.AddIn` / `OfficeAgent.Excel.AddIn` / `OfficeAgent.PowerPoint.AddIn` — 各 Office アプリ向けの VSTO アドインプロジェクト（`OfficeAgent.Core` を参照）
 * `installer/wix` — WiX Toolset によるインストーラー定義一式（MSAgent ランタイム / アドイン本体 / それらをまとめる Bundle）
-* `assets` — MSAgent キャラクターファイル（`.ACS`）やアイコンなど，各アドインで共有するリソース
+* `agents` — MSAgent キャラクターファイル（`.ACS`）やアイコンなど，各アドインで共有するリソース
 
 ## 必要な環境
 * Visual Studio 2026（「Office/SharePoint 開発」ワークロード，Visual Basic 対応）

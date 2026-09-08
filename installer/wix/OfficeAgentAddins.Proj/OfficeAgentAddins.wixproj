@@ -1,10 +1,12 @@
 <Project Sdk="WixToolset.Sdk/7.0.0">
+  <Import Project="..\Version.props" />
   <PropertyGroup>
     <OutputName>OfficeAgentAddins</OutputName>
     <OutputType>Package</OutputType>
     <Platforms>AnyCPU</Platforms>
     <OutputPath>..\..\</OutputPath>
     <Cultures>ja-JP</Cultures>
+    <DefineConstants>ProductVersion=$(ProductVersion)</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\Directories.wxs" />

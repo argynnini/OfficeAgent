@@ -1,0 +1,137 @@
+Imports System.Linq
+
+' 探索パス上に存在する.acsファイルを検出し、キャラクター選択リストの候補として提供する。
+' カイル(DOLPHIN.ACS)以外の.acsが見つかった場合（フィンフィンを含む）も、
+' キャラクターIDとしてファイル名（拡張子除く・大文字化）をそのまま使い、汎用設定で動作させる。
+Public Module AgentCharacterCatalog
+
+    Public Structure CharacterInfo
+        Public Id As String
+        Public DisplayName As String
+        Public AcsPath As String
+    End Structure
+
+    ' 既知キャラクターの表示名。ここに無いIDは、ファイル名（拡張子を除いたもの）をそのまま表示名として使う
+    Private ReadOnly KnownDisplayNames As New Dictionary(Of String, String)(StringComparer.OrdinalIgnoreCase) From {
+        {"DOLPHIN", "カイル"}
+    }
+
+    Public Function DisplayNameFor(id As String) As String
+        Dim name As String = Nothing
+        If KnownDisplayNames.TryGetValue(id, name) Then Return name
+        Return id
+    End Function
+
+    ' TryReadCharacterProfile（AgentFloatingForm、.acsを実際に読み込んでName/Descriptionプロパティを
+    ' 取得する）の結果をキャッシュする。一度読み込んだ.acsは、パスが変わらない限り
+    ' アプリ実行中は再読み込みしない（Name/Descriptionは同じ読み込みで一緒に取得するため、
+    ' キャッシュも1つにまとめている）
+    Private ReadOnly _liveProfileCache As New Dictionary(Of String, (Name As String, Description As String))(StringComparer.OrdinalIgnoreCase)
+
+    ' 実際に.acsを一度読み込んで、埋め込まれたName/Descriptionプロパティを取得する
+    ' （重いためDiscoverCharacters()では行わず、実際に必要になった場面でのみ呼ぶ）。
+    ' AxAgentがまだ使えない場合や読み込みに失敗した場合は両方Nothingになる
+    Private Function ResolveLiveProfile(info As CharacterInfo) As (Name As String, Description As String)
+        Dim cached As (Name As String, Description As String) = Nothing
+        If _liveProfileCache.TryGetValue(info.AcsPath, cached) Then Return cached
+
+        Dim profile = AgentFloatingForm.Instance?.TryReadCharacterProfile(info.AcsPath)
+        Dim resolved = If(profile.HasValue, profile.Value, (CStr(Nothing), CStr(Nothing)))
+        _liveProfileCache(info.AcsPath) = resolved
+        Return resolved
+    End Function
+
+    ' キャラクター選択リストの表示名を解決する。実際のNameが取れなければ
+    ' 既知の表示名テーブル、それも無ければIDそのものにフォールバックする
+    Public Function ResolveLiveDisplayName(info As CharacterInfo) As String
+        Dim profile = ResolveLiveProfile(info)
+        Return If(Not String.IsNullOrWhiteSpace(profile.Name), profile.Name, DisplayNameFor(info.Id))
+    End Function
+
+    ' キャラクターの紹介文（Description）を取得する。ACS側に無い場合はNothingを返す
+    ' （Descriptionは任意項目のため、Nameと違ってフォールバック文言は用意しない）
+    Public Function ResolveLiveDescription(info As CharacterInfo) As String
+        Return ResolveLiveProfile(info).Description
+    End Function
+
+    ' IDだけからパスを引く簡易版。CharacterInfoを持っていない呼び出し元（GPTルール文の生成など）から使う
+    Private Function Find(id As String) As CharacterInfo
+        Return DiscoverCharacters().FirstOrDefault(Function(c) String.Equals(c.Id, id, StringComparison.OrdinalIgnoreCase))
+    End Function
+
+    Public Function ResolveLiveDisplayName(id As String) As String
+        Dim found = Find(id)
+        If found.AcsPath Is Nothing Then Return DisplayNameFor(id)
+        Return ResolveLiveDisplayName(found)
+    End Function
+
+    Public Function ResolveLiveDescription(id As String) As String
+        Dim found = Find(id)
+        If found.AcsPath Is Nothing Then Return Nothing
+        Return ResolveLiveDescription(found)
+    End Function
+
+    ' .acsの探索候補フォルダ。アプリに同梱されたフォルダ（インストール先の"agents"フォルダ等）を
+    ' 優先し、最後にOS標準の msagent\chars を見る（Genie/Merlin/Robbyなど旧MS Agent標準キャラクターが
+    ' 残っている環境向け）。ResolveAcsPath（AgentFloatingForm）と揃えた候補リスト
+    Private Function CandidateDirs() As List(Of String)
+        Dim assemblyDir = IO.Path.GetDirectoryName(GetType(AgentCharacterCatalog).Assembly.Location)
+        Dim appBaseDir = AppDomain.CurrentDomain.BaseDirectory.TrimEnd(IO.Path.DirectorySeparatorChar)
+        Dim windowsDir As String = Nothing
+        Try
+            windowsDir = Environment.GetFolderPath(Environment.SpecialFolder.Windows)
+        Catch
+        End Try
+
+        Dim dirs As New List(Of String) From {
+            assemblyDir,
+            IO.Path.Combine(If(assemblyDir, ""), "..\agents"),
+            appBaseDir,
+            IO.Path.Combine(If(appBaseDir, ""), "..\agents"),
+            Environment.CurrentDirectory
+        }
+        If Not String.IsNullOrEmpty(windowsDir) Then
+            dirs.Add(IO.Path.Combine(windowsDir, "msagent\chars"))
+        End If
+        Return dirs
+    End Function
+
+    ' 探索パス上の.acsを順番に読み込み、重複なく列挙する。
+    ' 同じファイル名（大文字小文字区別なし）が複数の候補フォルダで見つかった場合は、
+    ' 先に列挙したフォルダ（アプリ同梱側）を優先し、後から見つかったOS標準フォルダ側は無視する。
+    ' カイルが見つかった場合はリストの先頭に並べ、それ以外（フィンフィンを含む）は見つかった順で続く
+    Public Function DiscoverCharacters() As List(Of CharacterInfo)
+        Dim result As New List(Of CharacterInfo)
+        Dim seenIds As New HashSet(Of String)(StringComparer.OrdinalIgnoreCase)
+
+        For Each folder In CandidateDirs()
+            If String.IsNullOrEmpty(folder) OrElse Not IO.Directory.Exists(folder) Then Continue For
+
+            Dim acsFiles As String()
+            Try
+                acsFiles = IO.Directory.GetFiles(folder, "*.acs")
+            Catch
+                Continue For
+            End Try
+
+            For Each path In acsFiles
+                Dim id = IO.Path.GetFileNameWithoutExtension(path).ToUpperInvariant()
+                If seenIds.Contains(id) Then Continue For
+                seenIds.Add(id)
+                result.Add(New CharacterInfo With {
+                    .Id = id,
+                    .DisplayName = DisplayNameFor(id),
+                    .AcsPath = path
+                })
+            Next
+        Next
+
+        Return result.OrderBy(Function(c) PriorityOf(c.Id)).ToList()
+    End Function
+
+    Private Function PriorityOf(id As String) As Integer
+        If String.Equals(id, "DOLPHIN", StringComparison.OrdinalIgnoreCase) Then Return 0
+        Return 1
+    End Function
+
+End Module

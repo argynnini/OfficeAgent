@@ -1,5 +1,6 @@
 Imports System.Reflection
 Imports System.Runtime.InteropServices
+Imports System.Linq
 
 Public Class AgentSettingsPane
     Inherits System.Windows.Forms.UserControl
@@ -25,6 +26,10 @@ Public Class AgentSettingsPane
     Private _prevIndex As Integer = 0
     Private _loading As Boolean = True
 
+    ' 「キャラクター」コンボボックスの項目一覧。探索パス上に見つかった.acsから毎回作り直すため、
+    ' 選択中インデックスに対応するキャラクターID（.acsファイル名由来）はこのリストを介して引く
+    Private _characters As New List(Of AgentCharacterCatalog.CharacterInfo)
+
     ' 各ThisAddIn_Startupが生成直後に設定する、自分のアプリ種別。
     ' アニメーション設定グリッドで、そのアプリに関係するイベントだけを表示するために使う
     Public Property HostApp As AnimationEvents.HostApp?
@@ -45,6 +50,7 @@ Public Class AgentSettingsPane
         ToolTipset.SetToolTip(TextBoxModel, "例: gpt-4o、llama-3.3-70b-versatile")
         ToolTipset.SetToolTip(CheckBoxIncludeSelection, "選択中のテキストも一緒にAIへ送信")
         ToolTipset.SetToolTip(TextBoxRule, "AIへの指示（プロンプト）")
+        ToolTipset.SetToolTip(LinkResetRule, "性格設定を既定の文章に戻す")
         ToolTipset.SetToolTip(ComboBoxDefaultSearchEngine, "既定の検索サイト")
         ToolTipset.SetToolTip(DataGridViewSearchEngines, "検索サイト一覧の編集")
         ToolTipset.SetToolTip(DataGridViewAnimationEvents, "イベントごとのアニメーション設定")
@@ -142,7 +148,30 @@ Public Class AgentSettingsPane
         ColAnimName.DefaultCellStyle.ForeColor = textSub
 
         LinkAPI.LinkColor = accent
+        LinkResetRule.LinkColor = accent
         LabelVersion.LinkColor = textSub
+    End Sub
+
+    ' 探索パス上に見つかった.acsから「キャラクター」コンボボックスの項目を作り直す。
+    ' 現在保存されているCharacterIdが一覧に無い場合（.acsが後から削除された等）も、
+    ' 一覧の先頭（通常はカイル）を暫定選択にしておく
+    Private Sub PopulateCharacterCombo()
+        _characters = AgentCharacterCatalog.DiscoverCharacters()
+        ComboBoxCharacter.Items.Clear()
+        ComboBoxCharacter.BeginUpdate()
+        For i = 0 To _characters.Count - 1
+            ' 表示名は、既知のテーブルではなく.acsに実際に埋め込まれた名前を優先する
+            ' （一度読み込んだ.acsはAgentCharacterCatalog側でキャッシュされ、以降は再読み込みしない）
+            Dim info = _characters(i)
+            info.DisplayName = AgentCharacterCatalog.ResolveLiveDisplayName(info)
+            _characters(i) = info
+            ComboBoxCharacter.Items.Add(info.DisplayName)
+        Next
+        ComboBoxCharacter.EndUpdate()
+
+        If ComboBoxCharacter.Items.Count = 0 Then Return
+        Dim index = _characters.FindIndex(Function(c) String.Equals(c.Id, AgentSettings.CharacterId, StringComparison.OrdinalIgnoreCase))
+        ComboBoxCharacter.SelectedIndex = Math.Max(0, Math.Min(If(index >= 0, index, 0), ComboBoxCharacter.Items.Count - 1))
     End Sub
 
     Public Sub LoadSettings()
@@ -160,7 +189,7 @@ Public Class AgentSettingsPane
         CheckBoxShowOnStartup.Checked = AgentSettings.ShowOnStartup
         CheckBoxHideDuringSlideShow.Checked = AgentSettings.HideAgentDuringSlideShow
         CheckBoxIncludeSelection.Checked = AgentSettings.IncludeSelectionInSearch
-        ComboBoxCharacter.SelectedIndex = CInt(AgentSettings.CharacterId)
+        PopulateCharacterCombo()
         RelayoutForHost()
         TextBoxRule.Text = AgentSettings.GPT_RULE
         LoadSearchEngineGrid()
@@ -259,6 +288,7 @@ Public Class AgentSettingsPane
             y = StackY(TextBoxModel, y, GapField)
             y = StackY(CheckBoxIncludeSelection, y, GapSection)
             y = StackY(SectionPersonality, y, GapLabel)
+            LinkResetRule.Top = SectionPersonality.Top + 1
             y = StackY(Label1, y, GapLabel)
             y = StackY(TextBoxRule, y, GapField)
         End If
@@ -301,12 +331,27 @@ Public Class AgentSettingsPane
     End Sub
 
     Private Sub LoadAnimationEventsGrid()
+        Dim rows = AnimationEvents.GetAll(HostApp, AgentSettings.CharacterId)
+
+        Dim items As New List(Of String)
         Dim animationNames = AgentFloatingForm.Instance?.GetAvailableAnimationNames()
+        If animationNames IsNot Nothing Then items.AddRange(animationNames)
+
+        ' カイル・フィンフィン以外の未知キャラクターは、既定アニメーション名がDolphinのもの
+        ' （GetAttention/Save等）にフォールバックする。そのキャラクターが同名のアニメーションを
+        ' 収録していない場合、セルの値がComboBoxColumnのItemsに存在しなくなりDataErrorの原因になるため、
+        ' 実在しない値でも一覧に足しておく（保存された値をそのまま表示・維持できるようにする）
+        For Each r In rows
+            If Not String.IsNullOrEmpty(r.Animation) AndAlso Not items.Contains(r.Animation, StringComparer.OrdinalIgnoreCase) Then
+                items.Add(r.Animation)
+            End If
+        Next
+
         ColAnimAnimation.Items.Clear()
-        If animationNames IsNot Nothing Then ColAnimAnimation.Items.AddRange(animationNames)
+        ColAnimAnimation.Items.AddRange(items.ToArray())
 
         DataGridViewAnimationEvents.Rows.Clear()
-        For Each row In AnimationEvents.GetAll(HostApp, AgentSettings.CharacterId)
+        For Each row In rows
             Dim idx = DataGridViewAnimationEvents.Rows.Add(row.Enabled, row.Def.DisplayName, row.Animation)
             DataGridViewAnimationEvents.Rows(idx).Tag = row.Def.EventKey
         Next
@@ -385,12 +430,14 @@ Public Class AgentSettingsPane
     ' キャラクターごとに収録アニメーションが異なるためアニメーション設定グリッドを再読み込みする
     Private Sub ComboBoxCharacter_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ComboBoxCharacter.SelectedIndexChanged
         If _loading Then Return
+        If ComboBoxCharacter.SelectedIndex < 0 OrElse ComboBoxCharacter.SelectedIndex >= _characters.Count Then Return
         Dim previousCharacter = AgentSettings.CharacterId
-        Dim character = CType(ComboBoxCharacter.SelectedIndex, AnimationEvents.CharacterId)
+        Dim character = _characters(ComboBoxCharacter.SelectedIndex).Id
         Dim succeeded = AgentFloatingForm.Instance IsNot Nothing AndAlso AgentFloatingForm.Instance.SwitchCharacter(character)
         If Not succeeded Then
             _loading = True
-            ComboBoxCharacter.SelectedIndex = CInt(AgentSettings.CharacterId)
+            Dim previousIndex = _characters.FindIndex(Function(c) String.Equals(c.Id, previousCharacter, StringComparison.OrdinalIgnoreCase))
+            ComboBoxCharacter.SelectedIndex = Math.Max(0, previousIndex)
             _loading = False
             Return
         End If
@@ -433,6 +480,21 @@ Public Class AgentSettingsPane
     Private Sub TextBoxRule_TextChanged(sender As Object, e As EventArgs) Handles TextBoxRule.TextChanged
         If _loading Then Return
         AgentSettings.GPT_RULE = TextBoxRule.Text
+    End Sub
+
+    ' 性格設定（GPTルール）を、現在のキャラクターの既定文章に戻す。
+    ' 自由記述で上書きしてしまった内容が消えるため、実行前に確認を挟む
+    Private Sub LinkResetRule_LinkClicked(sender As Object, e As LinkLabelLinkClickedEventArgs) Handles LinkResetRule.LinkClicked
+        Dim confirm = MessageBox.Show(
+            "性格設定を既定の文章に戻します。現在の内容は失われます。よろしいですか？",
+            "性格設定のリセット", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning)
+        If confirm <> DialogResult.OK Then Return
+
+        Dim defaultRule = AgentSettings.DefaultRuleFor(AgentSettings.CharacterId)
+        AgentSettings.GPT_RULE = defaultRule
+        _loading = True
+        TextBoxRule.Text = defaultRule
+        _loading = False
     End Sub
 
     Private Sub ComboBoxDefaultSearchEngine_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ComboBoxDefaultSearchEngine.SelectedIndexChanged

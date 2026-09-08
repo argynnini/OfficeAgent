@@ -121,6 +121,7 @@
     <Compile Include="SearchEngines.vb" />
     <Compile Include="WindowHelper.vb" />
     <Compile Include="AgentSettings.vb" />
+    <Compile Include="AgentCharacterCatalog.vb" />
     <Compile Include="AssemblyRedirectHelper.vb" />
     <Compile Include="AnimationEvents.vb" />
     <Compile Include="ResponseBalloonForm.vb" />
@@ -141,6 +142,9 @@
       <DependentUpon>AgentSettingsPane.vb</DependentUpon>
     </Compile>
     <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="..\SharedAssemblyInfo.vb">
+      <Link>My Project\SharedAssemblyInfo.vb</Link>
+    </Compile>
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
       <DependentUpon>Application.myapp</DependentUpon>
@@ -184,14 +188,12 @@
       <LastGenOutput>Settings.Designer.vb</LastGenOutput>
     </None>
   </ItemGroup>
-  <!-- DLLフォルダにコピーするリソースファイル（本体はリポジトリルートのassetsに置く） -->
+  <!-- DLLフォルダにコピーするリソースファイル（本体はリポジトリルートのagentsに置く）。
+       ワイルドカードでagents\配下の.acsを全てコピーする。カイル・フィンフィン以外の
+       カスタムエージェントをagents\に追加しても、ビルドし直すだけで自動的に反映される -->
   <ItemGroup>
-    <Content Include="..\..\assets\DOLPHIN.ACS">
-      <Link>DOLPHIN.ACS</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\assets\FINFIN.ACS">
-      <Link>FINFIN.ACS</Link>
+    <Content Include="..\..\agents\*.ACS">
+      <Link>%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

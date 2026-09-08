@@ -16,12 +16,6 @@ Partial Public Class ThisAddIn
         _agentForm = New OfficeAgent.Core.AgentFloatingForm()
         _agentForm.Show()
 
-        Dim pane As New OfficeAgent.Core.AgentSettingsPane() With {.HostApp = AnimationEvents.HostApp.PowerPoint}
-        _settingsTaskPane = Me.CustomTaskPanes.Add(pane, "OfficeAgent 設定")
-        _settingsTaskPane.Width = 260
-        _settingsTaskPane.Visible = False
-        AddHandler _settingsTaskPane.VisibleChanged, AddressOf SettingsPane_VisibleChanged
-
         OfficeAgent.Core.AgentFloatingForm.OpenSettingsPaneAction = AddressOf ShowSettingsPane
         OfficeAgent.Core.AgentFloatingForm.GetSelectedTextAction = AddressOf GetSelectedText
         AgentRibbon.IsSettingsPaneVisibleFunc = Function() IsSettingsPaneVisible
@@ -38,8 +32,19 @@ Partial Public Class ThisAddIn
         AddHandler Me.Application.PresentationBeforeClose, AddressOf OnBeforeClose
         AddHandler Me.Application.ProtectedViewWindowOpen, AddressOf OnProtectedViewWindowOpen
         AddHandler Me.Application.PresentationNewSlide, AddressOf OnPresentationNewSlide
-        AddHandler Me.Application.WindowActivate, AddressOf OnWindowActivateOrDeactivate
     End Sub
+
+    ' 設定タスクパネル（AgentSettingsPane）はCustomTaskPanes.Addのコストが実測200～460msあり、
+    ' 起動時には使わない機能のため、初めて「設定」が開かれるタイミングまで生成を遅延させる
+    Private Function EnsureSettingsTaskPane() As Microsoft.Office.Tools.CustomTaskPane
+        If _settingsTaskPane IsNot Nothing Then Return _settingsTaskPane
+        Dim pane As New OfficeAgent.Core.AgentSettingsPane() With {.HostApp = AnimationEvents.HostApp.PowerPoint}
+        _settingsTaskPane = Me.CustomTaskPanes.Add(pane, "OfficeAgent 設定")
+        _settingsTaskPane.Width = 260
+        _settingsTaskPane.Visible = False
+        AddHandler _settingsTaskPane.VisibleChanged, AddressOf SettingsPane_VisibleChanged
+        Return _settingsTaskPane
+    End Function
 
     Public ReadOnly Property IsSettingsPaneVisible As Boolean
         Get
@@ -53,13 +58,13 @@ Partial Public Class ThisAddIn
     End Property
 
     Public Sub ToggleSettingsPane()
-        If _settingsTaskPane Is Nothing Then Return
+        Dim pane = EnsureSettingsTaskPane()
         Try
-            If Not _settingsTaskPane.Visible Then
-                DirectCast(_settingsTaskPane.Control, OfficeAgent.Core.AgentSettingsPane).LoadSettings()
-                _settingsTaskPane.Visible = True
+            If Not pane.Visible Then
+                DirectCast(pane.Control, OfficeAgent.Core.AgentSettingsPane).LoadSettings()
+                pane.Visible = True
             Else
-                _settingsTaskPane.Visible = False
+                pane.Visible = False
             End If
         Catch ex As ObjectDisposedException
             _settingsTaskPane = Nothing
@@ -68,10 +73,10 @@ Partial Public Class ThisAddIn
 
     ' カイル右クリックの「設定」から呼ばれる：閉じていれば開くだけ（トグルしない）
     Public Sub ShowSettingsPane()
-        If _settingsTaskPane Is Nothing Then Return
+        Dim pane = EnsureSettingsTaskPane()
         Try
-            DirectCast(_settingsTaskPane.Control, OfficeAgent.Core.AgentSettingsPane).LoadSettings()
-            _settingsTaskPane.Visible = True
+            DirectCast(pane.Control, OfficeAgent.Core.AgentSettingsPane).LoadSettings()
+            pane.Visible = True
         Catch ex As ObjectDisposedException
             _settingsTaskPane = Nothing
         End Try
@@ -174,10 +179,6 @@ Partial Public Class ThisAddIn
 
     Private Sub OnPresentationNewSlide(sld As Microsoft.Office.Interop.PowerPoint.Slide)
         If _agentForm IsNot Nothing Then _agentForm.PlayConfiguredAnimation("PresentationNewSlide")
-    End Sub
-
-    Private Sub OnWindowActivateOrDeactivate(pres As Microsoft.Office.Interop.PowerPoint.Presentation, wn As Microsoft.Office.Interop.PowerPoint.DocumentWindow)
-        If _agentForm IsNot Nothing Then _agentForm.PlayLookAnimationTowardWindow(New IntPtr(CInt(wn.HWND)))
     End Sub
 
     Private Sub ThisAddIn_Shutdown() Handles Me.Shutdown

@@ -21,14 +21,6 @@ Imports System.Runtime.InteropServices
 'このプロジェクトが COM に公開される場合、次の GUID が typelib の ID になります
 <Assembly: Guid("299349f0-51ca-46dc-ba37-218b1665f03c")>
 
-' アセンブリのバージョン情報は、以下の 4 つの値で構成されています:
-'
-'      メジャー バージョン
-'      マイナー バージョン
-'      ビルド番号
-'      リビジョン
-'
+' アセンブリバージョンはSharedAssemblyInfo.vb（src直下、4プロジェクト共通リンク）で一元管理する
 
-<Assembly: AssemblyVersion("3.0.0.0")>
-<Assembly: AssemblyFileVersion("3.0.0.0")>
 <Assembly: NeutralResourcesLanguage("ja-JP")>

@@ -1,5 +1,6 @@
 Imports System.Runtime.InteropServices
 Imports System.Text
+Imports System.Linq
 Imports OpenAI.Chat
 Imports System.Windows.Forms
 Imports System.Diagnostics
@@ -24,7 +25,17 @@ Public Class AgentFloatingForm
     End Property
 
     Public response As String = Nothing
-    Private _responseBalloon As ResponseBalloonForm
+
+    ' 検索・AI応答の吹き出し（ResponseBalloonForm）はWebBrowserコントロールを内包しており
+    ' 生成コストが大きい（実測400～568ms）。起動時に必ず使うわけではないため、
+    ' 実際に応答を表示する場面まで生成を遅延させる（プロパティ経由の遅延初期化）
+    Private _responseBalloonInstance As ResponseBalloonForm
+    Private ReadOnly Property ResponseBalloon As ResponseBalloonForm
+        Get
+            If _responseBalloonInstance Is Nothing Then _responseBalloonInstance = New ResponseBalloonForm()
+            Return _responseBalloonInstance
+        End Get
+    End Property
     Private _responseBalloonWasVisible As Boolean
 
     ' カイル左クリックで表示する検索吹き出し。「Word起動直後はショートカットが効かない」不具合の
@@ -47,33 +58,44 @@ Public Class AgentFloatingForm
     Private Shared ReadOnly HostProcessNames() As String = {"WINWORD", "EXCEL", "POWERPNT"}
 
     ' コード中に直接名前で埋め込んでいるアニメーション（Greeting/Goodbye/Thinkingなど）は、
-    ' キャラクターによって収録されている名前が異なる（例: FinFinには"Greeting"が無く"Greet"がある）ため、
-    ' 論理名からキャラクターごとの実際のアニメーション名を引く小さなテーブルを介して再生する。
-    ' 候補を複数指定した場合はその中からランダムに1つを選ぶ（FinFinの登場・帰りに変化をつけるため）
+    ' カイル（Dolphin）自身のACSに収録された独自名で、Microsoft Agentの標準アニメーション
+    ' セットにすら含まれない（標準名は"Greet"/"Think"）。論理名からキャラクターごとの
+    ' 実際のアニメーション名を引く小さなテーブルを介して再生する。
+    ' 候補を複数指定した場合はその中からランダムに1つを選ぶ
     Private Shared ReadOnly _animationRandom As New Random()
 
-    Private Shared ReadOnly CharacterAnimationOverrides As New Dictionary(Of AnimationEvents.CharacterId, Dictionary(Of String, String())) From {
-        {AnimationEvents.CharacterId.Dolphin, New Dictionary(Of String, String()) From {
+    ' カイル以外（フィンフィンを含む、探索パスで見つかった任意の.acs）はここに専用テーブルを
+    ' 持たない。その場合ResolveCharacterAnimationはGenericAnimationByLogicalNameにフォールバックする
+    Private Shared ReadOnly CharacterAnimationOverrides As New Dictionary(Of String, Dictionary(Of String, String()))(StringComparer.OrdinalIgnoreCase) From {
+        {AnimationEvents.CharacterDolphin, New Dictionary(Of String, String()) From {
             {"Greeting", {"Greeting"}},
             {"Goodbye", {"Goodbye"}},
             {"Thinking", {"Thinking"}}
-        }},
-        {AnimationEvents.CharacterId.FinFin, New Dictionary(Of String, String()) From {
-            {"Greeting", {"NestOut", "Show"}},
-            {"Goodbye", {"NestIn", "Hide"}},
-            {"Thinking", {"Process"}}
         }}
     }
 
-    ' FinFinはTTS音声が割り当てられており、.Speak()を使うと吹き出しの内容を音声でしゃべってしまう
-    ' （Dolphinは対応するTTS音声が無いため今まで無音だった）。Think()は音声を一切使わず
-    ' 吹き出し（見た目は思考の雲形になる）だけを表示するため、FinFinのときはこちらを使う
+    ' "Greeting"/"Goodbye"/"Thinking"にこの名前のままカイル以外のキャラクター（フィンフィンを
+    ' 含む）で.Playすると「アニメーションが存在しない」エラーになりうるため、Microsoft Learnの
+    ' Agent States（Required Animations）に載っている、必ず存在が保証されているアニメーションに差し替える
+    Private Shared ReadOnly GenericAnimationByLogicalName As New Dictionary(Of String, String)(StringComparer.OrdinalIgnoreCase) From {
+        {"Greeting", "Show"},
+        {"Goodbye", "Hide"},
+        {"Thinking", "RestPose"}
+    }
+
+    ' 吹き出しを出す際、音声では絶対に喋らせないための分岐（あえてSpeak/Thinkが直感と逆）。
+    ' .TTSModeIDを参照するとMS Agentサーバーが対応TTSエンジンを探しにいく副作用があり、
+    ' LanguageIDに合うエンジンがシステムに存在すると、そのキャラクター本来の設計に関わらず
+    ' 「喋れる」判定になってしまう（詳細はAgentFloatingForm.vbの変更履歴を参照）。
+    ' そのため「TTSエンジンが無い」場合はどうせ音声が出ないので.Speak()を使い、
+    ' 「TTSエンジンがある」場合は.Speak()を使うと実際に喋ってしまうため、
+    ' 音声を一切出さない.Think()をあえて使う。これでどちらのケースも音声なし（吹き出しのみ）になる
     Private Sub SpeakOrThink(text As String)
         With AxAgent.Characters("OfficeAgent")
-            If AgentSettings.CharacterId = AnimationEvents.CharacterId.FinFin Then
-                .Think(text)
-            Else
+            If .TTSModeID = "" Then
                 .Speak(text)
+            Else
+                .Think(text)
             End If
         End With
     End Sub
@@ -84,6 +106,8 @@ Public Class AgentFloatingForm
         If CharacterAnimationOverrides.TryGetValue(AgentSettings.CharacterId, table) AndAlso table.TryGetValue(logicalName, candidates) AndAlso candidates.Length > 0 Then
             Return candidates(_animationRandom.Next(candidates.Length))
         End If
+        Dim generic As String = Nothing
+        If GenericAnimationByLogicalName.TryGetValue(logicalName, generic) Then Return generic
         Return logicalName
     End Function
 
@@ -140,42 +164,48 @@ Public Class AgentFloatingForm
         SearchEngine.SelectedIndex = Math.Max(0, Math.Min(preferredIndex, SearchEngine.Items.Count - 1))
     End Sub
 
-    Private Function AcsFileNameFor(character As AnimationEvents.CharacterId) As String
-        Return If(character = AnimationEvents.CharacterId.FinFin, "FINFIN.ACS", "DOLPHIN.ACS")
+    Private Function AcsFileNameFor(character As String) As String
+        Return character & ".ACS"
+    End Function
+
+    ' 指定した.acsを（現在表示中の"OfficeAgent"とは別名で）一時的に読み込み、
+    ' キャラクターに埋め込まれた本来の名前（Name）と紹介文（Description、無い場合もある）を
+    ' まとめて取得する。1回の読み込みで両方読むことで、二重にロードしないようにしている。
+    ' AgentCharacterCatalogがキャラクター選択リストの表示名・GPTルール生成に使う。
+    ' 失敗した場合（壊れたACS、ロード失敗など）は両方Nothingを返す
+    Public Function TryReadCharacterProfile(acsPath As String) As (Name As String, Description As String)
+        Const ProbeId As String = "__NameProbe"
+        Try
+            AxAgent.Characters.Load(ProbeId, acsPath)
+            Try
+                Dim probe = AxAgent.Characters(ProbeId)
+                probe.LanguageID = &H411
+                Dim name = probe.Name
+                Dim description = probe.Description
+                Return (If(String.IsNullOrWhiteSpace(name), Nothing, name),
+                        If(String.IsNullOrWhiteSpace(description), Nothing, description))
+            Finally
+                AxAgent.Characters.Unload(ProbeId)
+            End Try
+        Catch
+            Return (Nothing, Nothing)
+        End Try
     End Function
 
     ' キャラクターごとの.acsファイルの場所を解決する。
     ' 素のファイル名だけをCharacters.Loadに渡すと、MS Agentが独自に
     ' C:\Windows\msagent\chars を検索してしまう（DOLPHIN.ACSはOS標準でそこに
     ' 存在することが多いため今まで気づかれなかったが、FINFIN.ACSは無いため失敗する）。
-    ' そのため、実際にファイルが存在する候補フォルダを順に確認し、見つかった絶対パスを渡す。
-    ' インストーラでは.acsをWord/Excel/PowerPoint個別のフォルダに重複配置せず、
-    ' 共通の "..\assets"（各アドインの1つ上の階層）にまとめて置く想定なので、
-    ' アセンブリと同じフォルダに加えてその候補も探す
-    Private Function ResolveAcsPath(character As AnimationEvents.CharacterId) As String
-        Dim fileName = AcsFileNameFor(character)
-        Dim assemblyDir = IO.Path.GetDirectoryName(GetType(AgentFloatingForm).Assembly.Location)
-        Dim appBaseDir = AppDomain.CurrentDomain.BaseDirectory.TrimEnd(IO.Path.DirectorySeparatorChar)
-
-        Dim candidateDirs As New List(Of String) From {
-            assemblyDir,
-            IO.Path.Combine(assemblyDir, "..\assets"),
-            appBaseDir,
-            IO.Path.Combine(appBaseDir, "..\assets"),
-            Environment.CurrentDirectory
-        }
-
-        For Each candidateDir In candidateDirs
-            If String.IsNullOrEmpty(candidateDir) Then Continue For
-            Dim candidate = IO.Path.Combine(candidateDir, fileName)
-            If IO.File.Exists(candidate) Then
-                Return candidate
-            End If
-        Next
+    ' そのため、AgentCharacterCatalog（探索パス上の.acsを列挙するモジュール）から
+    ' 実際に見つかった絶対パスを取得して渡す
+    Private Function ResolveAcsPath(character As String) As String
+        Dim found = AgentCharacterCatalog.DiscoverCharacters().
+            FirstOrDefault(Function(c) String.Equals(c.Id, character, StringComparison.OrdinalIgnoreCase))
+        If found.AcsPath IsNot Nothing Then Return found.AcsPath
 
         ' どこにも見つからなかった場合のみ、素のファイル名でMS Agent自身の検索に委ねる
         ' （通常はC:\Windows\msagent\charsを見に行くが、ここに来た時点で正規の配置場所には無い）
-        Return fileName
+        Return AcsFileNameFor(character)
     End Function
 
     Private Sub AgentFloatingForm_Load(sender As Object, e As EventArgs) Handles MyBase.Load
@@ -192,7 +222,7 @@ Public Class AgentFloatingForm
                 $"{AcsFileNameFor(character)} が見つからないため、Dolphinで起動します。" & Environment.NewLine &
                 $"想定パス: {acsPath}",
                 "OfficeAgent", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-            character = AnimationEvents.CharacterId.Dolphin
+            character = AnimationEvents.CharacterDolphin
             AgentSettings.CharacterId = character
             acsPath = ResolveAcsPath(character)
         End If
@@ -229,16 +259,6 @@ Public Class AgentFloatingForm
         AgentMenu.ShowItemToolTips = True
         SearchEngine.ToolTipText = "検索エンジンを変更します"
         MenuSetting.ToolTipText = "検索方法などを設定します"
-
-        With Animation
-            .Items.Add("アニメーション")
-            For Each AnimationList In AxAgent.Characters("OfficeAgent").AnimationNames
-                .Items.Add(AnimationList)
-            Next
-            .SelectedIndex = .Items.Count() - 1
-        End With
-
-        _responseBalloon = New ResponseBalloonForm()
 
         ' 「起動時に表示」が有効な場合のみ、Office起動と同時にエージェントを表示する
         If AgentSettings.ShowOnStartup Then
@@ -277,7 +297,7 @@ Public Class AgentFloatingForm
     Public Sub HideForSlideShow()
         _wasVisibleBeforeSlideShow = AxAgent.Characters("OfficeAgent").Visible
         If Not _wasVisibleBeforeSlideShow Then Return
-        _responseBalloon.Hide()
+        _responseBalloonInstance?.Hide()
         _searchBalloon.Hide()
         With AxAgent.Characters("OfficeAgent")
             .StopAll()
@@ -295,13 +315,13 @@ Public Class AgentFloatingForm
     ' 設定タスクパネルの「キャラクター」欄から呼ばれる：表示中のキャラクター（.acs）を差し替える。
     ' 同じ名前("OfficeAgent")のまま中身だけ入れ替えるので、以降の呼び出し側コードは変更不要。
     ' .acsファイルが見つからない・読み込みに失敗した場合はメッセージを出し、元のキャラクターのまま何もしない
-    Public Function SwitchCharacter(character As AnimationEvents.CharacterId) As Boolean
+    Public Function SwitchCharacter(character As String) As Boolean
         Dim acsPath = ResolveAcsPath(character)
         If Not IO.File.Exists(acsPath) Then
             MessageBox.Show(
                 $"{AcsFileNameFor(character)} が見つかりません。" & Environment.NewLine &
                 $"想定パス: {acsPath}" & Environment.NewLine & Environment.NewLine &
-                "assetsフォルダに.acsファイルを配置してください。",
+                "agentsフォルダに.acsファイルを配置してください。",
                 "キャラクターの切り替えに失敗しました", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Return False
         End If
@@ -340,6 +360,13 @@ Public Class AgentFloatingForm
                 .Hide(False)
             End If
         End With
+
+        ' キャラクターが変わると収録アニメーション名の一覧も変わるため、キャッシュを無効化して
+        ' 右クリックメニューのアニメーション一覧を作り直す
+        _cachedAnimationNames = Nothing
+        _animationComboPopulated = True
+        PopulateAnimationCombo()
+
         Return True
     End Function
 
@@ -362,7 +389,7 @@ Public Class AgentFloatingForm
     ' checkOtherApps:=True の場合、他のOfficeアプリが起動中であれば
     ' 共有キャラクターへのGoodbye再生・非表示をスキップする
     Public Sub HideAgent(Optional checkOtherApps As Boolean = False)
-        _responseBalloon.Hide()
+        _responseBalloonInstance?.Hide()
         _searchBalloon.Hide()
         Hide()
 
@@ -381,6 +408,11 @@ Public Class AgentFloatingForm
 
         Try
             With AxAgent.Characters("OfficeAgent")
+                ' 右クリックメニューでアニメーションを選択した直後など、.StopAll()を経由せず
+                ' .Play()だけがキューされた状態が残っていると、そのリクエストが完了しない限り
+                ' 後続のGoodbye/Hideが実行されずRequestCompleteが来なくなる（実機検証で確認）。
+                ' そのため新しいキューを積む前に必ず既存のキューをクリアする
+                .StopAll()
                 .Balloon.Visible = False
                 .Play(ResolveCharacterAnimation("Goodbye"))
                 hideRequestId = .Hide(True).ID
@@ -428,7 +460,7 @@ Public Class AgentFloatingForm
             .Balloon.Visible = False
             Select Case e.button
                 Case 1
-                    _responseBalloon.Hide()
+                    _responseBalloonInstance?.Hide()
                     AgentMenu.Hide()
                     _searchBalloon.ShowNear(.Left, .Top, GetWindowMag())
                 Case 2
@@ -452,8 +484,8 @@ Public Class AgentFloatingForm
     'Agentドラッグ時
     Private Sub Agent_Dragstart(sender As Object, e As AxAgentObjects._AgentEvents_DragStartEvent) Handles AxAgent.DragStart
         _searchBalloon.Hide()
-        _responseBalloonWasVisible = _responseBalloon.Visible
-        _responseBalloon.Hide()
+        _responseBalloonWasVisible = _responseBalloonInstance IsNot Nothing AndAlso _responseBalloonInstance.Visible
+        _responseBalloonInstance?.Hide()
     End Sub
 
     'Agentドラッグ終了時
@@ -463,8 +495,8 @@ Public Class AgentFloatingForm
         Dim mag3 = GetWindowMag()
         _searchBalloon.RepositionNear(agL2, agT2, mag3)
         If _responseBalloonWasVisible Then
-            _responseBalloon.MoveToAgent(agL2, agT2, mag3)
-            _responseBalloon.Show()
+            ResponseBalloon.MoveToAgent(agL2, agT2, mag3)
+            ResponseBalloon.Show()
         End If
     End Sub
 
@@ -527,7 +559,7 @@ Public Class AgentFloatingForm
         ' Await前のUI操作（UIスレッドで安全）
         With AxAgent.Characters("OfficeAgent")
             HideAndRestoreOfficeFocus()
-            _responseBalloon.Hide()
+            _responseBalloonInstance?.Hide()
             .StopAll()
             .Play(ResolveCharacterAnimation("Thinking"))
         End With
@@ -560,11 +592,11 @@ Public Class AgentFloatingForm
                                         .StopAll()
                                         .Play("RestPose")
                                     End With
-                                    _responseBalloon.StartResponse(localText, agL, agT, capturedMag)
+                                    ResponseBalloon.StartResponse(localText, agL, agT, capturedMag)
                                 End Sub)
                 Else
                     Dim localChunk = chunk
-                    BeginInvoke(Sub() _responseBalloon.AppendChunk(localChunk, agL, agT, capturedMag))
+                    BeginInvoke(Sub() ResponseBalloon.AppendChunk(localChunk, agL, agT, capturedMag))
                 End If
             End If
         End While
@@ -684,8 +716,8 @@ Public Class AgentFloatingForm
             With AxAgent.Characters("OfficeAgent")
                 .StopAll()
                 .Balloon.FontSize = 10
-                .Speak(String.Join("  ", parts))
             End With
+            SpeakOrThink(String.Join("  ", parts))
         Catch ex As COMException
             ' 全Officeウィンドウ最小化時などAxAgentの描画サーフェスが無効な状態で
             ' 呼ばれることがあるため、失敗は無視する
@@ -790,49 +822,51 @@ Public Class AgentFloatingForm
     End Sub
 
     ' 設定タスクパネルの「アニメーション」列に候補として表示する、実際に再生可能なアニメーション名の一覧
+    ' AxAgent.Characters(...).AnimationNamesの列挙はCOM経由で1件ずつ取得するため実測72～107msかかるが、
+    ' 都度取得を避けるため一度取得した結果をキャッシュする（SwitchCharacterで無効化される）
+    Private _cachedAnimationNames As String()
+
+    Private Function GetCachedAnimationNames() As String()
+        If _cachedAnimationNames Is Nothing Then
+            Dim names As New List(Of String)
+            For Each n In AxAgent.Characters("OfficeAgent").AnimationNames
+                names.Add(CStr(n))
+            Next
+            _cachedAnimationNames = names.ToArray()
+        End If
+        Return _cachedAnimationNames
+    End Function
+
+    ' 右クリックメニューのアニメーション選択コンボボックスは、実際にメニューが開かれるまで
+    ' 構築を遅らせる（起動時のAnimationNames列挙コストを避けるため）。
+    ' 以前この遅延化がOffice終了時のフリーズ原因と疑われロールバックしたが、実際の原因は
+    ' 診断用に有効化していたFusion Log（.NETアセンブリバインディングログ）自体のオーバーヘッドで
+    ' あり、この遅延化とは無関係だったことが実機検証で判明したため再度有効化する
+    Private _animationComboPopulated As Boolean = False
+
+    Private Sub AgentMenu_Opening(sender As Object, e As System.ComponentModel.CancelEventArgs) Handles AgentMenu.Opening
+        If _animationComboPopulated Then Return
+        _animationComboPopulated = True
+        PopulateAnimationCombo()
+    End Sub
+
+    Private Sub PopulateAnimationCombo()
+        With Animation
+            .Items.Clear()
+            .Items.Add("アニメーション")
+            For Each animName In GetCachedAnimationNames()
+                .Items.Add(animName)
+            Next
+            .SelectedIndex = .Items.Count() - 1
+        End With
+    End Sub
+
     Public Function GetAvailableAnimationNames() As String()
-        Dim names As New List(Of String)
-        For Each n In AxAgent.Characters("OfficeAgent").AnimationNames
-            names.Add(CStr(n))
-        Next
+        Dim names As New List(Of String)(GetCachedAnimationNames())
         names.Sort(StringComparer.OrdinalIgnoreCase)
         Return names.ToArray()
     End Function
 
-    ' targetHwndのウィンドウがエージェント自身より画面上でどちら側にあるかを見て、
-    ' Look(Up/Down)(Left/Right)系のアニメーションを再生する。
-    ' エージェントの中心Xが対象ウィンドウの幅の範囲内にあれば上下のみ、
-    ' 中心Yが対象ウィンドウの高さの範囲内にあれば左右のみ、
-    ' どちらでもなければ斜め方向にする。
-    ' 注意: このキャラクターは左右が名前と逆になっている（"LookRight"で見た目上は左、
-    ' "LookLeft"で見た目上は右を向く）ため、水平方向のトークンだけ反転させている。
-    ' 上下方向はそのまま（"LookUp"で見た目上も上）。
-    Public Sub PlayLookAnimationTowardWindow(targetHwnd As IntPtr)
-        Dim targetBounds = WindowHelper.GetWindowBounds(targetHwnd)
-        If targetBounds Is Nothing Then Return
-
-        Dim myCenterX = Me.Left + Me.Width \ 2
-        Dim myCenterY = Me.Top + Me.Height \ 2
-        Dim targetCenterX = targetBounds.Value.Left + targetBounds.Value.Width \ 2
-        Dim targetCenterY = targetBounds.Value.Top + targetBounds.Value.Height \ 2
-
-        Dim horizontalToken = If(targetCenterX < myCenterX, "Right", "Left")
-        Dim verticalToken = If(targetCenterY < myCenterY, "Up", "Down")
-
-        Dim withinWidth = myCenterX >= targetBounds.Value.Left AndAlso myCenterX <= targetBounds.Value.Right
-        Dim withinHeight = myCenterY >= targetBounds.Value.Top AndAlso myCenterY <= targetBounds.Value.Bottom
-
-        Dim animationName As String
-        If withinWidth Then
-            animationName = "Look" & verticalToken
-        ElseIf withinHeight Then
-            animationName = "Look" & horizontalToken
-        Else
-            animationName = "Look" & verticalToken & horizontalToken
-        End If
-
-        PlayAnimation(animationName)
-    End Sub
 
     Private Function GetSearchTooltip() As String
         Select Case AgentSettings.AiProvider
