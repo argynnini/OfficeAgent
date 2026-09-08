@@ -14,6 +14,17 @@
           <checkBox id="chkShowSlideNumber" label="スライド番号表示" onAction="ShowSlideNumber_Toggle" getPressed="ShowSlideNumber_GetPressed" />
           <checkBox id="chkShowElapsedTime" label="発表時間表示" onAction="ShowElapsedTime_Toggle" getPressed="ShowElapsedTime_GetPressed" />
           <checkBox id="chkShowLapTime" label="スライドラップ表示" onAction="ShowLapTime_Toggle" getPressed="ShowLapTime_GetPressed" />
+          <checkBox id="chkSpeakSlideNotes" label="スピーカーノート読み上げ" onAction="SpeakSlideNotes_Toggle" getPressed="SpeakSlideNotes_GetPressed" />
+          <button id="btnOpenVoiceSettings" label="読み上げ音声の設定" imageMso="SoundCheck" onAction="OpenVoiceSettings_Click" />
+          <menu id="mnuInsertSapiTag" label="タグ挿入">
+            <button id="btnInsertVolume" label="音量" onAction="InsertVolumeTag_Click" screentip="音量タグを挿入" supertip="選択したノートの文字を &lt;volume level=&quot;50&quot;&gt;...&lt;/volume&gt; で挟みます。levelは0～100（数字部分は挿入後に書き換えてください）" />
+            <button id="btnInsertRate" label="速度" onAction="InsertRateTag_Click" screentip="速度タグを挿入" supertip="選択したノートの文字を &lt;rate speed=&quot;5&quot;&gt;...&lt;/rate&gt; で挟みます。speedは-10～10（数字部分は挿入後に書き換えてください）" />
+            <button id="btnInsertPitch" label="ピッチ" onAction="InsertPitchTag_Click" screentip="ピッチタグを挿入" supertip="選択したノートの文字を &lt;pitch middle=&quot;5&quot;&gt;...&lt;/pitch&gt; で挟みます。middleは-10～10（数字部分は挿入後に書き換えてください）" />
+            <button id="btnInsertSilence" label="無音" onAction="InsertSilenceTag_Click" screentip="無音タグを挿入" supertip="カーソル位置に &lt;silence msec=&quot;500&quot;/&gt; を挿入します。msecはミリ秒（数字部分は挿入後に書き換えてください）" />
+            <button id="btnInsertComment" label="発表者コメント（非表示）" onAction="InsertCommentTag_Click" screentip="非読み上げコメントを挿入" supertip="選択したノートの文字をXMLコメント &lt;!-- ... --&gt; で挟みます。読み上げも吹き出し表示もされません（発表者用の私的なメモに）" />
+            <button id="btnInsertSpell" label="スペルアウト" onAction="InsertSpellTag_Click" screentip="スペルアウトタグを挿入" supertip="選択したノートの文字を &lt;spell&gt;...&lt;/spell&gt; で挟みます。単語・数字等を1文字ずつ展開して読み上げます" />
+            <button id="btnInsertEmph" label="強調" onAction="InsertEmphTag_Click" screentip="強調タグを挿入" supertip="選択したノートの文字を &lt;emph&gt;...&lt;/emph&gt; で挟みます。次の単語を強調します（効果は音声エンジン次第）" />
+          </menu>
         </group>
       </tab>
       <tab idMso="TabFormulas">

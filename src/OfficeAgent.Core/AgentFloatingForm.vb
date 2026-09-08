@@ -42,6 +42,20 @@ Public Class AgentFloatingForm
     ' 調査の一環として、AxAgent（MS Agent ActiveX）を抱える本フォームからは完全に分離してある
     Private _searchBalloon As SearchBalloonForm
 
+    ' 吹き出し（Balloon）の既定Style。ビットフィールドで、bit0=balloon-on、bit1=size-to-text
+    ' （テキスト量に応じて高さ自動調整）、bit3=auto-pace（喋る速度に合わせて文字を少しずつ
+    ' 出す。溢れたら自動スクロール。0の場合は全文が一気に表示される）。
+    '
+    ' 以前はauto-paceで吹き出しが空白のままになる不具合の切り分けのため、size-to-textを外し
+    ' 固定のCharsPerLine/NumberOfLinesを指定していたが、真因はSAPIForVOICEVOX側の
+    ' ブックマークイベント(wParam固定0)のバグと判明し、size-to-textとの衝突ではなかった。
+    ' そのため元のsize-to-text（本文量に応じた自動リサイズ）に戻す
+    Private Const BalloonStyleBalloonOn As Integer = 1
+    Private Const BalloonStyleSizeToText As Integer = 2
+    Private Const BalloonStyleAutoPace As Integer = 8
+    Private Const BalloonStyleDefault As Integer =
+        BalloonStyleBalloonOn Or BalloonStyleSizeToText Or BalloonStyleAutoPace
+
     ' 発表時間の吹き出し（AnnouncePresentationTime）を一定時間で自動的に閉じるためのタイマー
     Private Const PresentationBalloonLifetimeMs As Integer = 30000
     Private WithEvents _presentationBalloonTimer As New Windows.Forms.Timer With {.Interval = PresentationBalloonLifetimeMs}
@@ -83,6 +97,33 @@ Public Class AgentFloatingForm
         {"Thinking", "RestPose"}
     }
 
+    Private Shared Function IsAsciiWordChar(c As Char) As Boolean
+        Return (c >= "A"c AndAlso c <= "Z"c) OrElse (c >= "a"c AndAlso c <= "z"c) OrElse (c >= "0"c AndAlso c <= "9"c)
+    End Function
+
+    ' Speak/Thinkの吹き出しは、単語の自動折り返し・自動サイズ計算（Balloon.Styleのsize-to-text）を
+    ' 空白文字の位置に頼っている。日本語にはスペースが無いため折り返し位置を認識できず、
+    ' 吹き出しのサイズ計算が崩れる（Microsoft Learnのドキュメントに明記されている既知の制約。
+    ' 「日本語、中国語、タイ語などスペースを使わない言語では、文字間にUnicodeのゼロ幅スペース
+    ' 　文字(0x200B)を挿入して論理的な単語区切りを定義する」との記載がある）。
+    ' 半角英数字の連続（"Ctrl+S"等）の間には挿入せず、単語が分断されないようにする
+    Private Shared Function InsertWordBreaks(text As String) As String
+        If String.IsNullOrEmpty(text) Then Return text
+        Dim sb As New StringBuilder()
+        For i = 0 To text.Length - 1
+            Dim c = text(i)
+            sb.Append(c)
+            If i < text.Length - 1 Then
+                Dim nextC = text(i + 1)
+                If Not Char.IsWhiteSpace(c) AndAlso Not Char.IsWhiteSpace(nextC) AndAlso
+                   Not (IsAsciiWordChar(c) AndAlso IsAsciiWordChar(nextC)) Then
+                    sb.Append(ChrW(&H200B))
+                End If
+            End If
+        Next
+        Return sb.ToString()
+    End Function
+
     ' 吹き出しを出す際、音声では絶対に喋らせないための分岐（あえてSpeak/Thinkが直感と逆）。
     ' .TTSModeIDを参照するとMS Agentサーバーが対応TTSエンジンを探しにいく副作用があり、
     ' LanguageIDに合うエンジンがシステムに存在すると、そのキャラクター本来の設計に関わらず
@@ -91,13 +132,50 @@ Public Class AgentFloatingForm
     ' 「TTSエンジンがある」場合は.Speak()を使うと実際に喋ってしまうため、
     ' 音声を一切出さない.Think()をあえて使う。これでどちらのケースも音声なし（吹き出しのみ）になる
     Private Sub SpeakOrThink(text As String)
+        Dim wrapped = InsertWordBreaks(text)
         With AxAgent.Characters("OfficeAgent")
             If .TTSModeID = "" Then
-                .Speak(text)
+                .Speak(wrapped)
             Else
-                .Think(text)
+                .Think(wrapped)
             End If
         End With
+    End Sub
+
+    ' スピーカーノートの読み上げ（PowerPointのスライドショー機能）専用。SpeakOrThinkと違い、
+    ' こちらは意図的に音声を出したい機能なので、TTSが使えるなら素直に.Speak()する
+    ' （TTSが使えない環境では吹き出し表示のみになる＝Speakの標準挙動に任せる）。
+    ' Speakはキューに積まれる仕様なので、.StopAll()を挟まずに次のスライドの分を呼ぶと
+    ' 前のスライドの読み上げが終わるまで新しい分が再生されない（発表者がスライドを
+    ' 送っても読み上げが追いつかない）。そのため必ず前の読み上げを打ち切ってから再生する。
+    ' InsertWordBreaksが挿入するゼロ幅スペースは、Microsoft Agent自身の折り返し計算には
+    ' 有効だが、VOICEVOX等の外部TTSエンジン（SAPIForVOICEVOX経由）がこの特殊文字を
+    ' 正しく処理できず、テキスト解析が壊れて無関係な数値を読み上げてしまう不具合を確認した。
+    ' そのためここでは適用せず、素のテキストをそのままTTSエンジンに渡す
+    ' （吹き出しの折り返しが乱れる可能性はあるが、実際に喋る内容が壊れる方が実害が大きいため）
+    '
+    ' Microsoft Agentの.Speak()テキストには、以下の予約文字・既知の不具合がある
+    ' （公式ドキュメント記載）。スピーカーノートの自由な文章にこれらが含まれていても
+    ' 発話が壊れないよう、発話用に渡す直前に見た目がほぼ同じ全角文字へ置き換える。
+    ' - \（バックスラッシュ）: タグ（\Mrk=100\等）の開始文字として解釈される
+    ' - |（縦棒）: 「代替文字列の区切り」として扱われ、Speak呼び出しのたびにどちらか
+    '   一方がランダムに選ばれてしまう。発表時間の目安として「10s | 30s」のように
+    '   区切り記号として使っているスピーカーノートがこれに巻き込まれ、前後の内容が
+    '   丸ごとランダムに消えてしまう不具合が実機で確認された
+    ' - &（アンパサンド）: 周辺の吹き出しテキストが切り捨てられる既知の不具合がある
+    '   （本来の回避策は\Map\タグの使用だが、これ自体が動作しないことを確認済みのため使えない）
+    Public Sub SpeakSlideNotes(text As String)
+        If String.IsNullOrWhiteSpace(text) Then Return
+        Dim safeText = text.Replace("\"c, "＼"c).Replace("|"c, "｜"c).Replace("&"c, "＆"c)
+        With AxAgent.Characters("OfficeAgent")
+            .StopAll()
+            .Speak(safeText)
+        End With
+    End Sub
+
+    ' スライドショー終了時など、読み上げ中の音声・吹き出しを即座に打ち切りたい場面で使う
+    Public Sub StopSpeaking()
+        AxAgent.Characters("OfficeAgent").StopAll()
     End Sub
 
     Private Function ResolveCharacterAnimation(logicalName As String) As String
@@ -233,7 +311,7 @@ Public Class AgentFloatingForm
         Dim wasAlreadyVisible = AxAgent.Characters("OfficeAgent").Visible
 
         With AxAgent.Characters("OfficeAgent")
-            .Balloon.Style = 3
+            .Balloon.Style = BalloonStyleDefault
             .LanguageID = &H411
             .Balloon.FontCharSet = 128
             .Balloon.Visible = False
@@ -345,7 +423,7 @@ Public Class AgentFloatingForm
         End Try
 
         With AxAgent.Characters("OfficeAgent")
-            .Balloon.Style = 3
+            .Balloon.Style = BalloonStyleDefault
             .LanguageID = &H411
             .Balloon.FontCharSet = 128
             .Balloon.Visible = False

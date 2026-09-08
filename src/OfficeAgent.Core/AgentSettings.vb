@@ -90,6 +90,17 @@ Public Class AgentSettings
         End Set
     End Property
 
+    ' スライド切り替え時にスピーカーノートを音声で読み上げるかどうか（PowerPointのみ有効）。
+    ' 発表中に意図せず音声が流れると困るため、既定はOFF
+    Public Shared Property SpeakSlideNotesDuringSlideShow As Boolean
+        Get
+            Return CBool(GetValue("SpeakSlideNotesDuringSlideShow", False))
+        End Get
+        Set(value As Boolean)
+            SetValue("SpeakSlideNotesDuringSlideShow", value)
+        End Set
+    End Property
+
     ' AI（Groq/OpenAI）への検索チャット送信時、ホストアプリで選択中のテキストがあれば
     ' それを質問文に含めて送信するかどうか（ウェブ検索モードでは使用しない）
     Public Shared Property IncludeSelectionInSearch As Boolean
