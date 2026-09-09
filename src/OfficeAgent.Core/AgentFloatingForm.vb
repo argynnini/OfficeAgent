@@ -1,5 +1,6 @@
 Imports System.Runtime.InteropServices
 Imports System.Text
+Imports System.Text.RegularExpressions
 Imports System.Linq
 Imports OpenAI.Chat
 Imports System.Windows.Forms
@@ -17,6 +18,32 @@ Public Class AgentFloatingForm
     ' 各Officeアドイン（ThisAddIn_Startup）が、ホストアプリで現在選択中のテキストを返す処理を登録する
     ' （カイル右クリックの「選択範囲について」から、選択中の文章をAIに渡すために使用）
     Public Shared GetSelectedTextAction As Func(Of String)
+
+    ' PowerPointアドイン（ThisAddIn_Startup）が、スライドショーの進行操作を実行する処理を登録する。
+    ' スピーカーノート中の<slide .../>タグが発話の途中（Bookmarkイベント）で
+    ' 検出されたタイミングで、(op, dir, index)を引数に呼び出される。
+    ' opは"click"（PowerPointの通常のクリック送り＝現在のスライドに未実行のアニメーション
+    ' ビルドが残っていればそれを進め、無ければ次/前のスライドへ進む）または"page"（残りの
+    ' ビルドを無視して強制的に次/前/指定スライドへ移動する）。
+    ' dirは"next"/"prev"（indexが指定されている場合は無視される）。
+    ' indexは"page"のときのみ、指定があれば1始まりのスライド番号（無ければ-1）
+    Public Shared PerformSlideActionAction As Action(Of String, String, Integer)
+
+    ' PowerPointアドイン（ThisAddIn_Startup）が、スライドショーウィンドウの画面状態操作
+    ' （ブラックアウト・ホワイトアウト・通常表示への復帰）を実行する処理を登録する。
+    ' スピーカーノート中の<screen op="blackout|whiteout|resume"/>タグが発話の途中
+    ' （Bookmarkイベント）で検出されたタイミングで、opを引数に呼び出される
+    Public Shared PerformScreenActionAction As Action(Of String)
+
+    ' PowerPointアドイン（ThisAddIn_Startup）が、レーザーポインターのON/OFFを実行する
+    ' 処理を登録する。スピーカーノート中の<laser op="on|off"/>タグが発話の途中
+    ' （Bookmarkイベント）で検出されたタイミングで、opを引数に呼び出される
+    Public Shared PerformLaserActionAction As Action(Of String)
+
+    ' PowerPointアドイン（ThisAddIn_Startup）が、スピーカーノート中の<var name="..."/>タグで
+    ' 使えるPowerPoint固有の値（スライド番号・ファイル名等）を返す処理を登録する。
+    ' SpeakSlideNotesが呼ばれるたびに（＝スライドが変わるたびに）呼び出すため、常に最新の値が返る
+    Public Shared GetSlideVariablesFunc As Func(Of Dictionary(Of String, String))
 
     Protected Overrides ReadOnly Property ShowWithoutActivation As Boolean
         Get
@@ -41,6 +68,9 @@ Public Class AgentFloatingForm
     ' カイル左クリックで表示する検索吹き出し。「Word起動直後はショートカットが効かない」不具合の
     ' 調査の一環として、AxAgent（MS Agent ActiveX）を抱える本フォームからは完全に分離してある
     Private _searchBalloon As SearchBalloonForm
+
+    ' スピーカーノート読み上げ時の吹き出しフォントサイズ（既定値。SpeakSlideNotes参照）
+    Private Const NormalBalloonFontSize As Integer = 12
 
     ' 吹き出し（Balloon）の既定Style。ビットフィールドで、bit0=balloon-on、bit1=size-to-text
     ' （テキスト量に応じて高さ自動調整）、bit3=auto-pace（喋る速度に合わせて文字を少しずつ
@@ -124,6 +154,28 @@ Public Class AgentFloatingForm
         Return sb.ToString()
     End Function
 
+    ' InsertWordBreaksは全文字間にゼロ幅スペースを挿入するため密度が高く、VOICEVOX等の
+    ' 外部TTSエンジンのテキスト解析を壊す不具合が実機で確認された（AgentFloatingForm.vb
+    ' 変更履歴参照）。こちらは句読点等の「文の区切り」の直後にだけ、疎に挿入する版
+    ' （TTS側に渡る特殊文字の量を大幅に減らし、解析への影響を抑える狙い）
+    Private Shared ReadOnly SentenceBreakChars As New HashSet(Of Char) From {"。"c, "、"c, "！"c, "？"c, "，"c, "．"c}
+
+    Private Shared Function InsertWordBreaksAtPunctuation(text As String) As String
+        If String.IsNullOrEmpty(text) Then Return text
+        Dim sb As New StringBuilder()
+        For i = 0 To text.Length - 1
+            Dim c = text(i)
+            sb.Append(c)
+            If i < text.Length - 1 Then
+                Dim nextC = text(i + 1)
+                If SentenceBreakChars.Contains(c) AndAlso Not Char.IsWhiteSpace(nextC) Then
+                    sb.Append(ChrW(&H200B))
+                End If
+            End If
+        Next
+        Return sb.ToString()
+    End Function
+
     ' 吹き出しを出す際、音声では絶対に喋らせないための分岐（あえてSpeak/Thinkが直感と逆）。
     ' .TTSModeIDを参照するとMS Agentサーバーが対応TTSエンジンを探しにいく副作用があり、
     ' LanguageIDに合うエンジンがシステムに存在すると、そのキャラクター本来の設計に関わらず
@@ -148,34 +200,536 @@ Public Class AgentFloatingForm
     ' Speakはキューに積まれる仕様なので、.StopAll()を挟まずに次のスライドの分を呼ぶと
     ' 前のスライドの読み上げが終わるまで新しい分が再生されない（発表者がスライドを
     ' 送っても読み上げが追いつかない）。そのため必ず前の読み上げを打ち切ってから再生する。
-    ' InsertWordBreaksが挿入するゼロ幅スペースは、Microsoft Agent自身の折り返し計算には
-    ' 有効だが、VOICEVOX等の外部TTSエンジン（SAPIForVOICEVOX経由）がこの特殊文字を
-    ' 正しく処理できず、テキスト解析が壊れて無関係な数値を読み上げてしまう不具合を確認した。
-    ' そのためここでは適用せず、素のテキストをそのままTTSエンジンに渡す
-    ' （吹き出しの折り返しが乱れる可能性はあるが、実際に喋る内容が壊れる方が実害が大きいため）
+    ' InsertWordBreaks（全文字間にゼロ幅スペース）は、VOICEVOX等の外部TTSエンジン
+    ' （SAPIForVOICEVOX経由）がこの特殊文字を正しく処理できず、テキスト解析が壊れて無関係な
+    ' 数値を読み上げてしまう不具合を確認した。タグの外側（地の文）だけに絞っても
+    ' （InsertWordBreaksOutsideTags）実機で同じ不具合が再発したため、密な挿入は諦めた。
+    ' 代わりに、句読点の直後にだけ疎に挿入する版（InsertWordBreaksAtPunctuationOutsideTags）
+    ' を試している。TTS側に渡る特殊文字が大幅に減るため、解析への影響が出にくいはず
+    ' （効果が無い／再発する場合はここも外すこと）
     '
     ' Microsoft Agentの.Speak()テキストには、以下の予約文字・既知の不具合がある
     ' （公式ドキュメント記載）。スピーカーノートの自由な文章にこれらが含まれていても
     ' 発話が壊れないよう、発話用に渡す直前に見た目がほぼ同じ全角文字へ置き換える。
-    ' - \（バックスラッシュ）: タグ（\Mrk=100\等）の開始文字として解釈される
+    ' \（バックスラッシュ）はSAPI4時代の\Mrk\等のタグ記法用の予約文字だが、
+    ' 実際に喋らせているSAPI5エンジン（VOICEVOX/SAPIForVOICEVOX含む）はこの記法自体を
+    ' 無視する（RibbonUI.xmlのSAPI5 XMLタグ挿入の項を参照）ため、ここでは全角化しない
+    ' （素の文字として読ませる）。
     ' - |（縦棒）: 「代替文字列の区切り」として扱われ、Speak呼び出しのたびにどちらか
     '   一方がランダムに選ばれてしまう。発表時間の目安として「10s | 30s」のように
     '   区切り記号として使っているスピーカーノートがこれに巻き込まれ、前後の内容が
     '   丸ごとランダムに消えてしまう不具合が実機で確認された
     ' - &（アンパサンド）: 周辺の吹き出しテキストが切り捨てられる既知の不具合がある
     '   （本来の回避策は\Map\タグの使用だが、これ自体が動作しないことを確認済みのため使えない）
+    '
+    ' <!-- ... -->コメント（発表者用の非表示メモ、RibbonUI.xmlの「発表者コメント」タグ）は、
+    ' SAPIエンジンが読み上げ自体はスキップしてくれるものの、吹き出しの自動サイズ計算
+    ' （Balloon.Style bit1=size-to-text）はSpeak()に渡した文字列全体の長さを見て行われる模様で、
+    ' コメントの中身の文字数までサイズに含まれてしまい、吹き出しが不必要に巨大になる不具合が
+    ' 実機で確認された。SAPI側の「読み上げない」処理に任せず、Speak()に渡す前にこちら側で
+    ' コメントそのものを取り除く（複数行にまたがるコメントも正しく1つとして除去できるよう
+    ' RegexOptions.Singlelineを使う）。
+    ' 同じ理由で、空行（コメント除去後に残った空行や、タイミング目安・区切り用に空けている
+    ' 空行）も吹き出しのサイズ計算に含まれてしまうため、あわせて取り除く
     Public Sub SpeakSlideNotes(text As String)
         If String.IsNullOrWhiteSpace(text) Then Return
-        Dim safeText = text.Replace("\"c, "＼"c).Replace("|"c, "｜"c).Replace("&"c, "＆"c)
+        Dim normalizedText = NormalizeSmartQuotesInTags(text)
+        Dim withVars = ResolveVariables(normalizedText)
+        Dim strippedText = RemoveBlankLines(CommentTagPattern.Replace(withVars, ""))
+        If String.IsNullOrWhiteSpace(strippedText) Then Return
+        ' markIdはここでは0にリセットしない（_nextMarkIdを使い、キャラクターの生存期間を通して
+        ' 単調増加させる）。<slide>タグ自体がPowerPointのSlideShowNextSlide
+        ' イベントを発火させ、それが（ThisAddIn経由で）次のスライドのSpeakSlideNotesを再帰的に
+        ' 呼び出すことがある。その際もし番号を0から振り直していると、直前の発話でまだ処理中
+        ' だった古いbookmarkが遅れて発火したときに、たまたま同じ番号を振られた「新しいノートの
+        ' 全く別のアクション」に誤って解決されてしまう（実機で「指定スライドへジャンプしたら
+        ' エージェントの座標までジャンプした」という形で確認）。番号を使い切りにすることで、
+        ' 古いbookmarkが遅れて届いても存在しない番号として無視されるだけになり、誤爆しなくなる
         With AxAgent.Characters("OfficeAgent")
             .StopAll()
-            .Speak(safeText)
+            ' Balloon.FontSizeはキャラクターに紐づく状態で、一度設定すると次にどこかで
+            ' 変更されるまで残り続ける。発表時間のお知らせ（AnnouncePresentationTime）や
+            ' 検索吹き出し等、他の機能がそれぞれ自分の用途向けにFontSizeを変更する箇所が
+            ' 複数あり、リセットせずに使い回されるため、「1回目の発表は既定サイズなのに、
+            ' 2回目（＝直前にAnnouncePresentationTimeでお疲れ様でしたを話した後）は大きく
+            ' なる」という不具合が実機で確認された。スピーカーノートの読み上げは常に同じ
+            ' 見た目にしたいので、他の機能の状態に依存しないよう毎回明示的にリセットする
+            .Balloon.FontSize = NormalBalloonFontSize
+            ' <agent>タグの位置でノートを分割し、キューへ順に積む
+            ' （理由はExtractSlideNoteActions手前のコメント参照）。
+            ' 各テキスト断片はさらにExtractSlideNoteActionsで<slide>タグを
+            ' bookmarkへ変換してから読み上げる
+            For Each segment In SplitNoteBySequentialActions(strippedText)
+                If segment.SequentialAction IsNot Nothing Then
+                    Dim sa = segment.SequentialAction
+                    If String.Equals(sa.TypeName, "balloon", StringComparison.OrdinalIgnoreCase) Then
+                        PerformBalloonNoteAction(sa)
+                    Else
+                        Select Case sa.Op.ToLowerInvariant()
+                            Case "wait"
+                                ' 何も喋らず・エージェント操作もせず、指定ミリ秒だけキューを止める。
+                                ' UIスレッドをThread.Sleep等で止めるとPowerPoint全体がフリーズするため、
+                                ' 無音だけのSpeak呼び出しとしてキューに積む（非同期に消化される）
+                                Dim msText As String = Nothing
+                                Dim ms = 500
+                                If sa.Attributes.TryGetValue("ms", msText) Then Integer.TryParse(msText, ms)
+                                If ms > 0 Then .Speak($"<silence msec=""{ms}""/>")
+                            Case "break"
+                                ' 何もしない：ここで発話を分割することだけが目的
+                            Case Else
+                                PerformAgentNoteAction(sa)
+                        End Select
+                    End If
+                ElseIf Not String.IsNullOrEmpty(segment.PlainText) Then
+                    Dim withMarks = ExtractSlideNoteActions(segment.PlainText, _nextMarkId)
+                    Dim safeText = withMarks.Replace("|"c, "｜"c).Replace("&"c, "＆"c)
+                    ' 0幅空白挿入処理は一時的に無効化（TTS解析への影響を検証するため）
+                    ' safeText = InsertWordBreaksAtPunctuationOutsideTags(safeText)
+                    If Not String.IsNullOrWhiteSpace(safeText) Then
+                        ApplyAutoBalloonHeight(safeText)
+                        .Speak(safeText)
+                    End If
+                End If
+            Next
         End With
     End Sub
 
-    ' スライドショー終了時など、読み上げ中の音声・吹き出しを即座に打ち切りたい場面で使う
+    ' スライドショー終了時など、読み上げ中の音声・吹き出しを即座に打ち切りたい場面で使う。
+    ' <balloon op="style" width=.../>やApplyAutoBalloonHeightがBalloon.Styleの
+    ' CharsPerLine／NumberOfLines／size-to-textビットを直接書き換えており、これらは
+    ' FontSizeと同じくリセットされるまで残り続ける共有プロパティのため、次の発表やスライド
+    ' ショー以外の吹き出し（カイル右クリックメニュー等）に幅・高さのカスタム値が引き継がれて
+    ' しまわないよう、ここで既定値に戻す。
+    '
+    ' .StopAll()だけでは、SAPIForVOICEVOX（VOICEVOX）経由の場合、再生中の音声そのものは
+    ' 止まらず、次に新しい.Speak()が発行されて初めて実際に打ち切られる、という挙動が実機で
+    ' 確認された（発表終了時、直後にAnnouncePresentationTime側で新しくSpeak()するケースだけ
+    ' 即座に止まって見えており、呼び出し元がそのまま何もしない場合は前の発話がしゃべり
+    ' 終わるまで声が止まらなかった）。そのためここで無音だけの.Speak()を明示的に発行し、
+    ' 呼び出し元がこの後Speak()するかどうかに関わらず確実に打ち切れるようにする
     Public Sub StopSpeaking()
-        AxAgent.Characters("OfficeAgent").StopAll()
+        With AxAgent.Characters("OfficeAgent")
+            .StopAll()
+            .Speak("<silence msec=""1""/>")
+            .Balloon.Style = BalloonStyleDefault
+            .Balloon.FontSize = NormalBalloonFontSize
+        End With
+        _pendingSlideNoteActions.Clear()
+    End Sub
+
+    ' ── スピーカーノート中の<agent .../>／<slide .../>／<screen .../>／<laser .../>／
+    '    <balloon .../>タグ（発話中操作） ──────
+    '
+    ' <slide>／<screen>／<laser>（PowerPoint側の操作）と <agent>／<balloon>（キャラクター・
+    ' 吹き出し自身の操作）で、実現方法がまったく異なる点に注意。
+    '
+    ' ● <slide> / <screen> / <laser> → SAPI5のXMLブックマークタグ<bookmark mark="値"/>に
+    '   変換し、AxAgent.Bookmarkイベントで検出して実行する。PowerPoint側の操作はキャラクターの
+    '   発話キューとは無関係な処理なので、発話が再生されている「その場」で割り込み実行できる。
+    ' ● <agent> / <balloon> → Bookmarkは使わない。Speak()も明示的なPlay()/MoveTo()/
+    '   GestureAt()も、Balloon.Visible／FontSize等のプロパティ設定も、同じキャラクターの単一の
+    '   要求キューで直列に処理される（またはSpeak()を呼んだ瞬間の値が使われる）仕様のため、
+    '   発話の再生中にBookmarkイベント経由で呼んでも「割り込み」にはならず、今の発話が完了した
+    '   後の次の要求としてキューの末尾に積まれるだけになってしまう（タグが複数あれば、発話が
+    '   全部終わってからまとめて連続実行される、という形で実機で確認済み）。そのため<agent>／
+    '   <balloon>タグは常にノート本文をその位置で分割する区切りとして扱い、Speak→(操作)→Speak
+    '   という順序で個別にキューへ積むことで、「そこで一拍おいてから動いて、続きを話す」という、
+    '   MS Agentのアーキテクチャで実現できる範囲の動作にしている（SpeakSlideNotes参照）。
+    '   <agent op="break"/>は何も実行せずただ分割するだけ、<agent op="wait"/>は無音の
+    '   Speak呼び出し（<silence>タグ）を1つキューへ積むことで、それぞれ実現している。
+    '
+    ' 対応タグ:
+    '   <slide op="click|page" dir="next|prev|N"/>
+    '                                                        op省略時"click"（PowerPointの通常のクリック送り。
+    '                                                        ビルドが残っていればそれを消化、無ければ次/前スライドへ）、
+    '                                                        "page"は残りのビルドを無視して強制的に次/前スライドへ移動。
+    '                                                        dirに数値を指定すると、opに関わらずそのスライド番号へ
+    '                                                        直接ジャンプする。dir省略時"next"
+    '   <agent op="move" x="N" y="N" speed="N"/>            エージェントを画面座標(x,y)へ移動。speed省略時は
+    '                                                        アニメーション無しで瞬間移動、指定時はそのミリ秒
+    '                                                        かけて滑るように移動する
+    '   <agent op="play" name="..."/>                       エージェントのアニメーションを再生
+    '   <agent op="gesture" x="N" y="N"/>                   エージェントが座標(x,y)の方向を指す
+    '   <agent op="show" anim="true|false"/>                エージェント自体を表示。anim省略時"false"
+    '                                                        （アニメーション無しで瞬時に表示）。"true"を
+    '                                                        指定するとShowingアニメーション付きで表示する
+    '   <agent op="hide" anim="true|false"/>                エージェント自体を隠す。anim省略時"false"
+    '                                                        （アニメーション無しで瞬時に隠す）。"true"を
+    '                                                        指定するとHidingアニメーション付きで隠す
+    '   <agent op="break"/>                                 発話をここで区切るだけ（他は何もしない）。後続の
+    '                                                        <slide>を、喋っている途中の割り込みではなく
+    '                                                        「話し終わってから確実に実行」させたい時などに、
+    '                                                        直前へ置く
+    '   <agent op="wait" ms="1000"/>                        何も喋らず・操作もせず、指定ミリ秒だけ間を置く
+    '   <balloon op="show"/>                                 吹き出しを表示
+    '   <balloon op="hide"/>                                 吹き出しを隠す
+    '   <balloon op="style" size="N" font="..." width="N"/>
+    '                                                        以降の吹き出しのフォントサイズ／フォント名／横幅
+    '                                                        （1行あたりの文字数）を変更する（属性は指定した
+    '                                                        ものだけ変わり、他は今の設定のまま）。太字・斜体・
+    '                                                        下線・取り消し線はMS Agentでは実行時に変更不可
+    '                                                        （読み取り専用）なので対応していない。吹き出し
+    '                                                        全体に効くプロパティなので、一部の単語だけを
+    '                                                        サイズ変更する、といったこともできない
+    '   <screen op="blackout"/>                             画面をブラックアウト（[B]キー相当）
+    '   <screen op="whiteout"/>                              画面をホワイトアウト（[W]キー相当）
+    '   <screen op="resume"/>                                ブラックアウト／ホワイトアウトを解除して通常表示に戻す
+    '   <laser op="on"/>                                     レーザーポインター表示をON
+    '   <laser op="off"/>                                    レーザーポインター表示をOFF（座標指定はできず、
+    '                                                        実際のポインター位置はマウスに追従する点に注意）
+    Private Class SlideNoteAction
+        Public Property TypeName As String
+        Public Property Op As String
+        Public Property Attributes As New Dictionary(Of String, String)(StringComparer.OrdinalIgnoreCase)
+    End Class
+
+    Private ReadOnly _pendingSlideNoteActions As New Dictionary(Of Integer, SlideNoteAction)
+
+    ' bookmarkのmark番号の発行元。SpeakSlideNotesの呼び出しをまたいで単調増加させる
+    ' （理由はSpeakSlideNotes内のコメント参照）
+    Private _nextMarkId As Integer = 0
+
+    ' <agent .../>／<slide .../>／<screen .../>／<balloon .../>／<laser .../>タグにマッチする。
+    ' タグ名自体が種別（SlideNoteAction.TypeName）を表す（旧<action type="..." .../>形式から変更）
+    Private Shared ReadOnly ActionTagPattern As New Regex("<(agent|slide|screen|balloon|laser)\s+([^>]*?)/?>", RegexOptions.IgnoreCase)
+    ' PowerPointのノート欄は既定でオートコレートの「スマート引用符」が有効なため、手入力した
+    ' 半角"が入力中に“”（U+201C/U+201D）へ自動変換されうる（しかも開き・閉じの一方だけ変換され
+    ' 他方は半角のまま、という不揃いな状態になることもある）。半角"だけを見るとその属性が
+    ' 丸ごと読み取れず無視されてしまうため、半角"と全角の“”のどちらでも（組み合わせが
+    ' 不揃いでも）区切りとして受け付けるようにしておく
+    Private Shared ReadOnly ActionAttrPattern As New Regex("(\w+)\s*=\s*[""“”]([^""“”]*)[""“”]", RegexOptions.IgnoreCase)
+
+    ' <!-- ... -->コメント除去用。RegexOptions.Singlelineにより、コメントの中に改行が
+    ' 含まれていても（.が改行にもマッチするようになるので）1つのコメントとして正しく除去できる
+    ' （指定しない場合、複数行コメントの内側で.が改行を跨げず、閉じタグの手前で正しく止まらずに
+    ' 別のコメントの終わりまで巻き込んで消してしまう等、誤動作の原因になっていた）
+    Private Shared ReadOnly CommentTagPattern As New Regex("<!--.*?-->", RegexOptions.Singleline)
+
+    ' <...>タグの内側だけを対象にスマートクォート（“”）を半角"へ正規化する。<action>／<var>タグの
+    ' 属性値はActionAttrPatternが元々スマートクォートを許容しているため既に問題無いが、
+    ' <volume level="50">のようなSAPI標準タグはこちらでは解析せずそのまま.Speak()へ渡している
+    ' （TTSエンジン側のXMLパーサーに任せている）ため、そちらは対応できていなかった。
+    ' タグの外側（実際に喋る地の文）は対象にしない。日本語の文章中に正当な引用符として
+    ' “”が使われている場合に、意図せず書き換えてしまわないようにするため
+    Private Shared ReadOnly TagSpanPattern As New Regex("<[^>]*>", RegexOptions.Singleline)
+
+    Private Shared Function NormalizeSmartQuotesInTags(text As String) As String
+        Return TagSpanPattern.Replace(text, Function(m As Match) As String
+                                          Return m.Value.Replace(ChrW(&H201C), """"c).Replace(ChrW(&H201D), """"c)
+                                      End Function)
+    End Function
+
+    ' InsertWordBreaksAtPunctuation（句読点直後だけのゼロ幅スペース挿入）を、<...>タグの
+    ' 内側は避けて地の文にだけ適用する。タグの中に紛れ込むと、bookmarkのmark番号や属性値が
+    ' 分断され、正規表現での解析やSAPIエンジン側のXMLタグ認識が壊れてしまうため
+    Private Shared Function InsertWordBreaksAtPunctuationOutsideTags(text As String) As String
+        Dim sb As New StringBuilder()
+        Dim lastIndex = 0
+        For Each m As Match In TagSpanPattern.Matches(text)
+            sb.Append(InsertWordBreaksAtPunctuation(text.Substring(lastIndex, m.Index - lastIndex)))
+            sb.Append(m.Value)
+            lastIndex = m.Index + m.Length
+        Next
+        sb.Append(InsertWordBreaksAtPunctuation(text.Substring(lastIndex)))
+        Return sb.ToString()
+    End Function
+
+
+    ' ── スピーカーノート中の<var name="..."/>タグ（動的な値の埋め込み） ──────────
+    '
+    ' 対応する変数名:
+    '   slideNumber       現在のスライド番号（1始まり）
+    '   slideCount        スライドの総数
+    '   slidesRemaining   残りスライド数（slideCount - slideNumber)
+    '   fileName          プレゼンテーションのファイル名
+    '   slideTitle        現在のスライドのタイトル（タイトルプレースホルダーの文字列）
+    '   sectionName       現在のスライドが属するセクション名（未使用時は空）
+    '   author            プレゼンテーションのドキュメントプロパティの作成者
+    '   time              現在時刻
+    '   date              今日の日付
+    '   elapsed           発表開始からの経過時間
+    '   lap               このスライドに来てからの経過時間
+    '   userName          Windowsのユーザー名
+    '   computerName      コンピューター名
+    '   agentName         エージェントキャラクターの名前
+    '   agentDescription  エージェントキャラクターの説明
+    Private Shared ReadOnly VarTagPattern As New Regex("<var\s+([^>]*?)/?>", RegexOptions.IgnoreCase)
+
+    ' <var name="..."/>タグを、実際の値へ置き換える。PowerPoint固有の値（スライド番号・
+    ' ファイル名等）はGetSlideVariablesFuncから、それ以外（時刻・ユーザー名・エージェント名等）は
+    ' ここで直接取得する。存在しない変数名を指定された場合は空文字に置き換える
+    ' （読み上げにタグの生文字列がそのまま混ざるのを防ぐため）
+    Private Function ResolveVariables(text As String) As String
+        If Not VarTagPattern.IsMatch(text) Then Return text
+
+        Dim values As New Dictionary(Of String, String)(StringComparer.OrdinalIgnoreCase)
+        Dim now = DateTime.Now
+        values("time") = now.ToString("HH:mm")
+        values("date") = now.ToString("yyyy年M月d日")
+        values("userName") = Environment.UserName
+        values("computerName") = Environment.MachineName
+        If _slideShowElapsedStopwatch IsNot Nothing Then values("elapsed") = FormatShort(_slideShowElapsedStopwatch.Elapsed)
+        If _slideShowLapStopwatch IsNot Nothing Then values("lap") = FormatShort(_slideShowLapStopwatch.Elapsed)
+
+        Try
+            With AxAgent.Characters("OfficeAgent")
+                values("agentName") = .Name
+                values("agentDescription") = .Description
+            End With
+        Catch ex As Exception
+        End Try
+
+        Dim pptValues = GetSlideVariablesFunc?.Invoke()
+        If pptValues IsNot Nothing Then
+            For Each kv In pptValues
+                values(kv.Key) = kv.Value
+            Next
+        End If
+
+        Return VarTagPattern.Replace(text, Function(m As Match) As String
+                                         Dim nameText As String = Nothing
+                                         For Each attrMatch As Match In ActionAttrPattern.Matches(m.Groups(1).Value)
+                                             If String.Equals(attrMatch.Groups(1).Value, "name", StringComparison.OrdinalIgnoreCase) Then
+                                                 nameText = attrMatch.Groups(2).Value
+                                                 Exit For
+                                             End If
+                                         Next
+                                         Dim value As String = Nothing
+                                         If nameText IsNot Nothing AndAlso values.TryGetValue(nameText, value) Then Return value
+                                         Return ""
+                                     End Function)
+    End Function
+
+    ' 空行（前後の空白のみの行を含む）を取り除いて詰める。改行そのものはSpeak()での
+    ' 読み上げには影響しないが、吹き出しの自動サイズ計算では空行の分も高さに数えられてしまうため
+    Private Shared Function RemoveBlankLines(text As String) As String
+        Dim lines = text.Split({vbCrLf, vbLf, vbCr}, StringSplitOptions.None)
+        Return String.Join(vbLf, lines.Where(Function(l) Not String.IsNullOrWhiteSpace(l)))
+    End Function
+
+    Private Shared Function ParseActionTag(tagName As String, attrText As String) As SlideNoteAction
+        Dim action As New SlideNoteAction() With {.TypeName = tagName.ToLowerInvariant()}
+        For Each attrMatch As Match In ActionAttrPattern.Matches(attrText)
+            action.Attributes(attrMatch.Groups(1).Value) = attrMatch.Groups(2).Value
+        Next
+        Dim op As String = Nothing
+        action.Attributes.TryGetValue("op", op)
+        action.Op = If(op, "")
+        Return action
+    End Function
+
+    ' ノート本文を、<agent>タグ（op="move"／"gesture"／"play"／"visible"／"balloon"／
+    ' "font"／"break"／"wait"のいずれも含む）を区切りとして「地の文（テキスト）」と「キューを
+    ' 分割して実行する操作」の並びに分解する。地の文中の<slide>タグは
+    ' ここでは触らない（ExtractSlideNoteActionsで各テキスト断片ごとにbookmarkへ変換し、
+    ' 発話中に割り込ませる）
+    Private Shared Function SplitNoteBySequentialActions(text As String) As List(Of (PlainText As String, SequentialAction As SlideNoteAction))
+        Dim result As New List(Of (PlainText As String, SequentialAction As SlideNoteAction))
+        Dim lastIndex = 0
+        For Each m As Match In ActionTagPattern.Matches(text)
+            Dim action = ParseActionTag(m.Groups(1).Value, m.Groups(2).Value)
+            If String.Equals(action.TypeName, "agent", StringComparison.OrdinalIgnoreCase) OrElse
+               String.Equals(action.TypeName, "balloon", StringComparison.OrdinalIgnoreCase) Then
+                result.Add((text.Substring(lastIndex, m.Index - lastIndex), Nothing))
+                result.Add((Nothing, action))
+                lastIndex = m.Index + m.Length
+            End If
+        Next
+        result.Add((text.Substring(lastIndex), Nothing))
+        Return result
+    End Function
+
+    ' テキスト断片中の<slide>タグを取り除き、代わりに
+    ' <bookmark mark="N"/>を差し込んだテキストを返す。同時に_pendingSlideNoteActionsへ、
+    ' そのNに対応するアクション内容を積む（markIdはSpeakSlideNotes側で発話全体を通して
+    ' 連番になるよう管理するため、呼び出し元からByRefで受け取る）
+    Private Function ExtractSlideNoteActions(text As String, ByRef markId As Integer) As String
+        ' ByRefパラメーターはラムダ式の中から直接更新できないため、ローカル変数に写してから
+        ' Regex.Matches + StringBuilderで手動で組み立てる（Regex.Replaceのコールバックは使わない）
+        Dim nextMarkId = markId
+        Dim sb As New StringBuilder()
+        Dim lastIndex = 0
+        For Each m As Match In ActionTagPattern.Matches(text)
+            sb.Append(text, lastIndex, m.Index - lastIndex)
+            Dim action = ParseActionTag(m.Groups(1).Value, m.Groups(2).Value)
+            nextMarkId += 1
+            _pendingSlideNoteActions(nextMarkId) = action
+            sb.Append($"<bookmark mark=""{nextMarkId}""/>")
+            lastIndex = m.Index + m.Length
+        Next
+        sb.Append(text, lastIndex, text.Length - lastIndex)
+        markId = nextMarkId
+        Return sb.ToString()
+    End Function
+
+    ' SAPIのブックマークが読み上げ中に発火するたびに呼ばれる。対応するアクションが
+    ' 登録されていなければ何もしない（通常のスピーカーノート読み上げでは登録が無いので毎回ここで抜ける）
+    Private Sub Agent_Bookmark(sender As Object, e As AxAgentObjects._AgentEvents_BookmarkEvent) Handles AxAgent.Bookmark
+        Dim action As SlideNoteAction = Nothing
+        If Not _pendingSlideNoteActions.TryGetValue(e.bookmarkID, action) Then Return
+        Try
+            Select Case action.TypeName.ToLowerInvariant()
+                Case "slide"
+                    Dim opText As String = Nothing
+                    action.Attributes.TryGetValue("op", opText)
+                    Dim op = If(String.IsNullOrEmpty(opText), "click", opText.ToLowerInvariant())
+                    Dim dirText As String = Nothing
+                    action.Attributes.TryGetValue("dir", dirText)
+                    ' dirが数値ならスライド番号への直接ジャンプ、それ以外は"next"/"prev"の相対移動
+                    ' として扱う（index属性は廃止。dirだけで両方を表現できるようにした）
+                    Dim dir = "next"
+                    Dim indexValue = -1
+                    If Not String.IsNullOrEmpty(dirText) Then
+                        If Integer.TryParse(dirText, indexValue) Then
+                            dir = "goto"
+                        Else
+                            dir = dirText.ToLowerInvariant()
+                        End If
+                    End If
+                    PerformSlideActionAction?.Invoke(op, dir, indexValue)
+                Case "screen"
+                    PerformScreenActionAction?.Invoke(action.Op.ToLowerInvariant())
+                Case "laser"
+                    PerformLaserActionAction?.Invoke(action.Op.ToLowerInvariant())
+            End Select
+        Catch ex As Exception
+            ' 発話中のイベントハンドラなので、失敗しても読み上げ自体は継続させたい（例外を握りつぶす）
+        End Try
+    End Sub
+
+    ' Speak()と同じキューに積む都合上、SpeakSlideNotesのループから直接呼ばれる
+    ' （Bookmarkイベント経由ではない。上記コメント参照）。属性不正等で失敗しても、
+    ' 残りのSpeak呼び出しは続行させたいので例外を握りつぶす
+    Private Sub PerformAgentNoteAction(action As SlideNoteAction)
+        Try
+            Dim xText As String = Nothing, yText As String = Nothing
+            Dim x = 0, y = 0
+            With AxAgent.Characters("OfficeAgent")
+                Select Case action.Op.ToLowerInvariant()
+                    Case "move"
+                        ' speed省略時は0（アニメーション無しで瞬間移動）扱いにする。
+                        ' Left/Topへの直接代入は、Speak()等と違って「発話キュー」を経由しない
+                        ' プロパティ設定のため、キューの順序を無視してその場（＝SpeakSlideNotesの
+                        ' ループがこの行に来た瞬間）に即座に反映されてしまい、それより前に積んだ
+                        ' はずの発話より先に動いてしまう不具合が実機で確認された。MoveTo()の
+                        ' Speedに0を指定すると「アニメーション無しで瞬間移動」しつつ、通常の
+                        ' Requestとして正しくキューに乗る（moveto-method.md参照）ため、
+                        ' speedを問わず常にMoveTo()を使う（speedを指定すればそのミリ秒かけて
+                        ' 滑るように移動する）
+                        action.Attributes.TryGetValue("x", xText) : Integer.TryParse(xText, x)
+                        action.Attributes.TryGetValue("y", yText) : Integer.TryParse(yText, y)
+                        Dim speedText As String = Nothing
+                        Dim speed = 0
+                        If action.Attributes.TryGetValue("speed", speedText) Then Integer.TryParse(speedText, speed)
+                        .MoveTo(CShort(x), CShort(y), speed)
+                    Case "gesture"
+                        action.Attributes.TryGetValue("x", xText) : Integer.TryParse(xText, x)
+                        action.Attributes.TryGetValue("y", yText) : Integer.TryParse(yText, y)
+                        .GestureAt(CShort(x), CShort(y))
+                    Case "play"
+                        Dim animName As String = Nothing
+                        If action.Attributes.TryGetValue("name", animName) AndAlso Not String.IsNullOrEmpty(animName) Then .Play(animName)
+                    Case "show"
+                        .Show(Not ReadAnimAttribute(action))
+                    Case "hide"
+                        .Hide(Not ReadAnimAttribute(action))
+                End Select
+            End With
+        Catch ex As Exception
+        End Try
+    End Sub
+
+    ' <agent op="show|hide" anim="..."/>のanim属性を読み取る。省略時・不正値は"false"
+    ' （アニメーション無し＝Show/Hideのfastパラメーターにはその否定を渡す）扱いにする
+    Private Shared Function ReadAnimAttribute(action As SlideNoteAction) As Boolean
+        Dim animText As String = Nothing
+        If Not action.Attributes.TryGetValue("anim", animText) Then Return False
+        Dim result As Boolean
+        If Not Boolean.TryParse(animText, result) Then Return False
+        Return result
+    End Function
+
+    ' <balloon op="show|hide|style" .../>タグの実行。Balloon.Visible／FontName／FontSizeは
+    ' いずれも「Speak()を呼んだ瞬間の値」がその発話の吹き出しに適用される（途中で変えても
+    ' 今読み上げ中の吹き出しには反映されない）ため、<agent>と同じく発話を分割し、対象の
+    ' Speak()より前に確実に設定されるようにしている。
+    ' op="style"の属性は指定したものだけ変更し、指定しなかったものは今の設定のまま維持する。
+    ' 太字・斜体・下線・取り消し線は対応していない（実行時には読み取り専用で、.acs
+    ' キャラクターエディタかユーザーのMicrosoft Agentプロパティ画面でしか変更できないと
+    ' Microsoft Learnのfontbold-property等に明記されている）。
+    ' widthは吹き出しの横幅（1行あたりの文字数＝CharsPerLine）。専用のSetterは無く、
+    ' Balloon.Styleのビット16～23に埋め込む形で設定する（style-property.md参照）。
+    ' ビット16～23だけをクリアしてから新しい値を書き込むことで、balloon-on／size-to-text／
+    ' auto-pace（ビット0,1,3）やNumberOfLines（ビット24～31）は変更しない
+    Private Sub PerformBalloonNoteAction(action As SlideNoteAction)
+        Try
+            With AxAgent.Characters("OfficeAgent").Balloon
+                Select Case action.Op.ToLowerInvariant()
+                    Case "show"
+                        .Visible = True
+                    Case "hide"
+                        .Visible = False
+                    Case "style"
+                        Dim v As String = Nothing
+                        If action.Attributes.TryGetValue("size", v) Then
+                            Dim n As Integer
+                            If Integer.TryParse(v, n) Then .FontSize = n
+                        End If
+                        If action.Attributes.TryGetValue("font", v) AndAlso Not String.IsNullOrEmpty(v) Then .FontName = v
+                        If action.Attributes.TryGetValue("width", v) Then
+                            Dim charsPerLine As Integer
+                            If Integer.TryParse(v, charsPerLine) Then
+                                .Style = (.Style And &HFF00FFFF) Or (charsPerLine * (2 ^ 16))
+                            End If
+                        End If
+                End Select
+            End With
+        Catch ex As Exception
+        End Try
+    End Sub
+
+    ' MS Agent自身のsize-to-text自動計算は、スペースの無い日本語のような言語では
+    ' 単語区切りをうまく認識できず、高さがずれる（本文が入りきらない／余白が余る）ことが
+    ' 実機で確認された。そのためこちらで文字幅から必要な行数を見積もり、size-to-textを
+    ' 使わずNumberOfLinesを直接指定する方式を試す。全角文字（おおよそLatin-1の範囲外、
+    ' AscW>255）を幅2、それ以外（半角英数字等）を幅1として概算する簡易的な計算。
+    ' ただしInsertWordBreaksAtPunctuationOutsideTagsが句読点の後に挿入するゼロ幅スペース
+    ' （U+200B、AscW=8203で上記の条件に該当してしまう）は、見た目上は幅を持たない文字
+    ' なので、全角扱い（幅2）にしてしまうと行数を余分に見積もってしまう。幅0として除外する
+    Private Shared Function EstimateDisplayWidth(s As String) As Integer
+        Dim total = 0
+        For Each c In s
+            If AscW(c) = &H200B Then Continue For
+            total += If(AscW(c) > 255, 2, 1)
+        Next
+        Return total
+    End Function
+
+    ' spokenTextを読み上げる直前に呼ぶ。実際に吹き出しへ表示される分量（タグ・ゼロ幅スペース
+    ' を除いた地の文）から必要な行数を計算し、Balloon.Styleへ反映する
+    Private Sub ApplyAutoBalloonHeight(spokenText As String)
+        Try
+            With AxAgent.Characters("OfficeAgent").Balloon
+                Dim charsPerLine = .CharsPerLine
+                If charsPerLine <= 0 Then Return
+
+                Dim visibleText = TagSpanPattern.Replace(spokenText, "")
+                Dim totalLines = 0
+                For Each line In visibleText.Split({vbCr, vbLf}, StringSplitOptions.None)
+                    Dim width = EstimateDisplayWidth(line)
+                    totalLines += Math.Max(1, CInt(Math.Ceiling(width / CDbl(charsPerLine))))
+                Next
+                totalLines = Math.Max(1, totalLines)
+
+                ' size-to-textビット(bit1)が立っていると、NumberOfLines（ビット24～31）を
+                ' 設定しようとした時点でエージェント側がエラーを返す（style-property.md参照）
+                ' ため、先にそのビットを下ろしてから設定する
+                Dim style = .Style And Not BalloonStyleSizeToText
+                style = (style And &HFFFFFF) Or (totalLines * (2 ^ 24))
+                .Style = style
+            End With
+        Catch ex As Exception
+        End Try
     End Sub
 
     Private Function ResolveCharacterAnimation(logicalName As String) As String
@@ -773,7 +1327,14 @@ Public Class AgentFloatingForm
         End If
     End Sub
 
+    ' オーバーレイ（スライド番号／発表時間／ラップ）は、スライドが切り替わるたびに
+    ' .StopAll()してSpeakOrThink()で読み上げる仕組みのため、スピーカーノート読み上げ
+    ' （SpeakSlideNotes、同じキャラクターの発話キューを使う）と同時に有効だと、お互いの
+    ' 発話を次々と打ち切り合ってしまう。リボン側でチェックボックスをグレーアウトして
+    ' いるが、以前チェックを入れたまま読み上げをONにしたケースにも対応できるよう、
+    ' ここでも機能的に無効化しておく
     Private Function OverlayEnabled() As Boolean
+        If AgentSettings.SpeakSlideNotesDuringSlideShow Then Return False
         Return AgentSettings.ShowSlideNumberDuringSlideShow OrElse
                AgentSettings.ShowElapsedTimeDuringSlideShow OrElse
                AgentSettings.ShowLapTimeDuringSlideShow

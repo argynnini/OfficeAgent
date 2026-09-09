@@ -6,6 +6,12 @@ Partial Public Class ThisAddIn
     Private _settingsTaskPane As Microsoft.Office.Tools.CustomTaskPane
     Private _slideShowStopwatch As Diagnostics.Stopwatch
 
+    ' スピーカーノート中の<slide .../>タグ（発話中操作）が、AgentFloatingForm側の
+    ' Bookmarkイベントハンドラから呼ばれた時点で使う「今アクティブなスライドショーウィンドウ」。
+    ' コールバックのタイミングでは元のイベント引数(wn)を持っていないため、直近のスライドショー
+    ' イベントで受け取ったものを覚えておく
+    Private _activeSlideShowWindow As Microsoft.Office.Interop.PowerPoint.SlideShowWindow
+
     ' SlideShowNextSlideイベントは、1回のスライド送りに対して複数回連続で発火することがある
     ' （PowerPoint Interopの既知の癖）。同じスライドに対してSpeakSlideNotes（内部でStopAll→Speak
     ' し直す）が短時間に連続で呼ばれると、SAPIエンジン側の再生位置がずれて冒頭が読まれず
@@ -28,6 +34,10 @@ Partial Public Class ThisAddIn
         AgentRibbon.IsSettingsPaneVisibleFunc = Function() IsSettingsPaneVisible
         AgentRibbon.ToggleSettingsPaneAction = AddressOf ToggleSettingsPane
         AgentRibbon.InsertSapiTagAction = AddressOf InsertSapiTagIntoSelection
+        OfficeAgent.Core.AgentFloatingForm.PerformSlideActionAction = AddressOf PerformSlideAction
+        OfficeAgent.Core.AgentFloatingForm.PerformScreenActionAction = AddressOf PerformScreenAction
+        OfficeAgent.Core.AgentFloatingForm.PerformLaserActionAction = AddressOf PerformLaserAction
+        OfficeAgent.Core.AgentFloatingForm.GetSlideVariablesFunc = AddressOf GetSlideVariables
 
         AddHandler Me.Application.PresentationBeforeSave, AddressOf OnBeforeSave
         AddHandler Me.Application.PresentationSave, AddressOf OnAfterSave
@@ -169,9 +179,15 @@ Partial Public Class ThisAddIn
     Private Sub OnSlideShowBegin(wn As Microsoft.Office.Interop.PowerPoint.SlideShowWindow)
         _slideShowStopwatch = Diagnostics.Stopwatch.StartNew()
         _lastSpokenSlideNotesIndex = -1
+        _activeSlideShowWindow = wn
         If _agentForm Is Nothing Then Return
 
-        If AgentSettings.HideAgentDuringSlideShow Then
+        ' 発表中は非表示（HideAgentDuringSlideShow）とスピーカーノート読み上げは機能上
+        ' 競合する（非表示にすると、この後のSpeakCurrentSlideNotesIfEnabled呼び出しに
+        ' 到達できず、最初のスライドのノートが読み上げられない）。リボン側でチェックボックスを
+        ' グレーアウトしているが、以前チェックを入れたまま読み上げをONにしたケースにも
+        ' 対応できるよう、ここでも機能的に無効化しておく
+        If AgentSettings.HideAgentDuringSlideShow AndAlso Not AgentSettings.SpeakSlideNotesDuringSlideShow Then
             _agentForm.HideForSlideShow()
         Else
             _agentForm.PlayConfiguredAnimation("SlideShowBegin")
@@ -183,10 +199,144 @@ Partial Public Class ThisAddIn
     ' スライドが切り替わるたびに、オーバーレイのスライド番号・ラップタイムを更新し、
     ' 設定がONならそのスライドのスピーカーノートを読み上げる
     Private Sub OnSlideShowNextSlide(wn As Microsoft.Office.Interop.PowerPoint.SlideShowWindow)
+        _activeSlideShowWindow = wn
         If _agentForm Is Nothing Then Return
         _agentForm.NotifySlideShowSlideChanged(wn.View.Slide.SlideIndex)
         SpeakCurrentSlideNotesIfEnabled(wn)
     End Sub
+
+    ' AgentFloatingForm側のBookmarkイベントハンドラから呼ばれる：スピーカーノート中の
+    ' <slide op="click|page" dir="next|prev|N"/>タグを、実際のスライドショー操作に変換する。
+    ' dirに数値（スライド番号）が指定されていた場合、AgentFloatingForm側でdir="goto"・
+    ' indexにその番号が入れられて渡ってくる。この場合はopに関わらず常にGotoSlideで直接
+    ' ジャンプする（View.Next()/.Previous()には任意スライドへ跳ぶ手段が無いため）。
+    ' dirが"next"／"prev"のときは、opによって挙動が変わる：
+    ' op="click"は.View.Next()/.Previous()を使う（現在のスライドに未実行のアニメーション
+    ' ビルドが残っていればそれを1つ進め（戻し）、無ければ結果的に次（前）のスライドへ進む＝
+    ' 発表者が普段キーボード等で送っているのと同じ挙動）。
+    ' op="page"は「純粋なスライド切り替え」としてGotoSlideを使う（現在のスライドに未実行の
+    ' アニメーションビルドが残っていても無視して次/前のスライドへ直接移動する）。
+    ' （範囲外・スライドショー終了後などは何もしない）
+    Private Sub PerformSlideAction(op As String, dir As String, index As Integer)
+        Dim wn = _activeSlideShowWindow
+        If wn Is Nothing Then Return
+        Try
+            ' dirが数値（dir="goto"）の場合は、opがclick／pageのどちらでも常にGotoSlideで
+            ' 直接ジャンプする（View.Next()/.Previous()には任意スライドへ跳ぶ手段が無いため）
+            If dir = "goto" Then
+                If index >= 1 AndAlso index <= wn.Presentation.Slides.Count Then wn.View.GotoSlide(index)
+                Return
+            End If
+            If op = "page" Then
+                Dim currentIndex = wn.View.Slide.SlideIndex
+                Select Case dir
+                    Case "next"
+                        If currentIndex < wn.Presentation.Slides.Count Then wn.View.GotoSlide(currentIndex + 1)
+                    Case "prev", "previous"
+                        If currentIndex > 1 Then wn.View.GotoSlide(currentIndex - 1)
+                End Select
+            Else
+                Select Case dir
+                    Case "next"
+                        wn.View.Next()
+                    Case "prev", "previous"
+                        wn.View.Previous()
+                End Select
+            End If
+        Catch ex As Exception
+            ' スライドショーが既に終了している等、操作できないタイミングであれば黙って無視する
+        End Try
+    End Sub
+
+    ' AgentFloatingForm側のBookmarkイベントハンドラから呼ばれる：スピーカーノート中の
+    ' <screen op="blackout|whiteout|resume"/>タグを、スライドショーウィンドウ自体の
+    ' 状態操作に変換する
+    Private Sub PerformScreenAction(op As String)
+        Dim wn = _activeSlideShowWindow
+        If wn Is Nothing Then Return
+        Try
+            Select Case op
+                Case "blackout"
+                    wn.View.State = Microsoft.Office.Interop.PowerPoint.PpSlideShowState.ppSlideShowBlackScreen
+                Case "whiteout"
+                    wn.View.State = Microsoft.Office.Interop.PowerPoint.PpSlideShowState.ppSlideShowWhiteScreen
+                Case "resume"
+                    wn.View.State = Microsoft.Office.Interop.PowerPoint.PpSlideShowState.ppSlideShowRunning
+            End Select
+        Catch ex As Exception
+            ' スライドショーが既に終了している等、操作できないタイミングであれば黙って無視する
+        End Try
+    End Sub
+
+    ' AgentFloatingForm側のBookmarkイベントハンドラから呼ばれる：スピーカーノート中の
+    ' <laser op="on|off"/>タグを、レーザーポインター表示のON/OFFに変換する。座標指定は
+    ' できず（Interopにその手段が無い）、ONにした後の実際の位置は現在のマウス位置に追従する
+    Private Sub PerformLaserAction(op As String)
+        Dim wn = _activeSlideShowWindow
+        If wn Is Nothing Then Return
+        Try
+            Select Case op
+                Case "on"
+                    wn.View.LaserPointerEnabled = True
+                Case "off"
+                    wn.View.LaserPointerEnabled = False
+            End Select
+        Catch ex As Exception
+            ' スライドショーが既に終了している等、操作できないタイミングであれば黙って無視する
+        End Try
+    End Sub
+
+    ' AgentFloatingForm側のResolveVariablesから呼ばれる：スピーカーノート中の<var name="..."/>
+    ' タグに埋め込むPowerPoint固有の値をまとめて返す。個々の値の取得はそれぞれ独立してTryで
+    ' 保護し、1つ失敗しても他の値は返せるようにする
+    Private Function GetSlideVariables() As Dictionary(Of String, String)
+        Dim values As New Dictionary(Of String, String)(StringComparer.OrdinalIgnoreCase)
+        Dim wn = _activeSlideShowWindow
+        If wn Is Nothing Then Return values
+
+        Try
+            values("slideNumber") = wn.View.Slide.SlideIndex.ToString()
+            values("slideCount") = wn.Presentation.Slides.Count.ToString()
+            values("slidesRemaining") = (wn.Presentation.Slides.Count - wn.View.Slide.SlideIndex).ToString()
+        Catch ex As Exception
+        End Try
+
+        Try
+            ' Presentation.Nameは拡張子付き（例："発表.pptx"）で返るため、読み上げ用途では
+            ' 不要な拡張子を取り除く
+            values("fileName") = IO.Path.GetFileNameWithoutExtension(wn.Presentation.Name)
+        Catch ex As Exception
+        End Try
+
+        Try
+            values("author") = CStr(wn.Presentation.BuiltInDocumentProperties("Author").Value)
+        Catch ex As Exception
+        End Try
+
+        Try
+            values("slideTitle") = wn.View.Slide.Shapes.Title.TextFrame.TextRange.Text
+        Catch ex As Exception
+            ' タイトルプレースホルダーが無いスライドでは例外になる
+        End Try
+
+        Try
+            ' SectionIndex／SectionPropertiesは、このプロジェクトが同梱する古いPIAの型定義には
+            ' 無いが（Slide/Presentationクラスをリフレクションで確認済み）、実際にインストール
+            ' されているPowerPoint（2010以降）のCOMオブジェクト自体には存在するため、
+            ' 遅延バインディング（Option Strict Offの後期バインディング呼び出し）で試す。
+            ' セクション未使用のプレゼンテーションや、万一メソッドが本当に無い場合は例外になり、
+            ' その場合はsectionNameを設定しない（空のまま）
+            Dim lateSlide As Object = wn.View.Slide
+            Dim sectionIndex As Integer = lateSlide.SectionIndex
+            If sectionIndex >= 1 Then
+                Dim latePres As Object = wn.Presentation
+                values("sectionName") = latePres.SectionProperties.Name(sectionIndex)
+            End If
+        Catch ex As Exception
+        End Try
+
+        Return values
+    End Function
 
     Private Sub SpeakCurrentSlideNotesIfEnabled(wn As Microsoft.Office.Interop.PowerPoint.SlideShowWindow)
         If Not AgentSettings.SpeakSlideNotesDuringSlideShow Then Return
@@ -216,6 +366,7 @@ Partial Public Class ThisAddIn
             ' 優先して即座に始められるよう、読み上げ中のキューを打ち切る
             _agentForm.StopSpeaking()
             If AgentSettings.HideAgentDuringSlideShow Then _agentForm.ShowAfterSlideShow()
+            _activeSlideShowWindow = Nothing
 
             ' 発表時間の吹き出しを先に表示してから、その再生キューに続けて
             ' 「スライド終了」アニメーション（既定Congratulate）を再生する
@@ -252,6 +403,10 @@ Partial Public Class ThisAddIn
         AgentRibbon.IsSettingsPaneVisibleFunc = Nothing
         AgentRibbon.ToggleSettingsPaneAction = Nothing
         AgentRibbon.InsertSapiTagAction = Nothing
+        OfficeAgent.Core.AgentFloatingForm.PerformSlideActionAction = Nothing
+        OfficeAgent.Core.AgentFloatingForm.PerformScreenActionAction = Nothing
+        OfficeAgent.Core.AgentFloatingForm.PerformLaserActionAction = Nothing
+        OfficeAgent.Core.AgentFloatingForm.GetSlideVariablesFunc = Nothing
 
         If _settingsTaskPane IsNot Nothing Then
             RemoveHandler _settingsTaskPane.VisibleChanged, AddressOf SettingsPane_VisibleChanged

@@ -76,8 +76,14 @@ Public Class AgentRibbon
     End Sub
 
     ' ── スライドショー中は非表示（PowerPointの「スライド ショー」タブ） ──────
+    ' スピーカーノート読み上げ（chkSpeakSlideNotes）とは互いに機能上の競合がある
+    ' （下記GetEnabled群のコメント参照）ため、読み上げがONの間はこの項目を操作不可にする
     Public Function HideDuringSlideShow_GetPressed(control As Office.IRibbonControl) As Boolean
         Return AgentSettings.HideAgentDuringSlideShow
+    End Function
+
+    Public Function HideDuringSlideShow_GetEnabled(control As Office.IRibbonControl) As Boolean
+        Return Not AgentSettings.SpeakSlideNotesDuringSlideShow
     End Function
 
     Public Sub HideDuringSlideShow_Toggle(control As Office.IRibbonControl, pressed As Boolean)
@@ -85,8 +91,20 @@ Public Class AgentRibbon
     End Sub
 
     ' ── スライドショー中のオーバーレイ表示項目 ──────────────
+    ' オーバーレイ（スライド番号／発表時間／ラップ）は、スライドが切り替わるたびに
+    ' UpdateSlideShowOverlayが.StopAll()してSpeakOrThink()で読み上げる仕組みになっており、
+    ' スピーカーノート読み上げ（SpeakSlideNotes、同じキャラクターの発話キューを使う）と
+    ' 同時に有効だと、お互いの発話を次々と打ち切り合ってしまう。そのためスピーカーノート
+    ' 読み上げがONの間は、これらのチェックボックスを操作不可（グレーアウト）にする。
+    ' UI上グレーアウトするだけでなく、AgentFloatingForm.OverlayEnabled()側でも
+    ' SpeakSlideNotesDuringSlideShowを見て機能的に無効化しており、以前チェックを入れたまま
+    ' 読み上げをONにした場合でもオーバーレイが動かないようにしている
     Public Function ShowSlideNumber_GetPressed(control As Office.IRibbonControl) As Boolean
         Return AgentSettings.ShowSlideNumberDuringSlideShow
+    End Function
+
+    Public Function ShowSlideNumber_GetEnabled(control As Office.IRibbonControl) As Boolean
+        Return Not AgentSettings.SpeakSlideNotesDuringSlideShow
     End Function
 
     Public Sub ShowSlideNumber_Toggle(control As Office.IRibbonControl, pressed As Boolean)
@@ -98,6 +116,10 @@ Public Class AgentRibbon
         Return AgentSettings.ShowElapsedTimeDuringSlideShow
     End Function
 
+    Public Function ShowElapsedTime_GetEnabled(control As Office.IRibbonControl) As Boolean
+        Return Not AgentSettings.SpeakSlideNotesDuringSlideShow
+    End Function
+
     Public Sub ShowElapsedTime_Toggle(control As Office.IRibbonControl, pressed As Boolean)
         AgentSettings.ShowElapsedTimeDuringSlideShow = pressed
         OfficeAgent.Core.AgentFloatingForm.Instance?.RefreshSlideShowOverlay()
@@ -105,6 +127,10 @@ Public Class AgentRibbon
 
     Public Function ShowLapTime_GetPressed(control As Office.IRibbonControl) As Boolean
         Return AgentSettings.ShowLapTimeDuringSlideShow
+    End Function
+
+    Public Function ShowLapTime_GetEnabled(control As Office.IRibbonControl) As Boolean
+        Return Not AgentSettings.SpeakSlideNotesDuringSlideShow
     End Function
 
     Public Sub ShowLapTime_Toggle(control As Office.IRibbonControl, pressed As Boolean)
@@ -118,6 +144,10 @@ Public Class AgentRibbon
 
     Public Sub SpeakSlideNotes_Toggle(control As Office.IRibbonControl, pressed As Boolean)
         AgentSettings.SpeakSlideNotesDuringSlideShow = pressed
+        ' スライド番号／発表時間／ラップ／発表中は非表示のgetEnabledを再評価させる
+        ' （getEnabledはRibbon側が自動では再ポーリングしないため、明示的な無効化が必要）
+        InvalidateRibbon()
+        OfficeAgent.Core.AgentFloatingForm.Instance?.RefreshSlideShowOverlay()
     End Sub
 
     ' 読み上げに使う音声（TTSエンジン）を選ぶには、Windows標準の「音声のプロパティ」
@@ -165,6 +195,153 @@ Public Class AgentRibbon
 
     Public Sub InsertEmphTag_Click(control As Office.IRibbonControl)
         InsertSapiTagAction?.Invoke("<emph>", "</emph>")
+    End Sub
+
+    ' ── 発話中操作タグ挿入（PowerPointの「スライド ショー」タブ） ──────────
+    ' <agent>／<slide>／<screen>は自作の記法（SAPI標準タグではない）。ノート読み上げ時に
+    ' AgentFloatingForm.ExtractSlideNoteActionsがSAPIの<bookmark mark="N"/>へ変換し、発話中に
+    ' そのマークへ到達したタイミングでスライド操作・エージェント操作を実行する
+    Public Sub InsertActionSlideClickTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<slide op=""click"" dir=""next""/>", "")
+    End Sub
+
+    Public Sub InsertActionSlideClickPrevTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<slide op=""click"" dir=""prev""/>", "")
+    End Sub
+
+    Public Sub InsertActionSlidePageTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<slide op=""page"" dir=""next""/>", "")
+    End Sub
+
+    Public Sub InsertActionSlidePagePrevTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<slide op=""page"" dir=""prev""/>", "")
+    End Sub
+
+    Public Sub InsertActionSlidePageGotoTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<slide dir=""1""/>", "")
+    End Sub
+
+    Public Sub InsertActionAgentMoveTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<agent op=""move"" x=""100"" y=""100"" speed=""1000""/>", "")
+    End Sub
+
+    Public Sub InsertActionAgentGestureAtTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<agent op=""gesture"" x=""100"" y=""100""/>", "")
+    End Sub
+
+    Public Sub InsertActionAgentPlayTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<agent op=""play"" name=""Wave""/>", "")
+    End Sub
+
+    Public Sub InsertActionAgentShowTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<agent op=""show""/>", "")
+    End Sub
+
+    Public Sub InsertActionAgentHideTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<agent op=""hide""/>", "")
+    End Sub
+
+    Public Sub InsertActionBalloonShowTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<balloon op=""show""/>", "")
+    End Sub
+
+    Public Sub InsertActionBalloonHideTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<balloon op=""hide""/>", "")
+    End Sub
+
+    Public Sub InsertActionBalloonStyleTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<balloon op=""style"" size=""12"" font="""" width=""40""/>", "")
+    End Sub
+
+    Public Sub InsertActionBlackoutTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<screen op=""blackout""/>", "")
+    End Sub
+
+    Public Sub InsertActionWhiteoutTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<screen op=""whiteout""/>", "")
+    End Sub
+
+    Public Sub InsertActionScreenResumeTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<screen op=""resume""/>", "")
+    End Sub
+
+    Public Sub InsertActionLaserOnTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<laser op=""on""/>", "")
+    End Sub
+
+    Public Sub InsertActionLaserOffTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<laser op=""off""/>", "")
+    End Sub
+
+    Public Sub InsertActionBreakTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<agent op=""break""/>", "")
+    End Sub
+
+    Public Sub InsertActionWaitTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<agent op=""wait"" ms=""1000""/>", "")
+    End Sub
+
+    ' ── 変数タグ挿入（PowerPointの「スライド ショー」タブ） ──────────
+    ' <var name="..."/>は自作の記法。ノート読み上げ時にAgentFloatingForm.ResolveVariablesが
+    ' 実際の値（スライド番号・時刻等）に置き換えてからSpeak()へ渡す
+    Public Sub InsertVarSlideNumberTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<var name=""slideNumber""/>", "")
+    End Sub
+
+    Public Sub InsertVarSlideCountTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<var name=""slideCount""/>", "")
+    End Sub
+
+    Public Sub InsertVarSlidesRemainingTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<var name=""slidesRemaining""/>", "")
+    End Sub
+
+    Public Sub InsertVarFileNameTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<var name=""fileName""/>", "")
+    End Sub
+
+    Public Sub InsertVarSlideTitleTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<var name=""slideTitle""/>", "")
+    End Sub
+
+    Public Sub InsertVarSectionNameTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<var name=""sectionName""/>", "")
+    End Sub
+
+    Public Sub InsertVarAuthorTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<var name=""author""/>", "")
+    End Sub
+
+    Public Sub InsertVarTimeTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<var name=""time""/>", "")
+    End Sub
+
+    Public Sub InsertVarDateTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<var name=""date""/>", "")
+    End Sub
+
+    Public Sub InsertVarElapsedTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<var name=""elapsed""/>", "")
+    End Sub
+
+    Public Sub InsertVarLapTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<var name=""lap""/>", "")
+    End Sub
+
+    Public Sub InsertVarUserNameTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<var name=""userName""/>", "")
+    End Sub
+
+    Public Sub InsertVarComputerNameTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<var name=""computerName""/>", "")
+    End Sub
+
+    Public Sub InsertVarAgentNameTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<var name=""agentName""/>", "")
+    End Sub
+
+    Public Sub InsertVarAgentDescriptionTag_Click(control As Office.IRibbonControl)
+        InsertSapiTagAction?.Invoke("<var name=""agentDescription""/>", "")
     End Sub
 
     ' ── 数式エラー検知（Excelの「数式」タブ） ──────────────
