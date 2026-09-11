@@ -22,12 +22,18 @@ Partial Public Class ThisAddIn
         OfficeAgent.Core.AssemblyRedirectHelper.EnsureRegistered()
 
         _agentForm = New OfficeAgent.Core.AgentFloatingForm()
-        _agentForm.Show()
 
+        ' _agentForm.Show()はフォームのハンドル未作成時に同期的にLoadイベントを発火させる。
+        ' AgentFloatingForm_Load内で初回表示位置の計算にGetHostWindowHandleFuncを使うため、
+        ' Show()より前に登録しておく必要がある（Show()の後だとLoad時点では常に未登録
+        ' 扱いになり、初回表示位置がプライマリモニタ基準にフォールバックしてしまう）
         OfficeAgent.Core.AgentFloatingForm.OpenSettingsPaneAction = AddressOf ShowSettingsPane
         OfficeAgent.Core.AgentFloatingForm.GetSelectedTextAction = AddressOf GetSelectedText
         AgentRibbon.IsSettingsPaneVisibleFunc = Function() IsSettingsPaneVisible
         AgentRibbon.ToggleSettingsPaneAction = AddressOf ToggleSettingsPane
+        OfficeAgent.Core.AgentFloatingForm.GetHostWindowHandleFunc = AddressOf GetHostWindowHandle
+
+        _agentForm.Show()
 
         AddHandler Me.Application.WorkbookBeforeSave, AddressOf OnBeforeSave
         AddHandler Me.Application.WorkbookAfterSave, AddressOf OnAfterSave
@@ -94,6 +100,16 @@ Partial Public Class ThisAddIn
 
     ' 選択範囲として渡す最大セル数（巨大な範囲選択時にAIへの送信量を抑えるため）
     Private Const MaxSelectedCells As Integer = 500
+
+    ' AgentFloatingForm側のGetHostWindowHandleFuncから呼ばれる：エージェントの初回表示位置を
+    ' 「Officeウィンドウがあるモニタ」基準にするため、Excelのメインウィンドウハンドルを返す
+    Private Function GetHostWindowHandle() As IntPtr
+        Try
+            Return New IntPtr(Me.Application.Hwnd)
+        Catch ex As Exception
+            Return IntPtr.Zero
+        End Try
+    End Function
 
     ' カイル右クリックの「選択範囲について」から呼ばれる：現在選択中のセル範囲をタブ区切りテキストにして返す
     ' （未選択・空・セル範囲以外の選択ならNothing）
@@ -179,6 +195,7 @@ Partial Public Class ThisAddIn
         OfficeAgent.Core.AgentFloatingForm.GetSelectedTextAction = Nothing
         AgentRibbon.IsSettingsPaneVisibleFunc = Nothing
         AgentRibbon.ToggleSettingsPaneAction = Nothing
+        OfficeAgent.Core.AgentFloatingForm.GetHostWindowHandleFunc = Nothing
 
         If _settingsTaskPane IsNot Nothing Then
             RemoveHandler _settingsTaskPane.VisibleChanged, AddressOf SettingsPane_VisibleChanged

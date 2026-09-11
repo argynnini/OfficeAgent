@@ -45,6 +45,17 @@ Public Class AgentFloatingForm
     ' SpeakSlideNotesが呼ばれるたびに（＝スライドが変わるたびに）呼び出すため、常に最新の値が返る
     Public Shared GetSlideVariablesFunc As Func(Of Dictionary(Of String, String))
 
+    ' 各Officeアドイン（ThisAddIn_Startup）が、ホストアプリのメインウィンドウハンドルを返す
+    ' 処理を登録する。初回表示位置を「エージェントが起動しているモニタ」ではなく
+    ' 「Officeウィンドウが実際に開いているモニタ」基準にするために使用する
+    Public Shared GetHostWindowHandleFunc As Func(Of IntPtr)
+
+    ' PowerPointアドイン（ThisAddIn_Startup）が、現在アクティブなスライドショーウィンドウ
+    ' （発表者が実際に発表画面として使っているウィンドウ）のハンドルを返す処理を登録する。
+    ' スライドショー開始時にエージェントを発表者スクリーン側のモニタへ移動させ、
+    ' <agent op="move".../>タグの座標をそのモニタ基準に解釈するために使用する
+    Public Shared GetSlideShowWindowHandleFunc As Func(Of IntPtr)
+
     Protected Overrides ReadOnly Property ShowWithoutActivation As Boolean
         Get
             Return True
@@ -176,6 +187,107 @@ Public Class AgentFloatingForm
         Return sb.ToString()
     End Function
 
+    ' ── <ruby yomi="読み仮名">原文</ruby>タグ（吹き出し表示≠発声内容） ──────────
+    '
+    ' Microsoft Agentの\Mapタグ（\Map="発声用"="吹き出し用"\）は、balloontext（2つ目の
+    ' 引数）は仕様通り吹き出しに表示されるが、spokentext（1つ目の引数）はMapの中身が
+    ' 常に無音になり一切発声されない、という実機挙動が判明している
+    ' （docs/MicrosoftAgent/map-tag-internal-behavior.md参照）。また、1回のSpeak呼び出し内で
+    ' \Mapを複数回使う場合、「\Map→地の文→\Map」のように間に地の文を挟んでから次の\Mapに
+    ' 入ると、2番目以降の\Mapで吹き出し更新が完全に停止するという副作用があるが、
+    ' \Mapを区切りなく連続させる分には何個でも問題ない、ということも実機で確認済み。
+    '
+    ' この2つの性質を組み合わせ、<ruby>タグを次のように\Mapの連なりへ変換する。
+    '   1. テキスト中で最初に現れる<ruby>より前の部分は、そのまま地の文として残す
+    '      （文の書き出しなので、\Mapの連続を崩さない）
+    '   2. 最初の<ruby>以降（<ruby>の中身も、<ruby>と<ruby>の間にある地の文も）を、
+    '      すべて\Map="x"="表示したい断片"\の連続に変換する（spokentextはダミーの"x"で
+    '      よい。中身はどうせ発声されないため）。<ruby>の本文（原文）は半角スペースで
+    '      単語ごとに分割し、それぞれ個別の\Mapにする。<ruby>の外の地の文は句読点
+    '      （SentenceBreakChars）で区切ったまとまりごとに\Mapにする
+    '   3. 最後に、実際に発声させたい内容（<ruby>はyomi属性の値、地の文はそのままの
+    '      文字列）を、元の語順通りに半角スペースで連結した1つのテキストとしてまとめて
+    '      \Mapの連なりの直後に続ける（\Mapの直後に地の文が続く分には吹き出し表示は
+    '      壊れないため、ここが安全に発声できる）
+    Private Shared ReadOnly RubyTagPattern As New Regex("<ruby\s+yomi\s*=\s*[""“”]([^""“”]*)[""“”]\s*>(.*?)</ruby>", RegexOptions.IgnoreCase Or RegexOptions.Singleline)
+
+    ' \Map="発声用ダミー"="表示断片"\ のうち、実際に吹き出しへ表示される断片（2つ目の
+    ' 引数）だけを取り出すパターン。ApplyAutoBalloonHeightの文字数計算で、
+    ' \Mapのタグ記法そのもの（バックスラッシュ・引用符等）まで表示文字数に含めて
+    ' 数えてしまわないようにするために使う（<...>形式ではないため既存のTagSpanPatternでは
+    ' 除去できない）
+    Private Shared ReadOnly MapTagPattern As New Regex("\\Map=""[^""]*""=""([^""]*)""\\", RegexOptions.IgnoreCase)
+
+    ' 地の文を句読点（SentenceBreakChars）の直後で分割する。「の紹介と、題しまして、」
+    ' のように句読点が複数あれば複数のまとまりに、末尾に句読点が無い残りがあれば
+    ' それも最後のまとまりとして含める
+    Private Shared Function SplitAtSentenceBreaks(text As String) As List(Of String)
+        Dim result As New List(Of String)
+        If String.IsNullOrEmpty(text) Then Return result
+        Dim sb As New StringBuilder()
+        For Each c In text
+            sb.Append(c)
+            If SentenceBreakChars.Contains(c) Then
+                result.Add(sb.ToString())
+                sb.Clear()
+            End If
+        Next
+        If sb.Length > 0 Then result.Add(sb.ToString())
+        Return result
+    End Function
+
+    Private Shared Function ConvertRubyTagsToMapChain(text As String) As String
+        If Not RubyTagPattern.IsMatch(text) Then Return text
+
+        Dim firstMatch = RubyTagPattern.Match(text)
+        Dim prefix = text.Substring(0, firstMatch.Index)
+        Dim rest = text.Substring(firstMatch.Index)
+
+        ' \Mapの連なりとして並べる断片（吹き出しに表示される）
+        Dim displayChunks As New List(Of String)
+        ' 最後にまとめて続ける、実際に発声させる断片
+        Dim spokenChunks As New List(Of String)
+
+        Dim lastIndex = 0
+        For Each m As Match In RubyTagPattern.Matches(rest)
+            If m.Index > lastIndex Then
+                Dim plain = rest.Substring(lastIndex, m.Index - lastIndex)
+                For Each chunk In SplitAtSentenceBreaks(plain)
+                    ' 改行だけ・空白だけのchunk（行末の改行文字などに由来）は、
+                    ' 中身の無い\Mapを生成してしまうため除外する
+                    If String.IsNullOrWhiteSpace(chunk) Then Continue For
+                    displayChunks.Add(chunk)
+                    spokenChunks.Add(chunk)
+                Next
+            End If
+
+            Dim yomi = m.Groups(1).Value
+            Dim original = m.Groups(2).Value
+            For Each word In original.Split(" "c).Where(Function(w) w.Length > 0)
+                displayChunks.Add(word)
+            Next
+            If Not String.IsNullOrEmpty(yomi) Then spokenChunks.Add(yomi)
+
+            lastIndex = m.Index + m.Length
+        Next
+
+        If lastIndex < rest.Length Then
+            Dim plain = rest.Substring(lastIndex)
+            For Each chunk In SplitAtSentenceBreaks(plain)
+                If String.IsNullOrWhiteSpace(chunk) Then Continue For
+                displayChunks.Add(chunk)
+                spokenChunks.Add(chunk)
+            Next
+        End If
+
+        Dim mapChain As New StringBuilder()
+        For Each chunk In displayChunks
+            mapChain.Append("\Map=""x""=""").Append(chunk).Append("""\")
+        Next
+
+        Return prefix & mapChain.ToString() & String.Join(" ", spokenChunks)
+    End Function
+
     ' 吹き出しを出す際、音声では絶対に喋らせないための分岐（あえてSpeak/Thinkが直感と逆）。
     ' .TTSModeIDを参照するとMS Agentサーバーが対応TTSエンジンを探しにいく副作用があり、
     ' LanguageIDに合うエンジンがシステムに存在すると、そのキャラクター本来の設計に関わらず
@@ -231,6 +343,11 @@ Public Class AgentFloatingForm
     ' RegexOptions.Singlelineを使う）。
     ' 同じ理由で、空行（コメント除去後に残った空行や、タイミング目安・区切り用に空けている
     ' 空行）も吹き出しのサイズ計算に含まれてしまうため、あわせて取り除く
+    ' <agent op="break"/>で挟む無音の長さ（ミリ秒）。breakの本質的な役割は吹き出しの
+    ' リセット（Agent_RequestComplete参照）であり、音声としての間を作ることが目的ではない
+    ' ため、Requestを1つ発行できる最小限の長さにしておく
+    Private Const BreakSilenceMs As Integer = 1
+
     Public Sub SpeakSlideNotes(text As String)
         If String.IsNullOrWhiteSpace(text) Then Return
         Dim normalizedText = NormalizeSmartQuotesInTags(text)
@@ -247,6 +364,10 @@ Public Class AgentFloatingForm
         ' 古いbookmarkが遅れて届いても存在しない番号として無視されるだけになり、誤爆しなくなる
         With AxAgent.Characters("OfficeAgent")
             .StopAll()
+            ' StopAllで前回の発話が中断された場合、そのとき未完了だったbreakのリクエストID
+            ' が残り続けないようにする（本来はRequestComplete(Status=3)で来るはずだが念のため）
+            _pendingBreakBalloonResetIds.Clear()
+            _pendingBalloonHeightMarks.Clear()
             ' Balloon.FontSizeはキャラクターに紐づく状態で、一度設定すると次にどこかで
             ' 変更されるまで残り続ける。発表時間のお知らせ（AnnouncePresentationTime）や
             ' 検索吹き出し等、他の機能がそれぞれ自分の用途向けにFontSizeを変更する箇所が
@@ -259,7 +380,16 @@ Public Class AgentFloatingForm
             ' （理由はExtractSlideNoteActions手前のコメント参照）。
             ' 各テキスト断片はさらにExtractSlideNoteActionsで<slide>タグを
             ' bookmarkへ変換してから読み上げる
-            For Each segment In SplitNoteBySequentialActions(strippedText)
+            Dim segmentList = SplitNoteBySequentialActions(strippedText)
+            ' テキスト断片が1つしかない（＝breakで分割されていない）場合は、高さ計算を
+            ' RequestStartまで遅延させず、従来通りSpeak直前に即座に適用する。RequestStart方式は
+            ' 「実際に音声合成が開始されるタイミング」まで適用が遅れるため、実機で最大0.6秒程度
+            ' 吹き出しが古い（既定の）高さのまま表示されてから正しい高さに切り替わるズレが
+            ' 確認された。単一テキストならそもそも「後続セグメントの高さで上書きされる」問題
+            ' （breakが無いと発生しない）は起きないため、遅延させる理由が無い
+            Dim textSegmentCount = segmentList.Where(Function(s) Not String.IsNullOrWhiteSpace(s.PlainText)).Count()
+            Dim useImmediateBalloonHeight = textSegmentCount <= 1
+            For Each segment In segmentList
                 If segment.SequentialAction IsNot Nothing Then
                     Dim sa = segment.SequentialAction
                     If String.Equals(sa.TypeName, "balloon", StringComparison.OrdinalIgnoreCase) Then
@@ -275,7 +405,14 @@ Public Class AgentFloatingForm
                                 If sa.Attributes.TryGetValue("ms", msText) Then Integer.TryParse(msText, ms)
                                 If ms > 0 Then .Speak($"<silence msec=""{ms}""/>")
                             Case "break"
-                                ' 何もしない：ここで発話を分割することだけが目的
+                                ' 無音を挟んで音声としての区切りを作りつつ、この無音リクエストの
+                                ' 完了（Agent_RequestComplete）をトリガーに吹き出しを明示的に
+                                ' リセットする（_pendingBreakBalloonResetIds参照）。単純な
+                                ' 直接プロパティ代入（.Balloon.Visible = False）をここで即座に
+                                ' 呼ぶと、キューでまだ再生中の前のテキストの吹き出しを
+                                ' 読み上げ途中で消してしまうため使わない
+                                Dim breakReq = TryCast(.Speak($"<silence msec=""{BreakSilenceMs}""/>"), AgentObjects.IAgentCtlRequest)
+                                If breakReq IsNot Nothing Then _pendingBreakBalloonResetIds.Add(breakReq.ID)
                             Case Else
                                 PerformAgentNoteAction(sa)
                         End Select
@@ -285,9 +422,25 @@ Public Class AgentFloatingForm
                     Dim safeText = withMarks.Replace("|"c, "｜"c).Replace("&"c, "＆"c)
                     ' 0幅空白挿入処理は一時的に無効化（TTS解析への影響を検証するため）
                     ' safeText = InsertWordBreaksAtPunctuationOutsideTags(safeText)
+                    safeText = ConvertRubyTagsToMapChain(safeText)
                     If Not String.IsNullOrWhiteSpace(safeText) Then
-                        ApplyAutoBalloonHeight(safeText)
-                        .Speak(safeText)
+                        Dim charsPerLineAtSpeak = .Balloon.CharsPerLine
+                        If useImmediateBalloonHeight Then
+                            ApplyAutoBalloonHeight(safeText, charsPerLineAtSpeak)
+                            .Speak(safeText)
+                        Else
+                            ' テキストの先頭に高さ適用専用のbookmarkを埋め込み、実際に読み上げが
+                            ' その位置に到達した瞬間（Agent_Bookmark）に高さを適用する。
+                            ' RequestStartイベント（そのSpeakリクエストがキューから処理され始めた
+                            ' タイミング）だと、TTSエンジンが次のリクエストを先読みして処理する
+                            ' ことがあり、まだ前のテキストが表示・再生されている間に次の高さが
+                            ' 適用されてしまう（実機で「1つ前のテキストの高さになる」不具合を確認）。
+                            ' bookmarkは実際の読み上げ位置に同期して発火するため、これを避けられる
+                            _nextMarkId += 1
+                            Dim heightMarkId = _nextMarkId
+                            _pendingBalloonHeightMarks(heightMarkId) = (safeText, charsPerLineAtSpeak)
+                            .Speak($"<bookmark mark=""{heightMarkId}""/>" & safeText)
+                        End If
                     End If
                 End If
             Next
@@ -345,11 +498,15 @@ Public Class AgentFloatingForm
     '                                                        "page"は残りのビルドを無視して強制的に次/前スライドへ移動。
     '                                                        dirに数値を指定すると、opに関わらずそのスライド番号へ
     '                                                        直接ジャンプする。dir省略時"next"
-    '   <agent op="move" x="N" y="N" speed="N"/>            エージェントを画面座標(x,y)へ移動。speed省略時は
-    '                                                        アニメーション無しで瞬間移動、指定時はそのミリ秒
-    '                                                        かけて滑るように移動する
+    '   <agent op="move" x="N" y="N" speed="N"/>            エージェントを画面上の位置(x,y)へ移動。x/yは
+    '                                                        対象スクリーンに対する0～100の割合（x="90" y="85"なら
+    '                                                        横90%・縦85%の位置）。対象スクリーンはスライドショー中は
+    '                                                        発表者スクリーン、それ以外はOfficeウィンドウのあるモニタ。
+    '                                                        speed省略時はアニメーション無しで瞬間移動、
+    '                                                        指定時はそのミリ秒かけて滑るように移動する
     '   <agent op="play" name="..."/>                       エージェントのアニメーションを再生
-    '   <agent op="gesture" x="N" y="N"/>                   エージェントが座標(x,y)の方向を指す
+    '   <agent op="gesture" x="N" y="N"/>                   エージェントが画面上の位置(x,y)の方向を指す。
+    '                                                        x/yはmoveと同じく対象スクリーンに対する0～100の割合
     '   <agent op="show" anim="true|false"/>                エージェント自体を表示。anim省略時"false"
     '                                                        （アニメーション無しで瞬時に表示）。"true"を
     '                                                        指定するとShowingアニメーション付きで表示する
@@ -385,6 +542,30 @@ Public Class AgentFloatingForm
 
     Private ReadOnly _pendingSlideNoteActions As New Dictionary(Of Integer, SlideNoteAction)
 
+    ' <agent op="break"/>で発行した無音Speakリクエストのidを覚えておく。
+    ' 吹き出し(Balloon)は「1回のSpeak()が終わるたび」ではなく「キュー全体が空になったとき」
+    ' にしか自動でHideされない仕様が実機で確認された（連続する複数のSpeak呼び出しの間、
+    ' 前のテキストの吹き出しが表示されっぱなしのまま次のテキストに差し替わる）。breakは
+    ' 「ここで吹き出しをリセットする」意図で使われているため、このリクエストの完了
+    ' （Agent_RequestComplete）を検知したタイミングで明示的にBalloon.Visibleを倒す
+    Private ReadOnly _pendingBreakBalloonResetIds As New HashSet(Of Integer)
+
+    ' 高さ適用専用bookmarkのmarkId→(本文, その時点のCharsPerLine)の対応。
+    ' Balloon.Styleの行数計算（ApplyAutoBalloonHeight）はLeft/Topと同じくキューを経由しない
+    ' 直接プロパティ代入のため、breakで複数のSpeak呼び出しがある場合にSpeakSlideNotesの
+    ' ループ内でその場（＝まだ何も再生されていない時点）で即座に適用してしまうと、ループが
+    ' 終わった時点で最後のセグメントの行数だけが残り、それより前のセグメントは実際に
+    ' 読み上げられる時点で誤った（最後のセグメント用の）行数のまま表示されてしまう。
+    ' そのため計算だけ先にせず本文を保留しておき、そのテキストの先頭に埋め込んだbookmarkに
+    ' 読み上げが到達した瞬間（Agent_Bookmark）に適用する。RequestStartイベント（そのSpeak
+    ' リクエストがキューから処理され始めたタイミング）はTTSエンジンが先読みすることがあり、
+    ' 前のテキストがまだ表示・再生されている間に次の高さが適用されてしまう不具合が実機で
+    ' 確認されたため、bookmark（実際の読み上げ位置に同期して発火する）方式に切り替えた。
+    ' CharsPerLineは.Speak()を呼ぶ瞬間（＝そのテキストの分だけループを処理している時点）に
+    ' キャプチャしたものを使う（Bookmark発火時点で改めて.CharsPerLineを読み直すと、
+    ' <balloon op="style" width="N"/>で後続のセグメント用に幅が変更されていた場合にズレるため）
+    Private ReadOnly _pendingBalloonHeightMarks As New Dictionary(Of Integer, (Text As String, CharsPerLine As Integer))
+
     ' bookmarkのmark番号の発行元。SpeakSlideNotesの呼び出しをまたいで単調増加させる
     ' （理由はSpeakSlideNotes内のコメント参照）
     Private _nextMarkId As Integer = 0
@@ -415,8 +596,8 @@ Public Class AgentFloatingForm
 
     Private Shared Function NormalizeSmartQuotesInTags(text As String) As String
         Return TagSpanPattern.Replace(text, Function(m As Match) As String
-                                          Return m.Value.Replace(ChrW(&H201C), """"c).Replace(ChrW(&H201D), """"c)
-                                      End Function)
+                                                Return m.Value.Replace(ChrW(&H201C), """"c).Replace(ChrW(&H201D), """"c)
+                                            End Function)
     End Function
 
     ' InsertWordBreaksAtPunctuation（句読点直後だけのゼロ幅スペース挿入）を、<...>タグの
@@ -487,17 +668,17 @@ Public Class AgentFloatingForm
         End If
 
         Return VarTagPattern.Replace(text, Function(m As Match) As String
-                                         Dim nameText As String = Nothing
-                                         For Each attrMatch As Match In ActionAttrPattern.Matches(m.Groups(1).Value)
-                                             If String.Equals(attrMatch.Groups(1).Value, "name", StringComparison.OrdinalIgnoreCase) Then
-                                                 nameText = attrMatch.Groups(2).Value
-                                                 Exit For
-                                             End If
-                                         Next
-                                         Dim value As String = Nothing
-                                         If nameText IsNot Nothing AndAlso values.TryGetValue(nameText, value) Then Return value
-                                         Return ""
-                                     End Function)
+                                               Dim nameText As String = Nothing
+                                               For Each attrMatch As Match In ActionAttrPattern.Matches(m.Groups(1).Value)
+                                                   If String.Equals(attrMatch.Groups(1).Value, "name", StringComparison.OrdinalIgnoreCase) Then
+                                                       nameText = attrMatch.Groups(2).Value
+                                                       Exit For
+                                                   End If
+                                               Next
+                                               Dim value As String = Nothing
+                                               If nameText IsNot Nothing AndAlso values.TryGetValue(nameText, value) Then Return value
+                                               Return ""
+                                           End Function)
     End Function
 
     ' 空行（前後の空白のみの行を含む）を取り除いて詰める。改行そのものはSpeak()での
@@ -562,9 +743,44 @@ Public Class AgentFloatingForm
         Return sb.ToString()
     End Function
 
+    ' 調査用：BalloonShowのタイミングが高さ適用（Bookmark経由のApplyAutoBalloonHeight）の
+    ' 前か後かを確認する。もしBalloonShowの方が先に来ているなら、吹き出しは「最初に表示
+    ' され始めた瞬間」の矩形サイズで固定され、その後Style（NumberOfLines）を変更しても
+    ' 実際の見た目には反映されない可能性がある
+    Private Sub Agent_BalloonShow(sender As Object, e As AxAgentObjects._AgentEvents_BalloonShowEvent) Handles AxAgent.BalloonShow
+        DebugLog.Write("BalloonShow")
+    End Sub
+
+    ' <agent op="break"/>で発行した無音Speakリクエストの完了を検知し、吹き出しを明示的に
+    ' リセットする。吹き出し(Balloon)は「1回のSpeak()ごと」ではなく「キュー全体が空に
+    ' なったとき」にしか自動でHideされない仕様が実機で確認されたため（_pendingBreakBalloonResetIds参照）
+    Private Sub Agent_RequestComplete(sender As Object, e As AxAgentObjects._AgentEvents_RequestCompleteEvent) Handles AxAgent.RequestComplete
+        Try
+            Dim req = TryCast(e.request, AgentObjects.IAgentCtlRequest)
+            If req IsNot Nothing AndAlso _pendingBreakBalloonResetIds.Remove(req.ID) Then
+                AxAgent.Characters("OfficeAgent").Balloon.Visible = False
+            End If
+        Catch ex As Exception
+        End Try
+    End Sub
+
     ' SAPIのブックマークが読み上げ中に発火するたびに呼ばれる。対応するアクションが
     ' 登録されていなければ何もしない（通常のスピーカーノート読み上げでは登録が無いので毎回ここで抜ける）
     Private Sub Agent_Bookmark(sender As Object, e As AxAgentObjects._AgentEvents_BookmarkEvent) Handles AxAgent.Bookmark
+        ' 高さ適用専用のbookmark（各テキストの先頭に埋め込んだもの）なら、実際にそのテキストの
+        ' 読み上げが始まった瞬間として吹き出しの高さを適用する（_pendingBalloonHeightMarks参照）
+        Dim heightEntry As (Text As String, CharsPerLine As Integer) = (Nothing, 0)
+        If _pendingBalloonHeightMarks.TryGetValue(e.bookmarkID, heightEntry) Then
+            _pendingBalloonHeightMarks.Remove(e.bookmarkID)
+            Try
+                DebugLog.Write($"Bookmark(height) mark={e.bookmarkID} Balloon.Visible(before)={AxAgent.Characters("OfficeAgent").Balloon.Visible} Style(before)={AxAgent.Characters("OfficeAgent").Balloon.Style:X8}")
+                ApplyAutoBalloonHeight(heightEntry.Text, heightEntry.CharsPerLine)
+                DebugLog.Write($"Bookmark(height) mark={e.bookmarkID} Style(after)={AxAgent.Characters("OfficeAgent").Balloon.Style:X8}")
+            Catch ex As Exception
+            End Try
+            Return
+        End If
+
         Dim action As SlideNoteAction = Nothing
         If Not _pendingSlideNoteActions.TryGetValue(e.bookmarkID, action) Then Return
         Try
@@ -603,7 +819,6 @@ Public Class AgentFloatingForm
     Private Sub PerformAgentNoteAction(action As SlideNoteAction)
         Try
             Dim xText As String = Nothing, yText As String = Nothing
-            Dim x = 0, y = 0
             With AxAgent.Characters("OfficeAgent")
                 Select Case action.Op.ToLowerInvariant()
                     Case "move"
@@ -615,17 +830,28 @@ Public Class AgentFloatingForm
                         ' Speedに0を指定すると「アニメーション無しで瞬間移動」しつつ、通常の
                         ' Requestとして正しくキューに乗る（moveto-method.md参照）ため、
                         ' speedを問わず常にMoveTo()を使う（speedを指定すればそのミリ秒かけて
-                        ' 滑るように移動する）
-                        action.Attributes.TryGetValue("x", xText) : Integer.TryParse(xText, x)
-                        action.Attributes.TryGetValue("y", yText) : Integer.TryParse(yText, y)
+                        ' 滑るように移動する）。
+                        ' x/yはピクセルの絶対座標ではなく、対象スクリーンに対する0～100の割合
+                        ' （x="90" y="85"なら横90%・縦85%の位置）として指定させる。ノートを
+                        ' 書く人がモニタの解像度やAxAgentの内部座標系（プライマリモニタ基準・
+                        ' DPIスケール込み）を意識しなくても位置を指定できるようにするため
+                        Dim xPercent As Double = 0, yPercent As Double = 0
+                        action.Attributes.TryGetValue("x", xText) : Double.TryParse(xText, xPercent)
+                        action.Attributes.TryGetValue("y", yText) : Double.TryParse(yText, yPercent)
                         Dim speedText As String = Nothing
                         Dim speed = 0
                         If action.Attributes.TryGetValue("speed", speedText) Then Integer.TryParse(speedText, speed)
-                        .MoveTo(CShort(x), CShort(y), speed)
+                        Dim absX, absY As Integer
+                        ResolvePercentPosition(xPercent, yPercent, absX, absY)
+                        .MoveTo(CShort(absX), CShort(absY), speed)
                     Case "gesture"
-                        action.Attributes.TryGetValue("x", xText) : Integer.TryParse(xText, x)
-                        action.Attributes.TryGetValue("y", yText) : Integer.TryParse(yText, y)
-                        .GestureAt(CShort(x), CShort(y))
+                        ' moveと同じく、x/yは対象スクリーンに対する0～100の割合として指定させる
+                        Dim xPercent As Double = 0, yPercent As Double = 0
+                        action.Attributes.TryGetValue("x", xText) : Double.TryParse(xText, xPercent)
+                        action.Attributes.TryGetValue("y", yText) : Double.TryParse(yText, yPercent)
+                        Dim absX, absY As Integer
+                        ResolvePercentPosition(xPercent, yPercent, absX, absY)
+                        .GestureAt(CShort(absX), CShort(absY))
                     Case "play"
                         Dim animName As String = Nothing
                         If action.Attributes.TryGetValue("name", animName) AndAlso Not String.IsNullOrEmpty(animName) Then .Play(animName)
@@ -693,6 +919,9 @@ Public Class AgentFloatingForm
     ' 実機で確認された。そのためこちらで文字幅から必要な行数を見積もり、size-to-textを
     ' 使わずNumberOfLinesを直接指定する方式を試す。全角文字（おおよそLatin-1の範囲外、
     ' AscW>255）を幅2、それ以外（半角英数字等）を幅1として概算する簡易的な計算。
+    ' （吹き出しが大きくなりすぎる不具合が実機で見つかったことがあるが、真因は空行が
+    ' 無条件に1行としてカウントされていたことで、この幅2倍の重み付け自体は妥当だった
+    ' ため元に戻した。空行の扱いはApplyAutoBalloonHeight側で対処している）
     ' ただしInsertWordBreaksAtPunctuationOutsideTagsが句読点の後に挿入するゼロ幅スペース
     ' （U+200B、AscW=8203で上記の条件に該当してしまう）は、見た目上は幅を持たない文字
     ' なので、全角扱い（幅2）にしてしまうと行数を余分に見積もってしまう。幅0として除外する
@@ -706,18 +935,31 @@ Public Class AgentFloatingForm
     End Function
 
     ' spokenTextを読み上げる直前に呼ぶ。実際に吹き出しへ表示される分量（タグ・ゼロ幅スペース
-    ' を除いた地の文）から必要な行数を計算し、Balloon.Styleへ反映する
-    Private Sub ApplyAutoBalloonHeight(spokenText As String)
+    ' を除いた地の文）から必要な行数を計算し、Balloon.Styleへ反映する。
+    ' charsPerLineは呼び出し側でキャプチャした値を渡すこと（このメソッド内で.CharsPerLineを
+    ' 都度取得しない）。呼び出しタイミングがそのテキストの実際の再生時点（Agent_RequestStart）
+    ' までずれ込むため、その場で読み直すと<balloon op="style" width="N"/>で後続のセグメント用に
+    ' 幅が変更されていた場合に、そのセグメントの意図した幅とズレてしまう
+    Private Sub ApplyAutoBalloonHeight(spokenText As String, charsPerLine As Integer)
         Try
             With AxAgent.Characters("OfficeAgent").Balloon
-                Dim charsPerLine = .CharsPerLine
                 If charsPerLine <= 0 Then Return
 
-                Dim visibleText = TagSpanPattern.Replace(spokenText, "")
+                ' \Map="発声用"="表示断片"\ は<...>形式ではないためTagSpanPatternでは
+                ' 除去できない。先に表示断片（2つ目の引数）だけへ変換してから、
+                ' 既存の<...>タグ除去処理にかける
+                Dim visibleText = TagSpanPattern.Replace(MapTagPattern.Replace(spokenText, "$1"), "")
                 Dim totalLines = 0
                 For Each line In visibleText.Split({vbCr, vbLf}, StringSplitOptions.None)
                     Dim width = EstimateDisplayWidth(line)
-                    totalLines += Math.Max(1, CInt(Math.Ceiling(width / CDbl(charsPerLine))))
+                    ' 空行（width=0）は0行として扱う。breakでテキストを分割すると、分割点の
+                    ' 前後に元の改行が残ったまま断片の先頭・末尾に空文字列の行ができてしまい
+                    ' （RemoveBlankLinesはノート全体に対して1回しかかけていないため、分割後に
+                    ' 生じる空行までは除去できない）、Math.Max(1, ...)を無条件にかけると
+                    ' その空行だけで1行分の余分な高さが積み上がってしまう不具合が実機で確認された
+                    Dim lineCount = If(width = 0, 0, Math.Max(1, CInt(Math.Ceiling(width / CDbl(charsPerLine)))))
+                    totalLines += lineCount
+                    DebugLog.Write($"ApplyAutoBalloonHeight: line=""{line}"" width={width} charsPerLine={charsPerLine} lineCount={lineCount}")
                 Next
                 totalLines = Math.Max(1, totalLines)
 
@@ -727,6 +969,7 @@ Public Class AgentFloatingForm
                 Dim style = .Style And Not BalloonStyleSizeToText
                 style = (style And &HFFFFFF) Or (totalLines * (2 ^ 24))
                 .Style = style
+                DebugLog.Write($"ApplyAutoBalloonHeight: totalLines={totalLines} (applied)")
             End With
         Catch ex As Exception
         End Try
@@ -840,6 +1083,83 @@ Public Class AgentFloatingForm
         Return AcsFileNameFor(character)
     End Function
 
+    ' <agent op="move"/>／<agent op="gesture"/>のx/y（対象スクリーンに対する0～100の割合）を、
+    ' AxAgentの座標系（プライマリモニタ基準・GetWindowMag()で割った論理ピクセル）の絶対座標に
+    ' 変換する。対象スクリーンは、スライドショー中（発表者スクリーンへ移動済み）はそのモニタ、
+    ' それ以外はOfficeウィンドウがあるモニタを基準にする
+    Private Sub ResolvePercentPosition(xPercent As Double, yPercent As Double, ByRef absX As Integer, ByRef absY As Integer)
+        Dim targetScreen = If(_positionBeforeSlideShow.HasValue,
+                               ResolveScreenFromHandleFunc(GetSlideShowWindowHandleFunc),
+                               GetHostScreen())
+        Dim mag = GetWindowMag()
+        Dim screenLeft = targetScreen.Bounds.Left / mag
+        Dim screenTop = targetScreen.Bounds.Top / mag
+        Dim screenWidth = targetScreen.Bounds.Width / mag
+        Dim screenHeight = targetScreen.Bounds.Height / mag
+        absX = CInt(screenLeft + screenWidth * (xPercent / 100.0))
+        absY = CInt(screenTop + screenHeight * (yPercent / 100.0))
+    End Sub
+
+    ' 初回表示位置の基準にするモニタを決める。GetHostWindowHandleFuncからOfficeの
+    ' メインウィンドウハンドルが取得できればそのウィンドウがあるモニタを、
+    ' 取得できなければ（未登録・失敗時）従来通りプライマリモニタを使う
+    Private Function GetHostScreen() As Screen
+        Return ResolveScreenFromHandleFunc(GetHostWindowHandleFunc)
+    End Function
+
+    ' ウィンドウハンドルを返すFuncから、そのウィンドウがあるモニタを解決する共通処理。
+    ' Func未登録・取得失敗（発表中以外にスライドショーウィンドウが無い等）の場合はプライマリモニタを返す
+    Private Function ResolveScreenFromHandleFunc(handleFunc As Func(Of IntPtr)) As Screen
+        Try
+            Dim hwnd = handleFunc?.Invoke()
+            If hwnd.HasValue AndAlso hwnd.Value <> IntPtr.Zero Then
+                Return Screen.FromHandle(hwnd.Value)
+            End If
+        Catch ex As Exception
+        End Try
+        Return Screen.PrimaryScreen
+    End Function
+
+    ' スライドショー開始前のエージェント位置（AxAgent座標系）。スライドショー終了時に
+    ' この位置へ戻すために使う。Nothingならスライドショー中ではない（＝移動していない）
+    Private _positionBeforeSlideShow As Drawing.Point?
+
+    ' PowerPointのスライドショー開始時に呼ぶ。GetSlideShowWindowHandleFuncから発表者が
+    ' 実際に見ているスライドショーウィンドウのハンドルを取得し、そのモニタの右下へ
+    ' エージェントを移動させる（初回表示位置と同じ計算式）。元の位置はEndSlideShowMoveで
+    ' 復元できるよう保存しておく
+    Public Sub MoveToSlideShowScreen()
+        Try
+            With AxAgent.Characters("OfficeAgent")
+                _positionBeforeSlideShow = New Drawing.Point(.Left, .Top)
+                Dim targetScreen = ResolveScreenFromHandleFunc(GetSlideShowWindowHandleFunc)
+                Dim mag = GetWindowMag()
+                Dim top = CShort((targetScreen.Bounds.Top + targetScreen.Bounds.Height - .OriginalHeight - 100) / mag)
+                Dim left = CShort((targetScreen.Bounds.Left + targetScreen.Bounds.Width - .OriginalWidth - 50) / mag)
+                .MoveTo(left, top, 0)
+            End With
+        Catch ex As Exception
+        End Try
+    End Sub
+
+    ' PowerPointのスライドショー終了時に呼ぶ。MoveToSlideShowScreenで移動する前の位置へ戻す。
+    ' この直後にAnnouncePresentationTime／PlayConfiguredAnimationが.StopAll()を呼ぶため、
+    ' MoveTo()でキューに乗せる方式だと実行前に取り消されてしまう（実機で発生確認済み）。
+    ' Left/Topへの直接代入はキューを経由せずその場で即座に反映されるため、.StopAll()の
+    ' 影響を受けない
+    Public Sub RestorePositionAfterSlideShow()
+        If Not _positionBeforeSlideShow.HasValue Then Return
+        Try
+            Dim pos = _positionBeforeSlideShow.Value
+            With AxAgent.Characters("OfficeAgent")
+                .Left = CShort(pos.X)
+                .Top = CShort(pos.Y)
+            End With
+        Catch ex As Exception
+        End Try
+        _positionBeforeSlideShow = Nothing
+    End Sub
+
     Private Sub AgentFloatingForm_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Instance = Me
         _searchBalloon = New SearchBalloonForm(Me)
@@ -873,8 +1193,9 @@ Public Class AgentFloatingForm
             .SoundEffectsOn = AgentSettings.DefaultSound
             .IdleOn = True
             If Not wasAlreadyVisible Then
-                .Top = (Screen.PrimaryScreen.Bounds.Height - .OriginalHeight - 100) / GetWindowMag()
-                .Left = (Screen.PrimaryScreen.Bounds.Width - .OriginalWidth - 50) / GetWindowMag()
+                Dim targetScreen = GetHostScreen()
+                .Top = (targetScreen.Bounds.Top + targetScreen.Bounds.Height - .OriginalHeight - 100) / GetWindowMag()
+                .Left = (targetScreen.Bounds.Left + targetScreen.Bounds.Width - .OriginalWidth - 50) / GetWindowMag()
             End If
             .Balloon.FontCharSet = 128
             If Not wasAlreadyVisible Then .Hide(True)

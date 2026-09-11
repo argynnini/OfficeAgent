@@ -15,7 +15,7 @@
           <checkBox id="chkShowElapsedTime" label="発表時間" onAction="ShowElapsedTime_Toggle" getPressed="ShowElapsedTime_GetPressed" getEnabled="ShowElapsedTime_GetEnabled" />
           <checkBox id="chkShowLapTime" label="ラップ" onAction="ShowLapTime_Toggle" getPressed="ShowLapTime_GetPressed" getEnabled="ShowLapTime_GetEnabled" />
           <checkBox id="chkSpeakSlideNotes" label="スライドノート読み上げ" onAction="SpeakSlideNotes_Toggle" getPressed="SpeakSlideNotes_GetPressed" />
-          <button id="btnOpenVoiceSettings" label="読み上げ音声の設定" imageMso="SoundCheck" onAction="OpenVoiceSettings_Click" />
+          <button id="btnOpenVoiceSettings" label="読み上げ音声の設定" imageMso="SoundCheck" onAction="OpenVoiceSettings_Click" screentip="読み上げに使う既定の音声を変更する" supertip="変更した内容は、Officeを再起動するまで反映されません。" />
           <menu id="mnuTagInsert" label="読み上げタグ挿入" imageMso="SoundCheck">
             <menu id="mnuInsertSapiTag" label="音声" imageMso="SoundCheck">
               <button id="btnInsertVolume" label="音量" onAction="InsertVolumeTag_Click" imageMso="SoundCheck" screentip="読み上げ音量を変更する" supertip="&lt;volume level=&quot;50&quot;&gt;...&lt;/volume&gt;　levelは0～100で設定" />
@@ -40,8 +40,8 @@
               <button id="btnInsertActionLaserOff" label="レーザーポインターOFF" onAction="InsertActionLaserOffTag_Click" imageMso="SlideHide" screentip="レーザーポインターを隠す" supertip="&lt;laser op=&quot;off&quot;/&gt;" />
             </menu>
             <menu id="mnuActionAgent" label="エージェント" imageMso="Info">
-              <button id="btnInsertActionAgentMove" label="移動" onAction="InsertActionAgentMoveTag_Click" imageMso="Info" screentip="座標(x,y)へ移動する" supertip="&lt;agent op=&quot;move&quot; x=&quot;100&quot; y=&quot;100&quot; speed=&quot;1000&quot;/&gt;　speedを消すと瞬間移動、指定するとミリ秒かけて移動" />
-              <button id="btnInsertActionAgentGestureAt" label="指し示す" onAction="InsertActionAgentGestureAtTag_Click" imageMso="Info" screentip="座標(x,y)の方向を指す" supertip="&lt;agent op=&quot;gesture&quot; x=&quot;100&quot; y=&quot;100&quot;/&gt;" />
+              <button id="btnInsertActionAgentMove" label="移動" onAction="InsertActionAgentMoveTag_Click" imageMso="Info" screentip="画面上の位置(x,y)へ移動する" supertip="&lt;agent op=&quot;move&quot; x=&quot;90&quot; y=&quot;85&quot; speed=&quot;1000&quot;/&gt;　x/yは画面に対する0～100の割合（横90%・縦85%の位置）。speedを消すと瞬間移動、指定するとミリ秒かけて移動" />
+              <button id="btnInsertActionAgentGestureAt" label="指し示す" onAction="InsertActionAgentGestureAtTag_Click" imageMso="Info" screentip="画面上の位置(x,y)の方向を指す" supertip="&lt;agent op=&quot;gesture&quot; x=&quot;90&quot; y=&quot;85&quot;/&gt;　x/yはmoveと同じく画面に対する0～100の割合" />
               <button id="btnInsertActionAgentPlay" label="アニメーション" onAction="InsertActionAgentPlayTag_Click" imageMso="Info" screentip="指定アニメーションを再生する" supertip="&lt;agent op=&quot;play&quot; name=&quot;Wave&quot;/&gt;" />
 				<button id="btnInsertActionWait" label="待機" onAction="InsertActionWaitTag_Click" imageMso="Info" screentip="指定ミリ秒だけ待機" supertip="&lt;agent op=&quot;wait&quot; ms=&quot;1000&quot;/&gt;" />
 				<button id="btnInsertActionAgentShow" label="エージェント表示" onAction="InsertActionAgentShowTag_Click" imageMso="Info" screentip="エージェントを表示する" supertip="&lt;agent op=&quot;show&quot;/&gt;" />

@@ -19,6 +19,7 @@ Partial Public Class ThisAddIn
         OfficeAgent.Core.AgentFloatingForm.GetSelectedTextAction = AddressOf GetSelectedText
         AgentRibbon.IsSettingsPaneVisibleFunc = Function() IsSettingsPaneVisible
         AgentRibbon.ToggleSettingsPaneAction = AddressOf ToggleSettingsPane
+        OfficeAgent.Core.AgentFloatingForm.GetHostWindowHandleFunc = AddressOf GetHostWindowHandle
 
         AddHandler Me.Application.DocumentBeforeSave, AddressOf OnBeforeSave
         AddHandler Me.Application.DocumentBeforePrint, AddressOf OnBeforePrint
@@ -82,6 +83,16 @@ Partial Public Class ThisAddIn
     Private Sub SettingsPane_VisibleChanged(sender As Object, e As EventArgs)
         AgentRibbon.Instance?.InvalidateRibbon()
     End Sub
+
+    ' AgentFloatingForm側のGetHostWindowHandleFuncから呼ばれる：エージェントの初回表示位置を
+    ' 「Officeウィンドウがあるモニタ」基準にするため、Wordのメインウィンドウハンドルを返す
+    Private Function GetHostWindowHandle() As IntPtr
+        Try
+            Return New IntPtr(CLng(Me.Application.Hwnd))
+        Catch ex As Exception
+            Return IntPtr.Zero
+        End Try
+    End Function
 
     ' カイル右クリックの「選択範囲について」から呼ばれる：現在選択中の文字列を返す（未選択・空ならNothing）
     Private Function GetSelectedText() As String
@@ -156,6 +167,7 @@ Partial Public Class ThisAddIn
         OfficeAgent.Core.AgentFloatingForm.GetSelectedTextAction = Nothing
         AgentRibbon.IsSettingsPaneVisibleFunc = Nothing
         AgentRibbon.ToggleSettingsPaneAction = Nothing
+        OfficeAgent.Core.AgentFloatingForm.GetHostWindowHandleFunc = Nothing
 
         If _settingsTaskPane IsNot Nothing Then
             RemoveHandler _settingsTaskPane.VisibleChanged, AddressOf SettingsPane_VisibleChanged

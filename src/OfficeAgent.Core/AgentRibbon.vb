@@ -222,11 +222,11 @@ Public Class AgentRibbon
     End Sub
 
     Public Sub InsertActionAgentMoveTag_Click(control As Office.IRibbonControl)
-        InsertSapiTagAction?.Invoke("<agent op=""move"" x=""100"" y=""100"" speed=""1000""/>", "")
+        InsertSapiTagAction?.Invoke("<agent op=""move"" x=""90"" y=""85"" speed=""1000""/>", "")
     End Sub
 
     Public Sub InsertActionAgentGestureAtTag_Click(control As Office.IRibbonControl)
-        InsertSapiTagAction?.Invoke("<agent op=""gesture"" x=""100"" y=""100""/>", "")
+        InsertSapiTagAction?.Invoke("<agent op=""gesture"" x=""90"" y=""85""/>", "")
     End Sub
 
     Public Sub InsertActionAgentPlayTag_Click(control As Office.IRibbonControl)

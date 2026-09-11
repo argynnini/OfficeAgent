@@ -27,8 +27,11 @@ Partial Public Class ThisAddIn
         OfficeAgent.Core.AssemblyRedirectHelper.EnsureRegistered()
 
         _agentForm = New OfficeAgent.Core.AgentFloatingForm()
-        _agentForm.Show()
 
+        ' _agentForm.Show()はフォームのハンドル未作成時に同期的にLoadイベントを発火させる。
+        ' AgentFloatingForm_Load内で初回表示位置の計算にGetHostWindowHandleFuncを使うため、
+        ' Show()より前に登録しておく必要がある（Show()の後だとLoad時点では常に未登録
+        ' 扱いになり、初回表示位置がプライマリモニタ基準にフォールバックしてしまう）
         OfficeAgent.Core.AgentFloatingForm.OpenSettingsPaneAction = AddressOf ShowSettingsPane
         OfficeAgent.Core.AgentFloatingForm.GetSelectedTextAction = AddressOf GetSelectedText
         AgentRibbon.IsSettingsPaneVisibleFunc = Function() IsSettingsPaneVisible
@@ -38,6 +41,10 @@ Partial Public Class ThisAddIn
         OfficeAgent.Core.AgentFloatingForm.PerformScreenActionAction = AddressOf PerformScreenAction
         OfficeAgent.Core.AgentFloatingForm.PerformLaserActionAction = AddressOf PerformLaserAction
         OfficeAgent.Core.AgentFloatingForm.GetSlideVariablesFunc = AddressOf GetSlideVariables
+        OfficeAgent.Core.AgentFloatingForm.GetHostWindowHandleFunc = AddressOf GetHostWindowHandle
+        OfficeAgent.Core.AgentFloatingForm.GetSlideShowWindowHandleFunc = AddressOf GetSlideShowWindowHandle
+
+        _agentForm.Show()
 
         AddHandler Me.Application.PresentationBeforeSave, AddressOf OnBeforeSave
         AddHandler Me.Application.PresentationSave, AddressOf OnAfterSave
@@ -163,6 +170,29 @@ Partial Public Class ThisAddIn
         End Try
     End Sub
 
+    ' AgentFloatingForm側のGetHostWindowHandleFuncから呼ばれる：エージェントの初回表示位置を
+    ' 「Officeウィンドウがあるモニタ」基準にするため、PowerPointのメインウィンドウハンドルを返す
+    Private Function GetHostWindowHandle() As IntPtr
+        Try
+            Return New IntPtr(Me.Application.HWND)
+        Catch ex As Exception
+            Return IntPtr.Zero
+        End Try
+    End Function
+
+    ' AgentFloatingForm側のGetSlideShowWindowHandleFuncから呼ばれる：発表者が実際に見ている
+    ' スライドショーウィンドウのハンドルを返す（発表者スクリーン側のモニタへエージェントを
+    ' 移動させる基準にするため）。スライドショー中以外はIntPtr.Zeroを返す
+    Private Function GetSlideShowWindowHandle() As IntPtr
+        Try
+            Dim wn = _activeSlideShowWindow
+            If wn Is Nothing Then Return IntPtr.Zero
+            Return New IntPtr(wn.HWND)
+        Catch ex As Exception
+            Return IntPtr.Zero
+        End Try
+    End Function
+
     Private Sub OnBeforeSave(pres As Microsoft.Office.Interop.PowerPoint.Presentation, ByRef cancel As Boolean)
         ' If _agentForm IsNot Nothing Then _agentForm.PlayAnimation("GetAttention")
     End Sub
@@ -181,6 +211,10 @@ Partial Public Class ThisAddIn
         _lastSpokenSlideNotesIndex = -1
         _activeSlideShowWindow = wn
         If _agentForm Is Nothing Then Return
+
+        ' 発表者が実際に見ているスクリーン（発表者ツールを別モニタに出している場合はそちら）に
+        ' エージェントを移動させる。元の位置はOnSlideShowEndで復元する
+        _agentForm.MoveToSlideShowScreen()
 
         ' 発表中は非表示（HideAgentDuringSlideShow）とスピーカーノート読み上げは機能上
         ' 競合する（非表示にすると、この後のSpeakCurrentSlideNotesIfEnabled呼び出しに
@@ -365,6 +399,8 @@ Partial Public Class ThisAddIn
             ' 最後のスライドのノート読み上げが終わっていなくても、発表終了のアナウンスを
             ' 優先して即座に始められるよう、読み上げ中のキューを打ち切る
             _agentForm.StopSpeaking()
+            ' 発表前の位置へ戻してから（非表示にしていた場合は）再表示する
+            _agentForm.RestorePositionAfterSlideShow()
             If AgentSettings.HideAgentDuringSlideShow Then _agentForm.ShowAfterSlideShow()
             _activeSlideShowWindow = Nothing
 
@@ -407,6 +443,8 @@ Partial Public Class ThisAddIn
         OfficeAgent.Core.AgentFloatingForm.PerformScreenActionAction = Nothing
         OfficeAgent.Core.AgentFloatingForm.PerformLaserActionAction = Nothing
         OfficeAgent.Core.AgentFloatingForm.GetSlideVariablesFunc = Nothing
+        OfficeAgent.Core.AgentFloatingForm.GetHostWindowHandleFunc = Nothing
+        OfficeAgent.Core.AgentFloatingForm.GetSlideShowWindowHandleFunc = Nothing
 
         If _settingsTaskPane IsNot Nothing Then
             RemoveHandler _settingsTaskPane.VisibleChanged, AddressOf SettingsPane_VisibleChanged
