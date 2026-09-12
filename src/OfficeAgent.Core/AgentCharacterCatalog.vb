@@ -149,7 +149,7 @@ Public Module AgentCharacterCatalog
                 Dim id = If(seenAcsIds.Contains(baseId), baseId & "_ACT", baseId)
                 result.Add(New CharacterInfo With {
                     .Id = id,
-                    .DisplayName = DisplayNameFor(baseId),
+                    .DisplayName = DisplayNameFor(baseId) & " (Actor)",
                     .AcsPath = path,
                     .Format = CharacterFormat.Act
                 })

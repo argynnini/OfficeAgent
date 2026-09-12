@@ -102,12 +102,7 @@ Public Class ActorFloatingForm
                     "OfficeAgent", MessageBoxButtons.OK, MessageBoxIcon.Warning)
                 Return
             End If
-            _loadedPath = path
-            _actor.SourceFile = path
-
-            Dim targetScreen = Screen.PrimaryScreen
-            Left = targetScreen.Bounds.Left + targetScreen.Bounds.Width - 200
-            Top = targetScreen.Bounds.Top + targetScreen.Bounds.Height - 250
+            LoadCharacterInternal(path)
         End If
         _actor.ShowActor()
         Show()
@@ -117,4 +112,44 @@ Public Class ActorFloatingForm
         _actor.HideActor()
         Hide()
     End Sub
+
+    Private _positioned As Boolean
+
+    ' 初回表示位置のみプライマリスクリーン右下隅に置く。以降のキャラクター切替
+    ' （SwitchCharacter）では位置を変えない（AgentFloatingForm.SwitchCharacterが
+    ' leftPos/topPosを引き継ぐのと同じ考え方）
+    Private Sub EnsurePositioned()
+        If _positioned Then Return
+        Dim targetScreen = Screen.PrimaryScreen
+        Left = targetScreen.Bounds.Left + targetScreen.Bounds.Width - 200
+        Top = targetScreen.Bounds.Top + targetScreen.Bounds.Height - 250
+        _positioned = True
+    End Sub
+
+    Private Sub LoadCharacterInternal(path As String)
+        _loadedPath = path
+        _actor.SourceFile = path
+        EnsurePositioned()
+    End Sub
+
+    ' 設定タスクパネルの「キャラクター」欄から呼ばれる：表示中のキャラクター(.act)を差し替える。
+    ' 表示中／非表示中のどちらの状態だったかは維持する（AgentFloatingForm.SwitchCharacterと同じ方針）。
+    ' 別のキャラクター形式(.acs)からの切替でこのフォーム自体をまだ表示すべきかどうかは、
+    ' 呼び出し元（AgentSettingsPane）がShowActorAgent/HideActorAgentで別途制御する
+    Public Function SwitchCharacter(acsPath As String) As Boolean
+        If String.IsNullOrEmpty(acsPath) OrElse Not IO.File.Exists(acsPath) Then
+            MessageBox.Show(
+                $"{IO.Path.GetFileName(acsPath)} が見つかりません。",
+                "OfficeAgent", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return False
+        End If
+
+        Dim wasVisible = Visible
+        LoadCharacterInternal(acsPath)
+        If wasVisible Then
+            _actor.ShowActor()
+            Show()
+        End If
+        Return True
+    End Function
 End Class
