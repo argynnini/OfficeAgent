@@ -98,6 +98,16 @@
       <Private>True</Private>
     </Reference>
   </ItemGroup>
+  <!-- .act形式（Microsoft Actor）キャラクター用。非公式の再実装コントロール
+       Frontier Actor（https://github.com/TMAFE/Frontier-Actor-Code-Samples）の
+       ビルド済みDLLをそのままコミット済みのものを参照する。ライセンス表記が
+       配布元に見当たらないため、将来的な取り扱いには注意が必要 -->
+  <ItemGroup>
+    <Reference Include="FrontierActorControl">
+      <HintPath>..\..\installer\wix\vendor\FrontierActor\FrontierActorControl.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+  </ItemGroup>
   <!-- グローバルImports -->
   <ItemGroup>
     <Import Include="Microsoft.VisualBasic" />
@@ -130,6 +140,9 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="AgentFloatingForm.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ActorFloatingForm.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="AgentFloatingForm.Designer.vb">
@@ -194,6 +207,10 @@
        カスタムエージェントをagents\に追加しても、ビルドし直すだけで自動的に反映される -->
   <ItemGroup>
     <Content Include="..\..\agents\*.ACS">
+      <Link>%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\agents\*.act">
       <Link>%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

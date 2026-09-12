@@ -5,10 +5,18 @@ Imports System.Linq
 ' キャラクターIDとしてファイル名（拡張子除く・大文字化）をそのまま使い、汎用設定で動作させる。
 Public Module AgentCharacterCatalog
 
+    ' キャラクターファイルの形式。Acs = Microsoft Agent（AxAgent、従来のカイル等）、
+    ' Act = Microsoft Actor（FrontierActorControl経由、ROVER.ACT等の.actファイル）
+    Public Enum CharacterFormat
+        Acs
+        Act
+    End Enum
+
     Public Structure CharacterInfo
         Public Id As String
         Public DisplayName As String
         Public AcsPath As String
+        Public Format As CharacterFormat
     End Structure
 
     ' 既知キャラクターの表示名。ここに無いIDは、ファイル名（拡張子を除いたもの）をそのまま表示名として使う
@@ -99,10 +107,13 @@ Public Module AgentCharacterCatalog
     ' 探索パス上の.acsを順番に読み込み、重複なく列挙する。
     ' 同じファイル名（大文字小文字区別なし）が複数の候補フォルダで見つかった場合は、
     ' 先に列挙したフォルダ（アプリ同梱側）を優先し、後から見つかったOS標準フォルダ側は無視する。
-    ' カイルが見つかった場合はリストの先頭に並べ、それ以外（フィンフィンを含む）は見つかった順で続く
+    ' カイルが見つかった場合はリストの先頭に並べ、それ以外（フィンフィンを含む）は見つかった順で続く。
+    ' .act（Microsoft Actor）も同じ探索パスから列挙するが、.acsとは別エンジン（FrontierActorControl）
+    ' で動かすため、同名の.acsが既にあってもIDを衝突させず別エントリとして残す（末尾に"_ACT"を付ける）
     Public Function DiscoverCharacters() As List(Of CharacterInfo)
         Dim result As New List(Of CharacterInfo)
-        Dim seenIds As New HashSet(Of String)(StringComparer.OrdinalIgnoreCase)
+        Dim seenAcsIds As New HashSet(Of String)(StringComparer.OrdinalIgnoreCase)
+        Dim seenActIds As New HashSet(Of String)(StringComparer.OrdinalIgnoreCase)
 
         For Each folder In CandidateDirs()
             If String.IsNullOrEmpty(folder) OrElse Not IO.Directory.Exists(folder) Then Continue For
@@ -113,15 +124,34 @@ Public Module AgentCharacterCatalog
             Catch
                 Continue For
             End Try
-
             For Each path In acsFiles
                 Dim id = IO.Path.GetFileNameWithoutExtension(path).ToUpperInvariant()
-                If seenIds.Contains(id) Then Continue For
-                seenIds.Add(id)
+                If seenAcsIds.Contains(id) Then Continue For
+                seenAcsIds.Add(id)
                 result.Add(New CharacterInfo With {
                     .Id = id,
                     .DisplayName = DisplayNameFor(id),
-                    .AcsPath = path
+                    .AcsPath = path,
+                    .Format = CharacterFormat.Acs
+                })
+            Next
+
+            Dim actFiles As String()
+            Try
+                actFiles = IO.Directory.GetFiles(folder, "*.act")
+            Catch
+                Continue For
+            End Try
+            For Each path In actFiles
+                Dim baseId = IO.Path.GetFileNameWithoutExtension(path).ToUpperInvariant()
+                If seenActIds.Contains(baseId) Then Continue For
+                seenActIds.Add(baseId)
+                Dim id = If(seenAcsIds.Contains(baseId), baseId & "_ACT", baseId)
+                result.Add(New CharacterInfo With {
+                    .Id = id,
+                    .DisplayName = DisplayNameFor(baseId),
+                    .AcsPath = path,
+                    .Format = CharacterFormat.Act
                 })
             Next
         Next

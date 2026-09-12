@@ -72,6 +72,28 @@ Public Class AgentRibbon
         End Using
     End Function
 
+    ' ── .act（Microsoft Actor）キャラクター表示/終了（フェーズ1・試験実装） ──────
+    Public Function ActorShowHide_GetLabel(control As Office.IRibbonControl) As String
+        Dim form = OfficeAgent.Core.ActorFloatingForm.Instance
+        If form IsNot Nothing AndAlso form.IsActorVisible Then
+            Return "Actor終了"
+        End If
+        Return "Actor表示"
+    End Function
+
+    Public Sub ActorShowHide_Click(control As Office.IRibbonControl)
+        If OfficeAgent.Core.ActorFloatingForm.Instance Is Nothing Then
+            OfficeAgent.Core.ActorFloatingForm.Instance = New OfficeAgent.Core.ActorFloatingForm()
+        End If
+        Dim form = OfficeAgent.Core.ActorFloatingForm.Instance
+        If form.IsActorVisible Then
+            form.HideActorAgent()
+        Else
+            form.ShowActorAgent()
+        End If
+        InvalidateRibbon()
+    End Sub
+
     ' ── 詳細設定 ──────────────────────────
     Public Function Detail_GetPressed(control As Office.IRibbonControl) As Boolean
         Return IsSettingsPaneVisibleFunc IsNot Nothing AndAlso IsSettingsPaneVisibleFunc()
