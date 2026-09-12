@@ -56,6 +56,12 @@ Public Class AgentFloatingForm
     ' <agent op="move".../>タグの座標をそのモニタ基準に解釈するために使用する
     Public Shared GetSlideShowWindowHandleFunc As Func(Of IntPtr)
 
+    ' PowerPointアドイン（ThisAddIn_Startup）が、指定した名前のシェイプの矩形をスクリーン座標
+    ' （ピクセル）で返す処理を登録する。<agent op="move|gesture" obj="..." pos="..."/>タグで
+    ' スライド上のオブジェクトを基準にエージェントを移動させるために使用する。
+    ' 該当シェイプが見つからない場合はNothingを返す
+    Public Shared GetShapeScreenBoundsFunc As Func(Of String, Rectangle?)
+
     Protected Overrides ReadOnly Property ShowWithoutActivation As Boolean
         Get
             Return True
@@ -103,6 +109,14 @@ Public Class AgentFloatingForm
 
     ' スライドショー中、スライド番号／発表時間／ラップタイムを吹き出しに常時表示するオーバーレイ用タイマー
     Private WithEvents _slideShowOverlayTimer As New Windows.Forms.Timer With {.Interval = 1000}
+
+    ' <agent op="wait" ms="N"/>用の実時間待機タイマー。当初は.Speak("<silence msec=.../>")の
+    ' 完了（Agent_RequestComplete）を待つ実装だったが、直前の<agent op="hide"/>でエージェントを
+    ' 隠した直後にwaitを実行すると、非表示中のキャラクターに対するsilenceの完了通知が指定した
+    ' 時間を待たずほぼ即座に発火してしまう（アニメーションエンジンが停止しているためと思われる）
+    ' 不具合が実機で確認された。TTSエンジンや表示状態に依存しない、確実な待機にするため
+    ' System.Windows.Forms.Timerによる実時間待機に変更した
+    Private WithEvents _waitTimer As New Windows.Forms.Timer()
     Private _slideShowElapsedStopwatch As Stopwatch
     Private _slideShowLapStopwatch As Stopwatch
     Private _slideShowCurrentSlide As Integer
@@ -351,59 +365,87 @@ Public Class AgentFloatingForm
     Public Sub SpeakSlideNotes(text As String)
         If String.IsNullOrWhiteSpace(text) Then Return
         Dim normalizedText = NormalizeSmartQuotesInTags(text)
-        Dim withVars = ResolveVariables(normalizedText)
-        Dim strippedText = RemoveBlankLines(CommentTagPattern.Replace(withVars, ""))
+        ' <var name="..."/>は、ノート全体を読み上げ始めるこの時点で一括置換するのではなく、
+        ' 各セグメントを実際にSpeak()する直前（ProcessNextSpeakSegment）で解決する。
+        ' timeやelapsed、lap（このスライドに来てからの経過時間）は時間とともに値が変わるため、
+        ' <agent op="wait"/>等で間を空けたノートの後半にある<var>を先頭でまとめて解決して
+        ' しまうと、実際に発声されるタイミングではなく「読み上げ開始した瞬間」の古い値の
+        ' ままになってしまう不具合が実機で確認された（例：waitを挟んだ後のlapが常に0近辺）
+        Dim strippedText = RemoveBlankLines(CommentTagPattern.Replace(normalizedText, ""))
         If String.IsNullOrWhiteSpace(strippedText) Then Return
-        ' markIdはここでは0にリセットしない（_nextMarkIdを使い、キャラクターの生存期間を通して
-        ' 単調増加させる）。<slide>タグ自体がPowerPointのSlideShowNextSlide
-        ' イベントを発火させ、それが（ThisAddIn経由で）次のスライドのSpeakSlideNotesを再帰的に
-        ' 呼び出すことがある。その際もし番号を0から振り直していると、直前の発話でまだ処理中
-        ' だった古いbookmarkが遅れて発火したときに、たまたま同じ番号を振られた「新しいノートの
-        ' 全く別のアクション」に誤って解決されてしまう（実機で「指定スライドへジャンプしたら
-        ' エージェントの座標までジャンプした」という形で確認）。番号を使い切りにすることで、
-        ' 古いbookmarkが遅れて届いても存在しない番号として無視されるだけになり、誤爆しなくなる
+        AxAgent.Characters("OfficeAgent").StopAll()
+        ' StopAllで前回の発話が中断された場合、そのとき未完了だったbreakのリクエストIDや
+        ' 完了待ちの状態が残り続けないようにする（本来はRequestComplete(Status=3)で
+        ' クリアされるはずだが念のため）
+        _pendingBreakBalloonResetIds.Clear()
+        _pendingSegmentCompletionReqId = -1
+        _waitTimer.Stop()
+        _speakGeneration += 1
+        ' Balloon.FontSizeはキャラクターに紐づく状態で、一度設定すると次にどこかで
+        ' 変更されるまで残り続ける。発表時間のお知らせ（AnnouncePresentationTime）や
+        ' 検索吹き出し等、他の機能がそれぞれ自分の用途向けにFontSizeを変更する箇所が
+        ' 複数あり、リセットせずに使い回されるため、「1回目の発表は既定サイズなのに、
+        ' 2回目（＝直前にAnnouncePresentationTimeでお疲れ様でしたを話した後）は大きく
+        ' なる」という不具合が実機で確認された。スピーカーノートの読み上げは常に同じ
+        ' 見た目にしたいので、他の機能の状態に依存しないよう毎回明示的にリセットする
+        AxAgent.Characters("OfficeAgent").Balloon.FontSize = NormalBalloonFontSize
+        ' <agent>／<slide>／<screen>／<balloon>／<laser>タグの位置でノートを分割し、
+        ' 処理待ちキューに積む（理由はSplitNoteBySequentialActions手前のコメント参照）
+        _pendingSpeakSegments = New Queue(Of (PlainText As String, SequentialAction As SlideNoteAction))(SplitNoteBySequentialActions(strippedText))
+        ProcessNextSpeakSegment()
+    End Sub
+
+    ' _pendingSpeakSegmentsから1件取り出して処理し、そのまま次のセグメントへ進める場合は
+    ' 自分自身を再帰的に呼ぶ。テキストのSpeak・breakの無音Speakなど「音声として区切りたい」
+    ' ものは、そのRequestの完了（Agent_RequestComplete）を待ってから次へ進む
+    ' （_pendingSegmentCompletionReqIdにRequestIDをセットして抜ける）。
+    ' 吹き出し(Balloon)は「表示され始めた瞬間（BalloonShow）」のStyle（NumberOfLines）で
+    ' 矩形サイズが固定され、その後Styleを変更しても表示中は再計算されないことが実機で
+    ' 確認された。そのため各テキストの高さは、必ずそのテキストの.Speak()を呼ぶ直前
+    ' （＝前のテキストの読み上げが完了し、Balloonが一度Hideされた後）に設定する
+    Private Sub ProcessNextSpeakSegment()
+        If _pendingSpeakSegments Is Nothing OrElse _pendingSpeakSegments.Count = 0 Then Return
+        Dim segment = _pendingSpeakSegments.Dequeue()
+        Dim generationAtStart = _speakGeneration
         With AxAgent.Characters("OfficeAgent")
-            .StopAll()
-            ' StopAllで前回の発話が中断された場合、そのとき未完了だったbreakのリクエストID
-            ' が残り続けないようにする（本来はRequestComplete(Status=3)で来るはずだが念のため）
-            _pendingBreakBalloonResetIds.Clear()
-            _pendingBalloonHeightMarks.Clear()
-            ' Balloon.FontSizeはキャラクターに紐づく状態で、一度設定すると次にどこかで
-            ' 変更されるまで残り続ける。発表時間のお知らせ（AnnouncePresentationTime）や
-            ' 検索吹き出し等、他の機能がそれぞれ自分の用途向けにFontSizeを変更する箇所が
-            ' 複数あり、リセットせずに使い回されるため、「1回目の発表は既定サイズなのに、
-            ' 2回目（＝直前にAnnouncePresentationTimeでお疲れ様でしたを話した後）は大きく
-            ' なる」という不具合が実機で確認された。スピーカーノートの読み上げは常に同じ
-            ' 見た目にしたいので、他の機能の状態に依存しないよう毎回明示的にリセットする
-            .Balloon.FontSize = NormalBalloonFontSize
-            ' <agent>タグの位置でノートを分割し、キューへ順に積む
-            ' （理由はExtractSlideNoteActions手前のコメント参照）。
-            ' 各テキスト断片はさらにExtractSlideNoteActionsで<slide>タグを
-            ' bookmarkへ変換してから読み上げる
-            Dim segmentList = SplitNoteBySequentialActions(strippedText)
-            ' テキスト断片が1つしかない（＝breakで分割されていない）場合は、高さ計算を
-            ' RequestStartまで遅延させず、従来通りSpeak直前に即座に適用する。RequestStart方式は
-            ' 「実際に音声合成が開始されるタイミング」まで適用が遅れるため、実機で最大0.6秒程度
-            ' 吹き出しが古い（既定の）高さのまま表示されてから正しい高さに切り替わるズレが
-            ' 確認された。単一テキストならそもそも「後続セグメントの高さで上書きされる」問題
-            ' （breakが無いと発生しない）は起きないため、遅延させる理由が無い
-            Dim textSegmentCount = segmentList.Where(Function(s) Not String.IsNullOrWhiteSpace(s.PlainText)).Count()
-            Dim useImmediateBalloonHeight = textSegmentCount <= 1
-            For Each segment In segmentList
-                If segment.SequentialAction IsNot Nothing Then
-                    Dim sa = segment.SequentialAction
-                    If String.Equals(sa.TypeName, "balloon", StringComparison.OrdinalIgnoreCase) Then
+            If segment.SequentialAction IsNot Nothing Then
+                Dim sa = segment.SequentialAction
+                Select Case sa.TypeName.ToLowerInvariant()
+                    Case "balloon"
                         PerformBalloonNoteAction(sa)
-                    Else
+                        ProcessNextSpeakSegment()
+                    Case "slide"
+                        PerformSlideNoteAction(sa)
+                        ' PerformSlideNoteActionが実際にスライドを切り替えた場合、SpeakSlideNotesが
+                        ' 再入で呼ばれ_pendingSpeakSegmentsが新しいスライド用に差し替わっている
+                        ' ことがある（_speakGeneration宣言箇所のコメント参照）。その場合はここで
+                        ' 処理を打ち切り、新しいキューの処理は再入した側に任せる
+                        If _speakGeneration <> generationAtStart Then Return
+                        ProcessNextSpeakSegment()
+                    Case "screen"
+                        PerformScreenActionAction?.Invoke(sa.Op.ToLowerInvariant())
+                        ProcessNextSpeakSegment()
+                    Case "laser"
+                        PerformLaserActionAction?.Invoke(sa.Op.ToLowerInvariant())
+                        ProcessNextSpeakSegment()
+                    Case Else ' "agent"
                         Select Case sa.Op.ToLowerInvariant()
                             Case "wait"
                                 ' 何も喋らず・エージェント操作もせず、指定ミリ秒だけキューを止める。
                                 ' UIスレッドをThread.Sleep等で止めるとPowerPoint全体がフリーズするため、
-                                ' 無音だけのSpeak呼び出しとしてキューに積む（非同期に消化される）
+                                ' Timerによる実時間待機で次へ進む（_waitTimer宣言箇所のコメント参照。
+                                ' 以前は無音のSpeak呼び出しの完了待ちだったが、直前にhideした直後だと
+                                ' 指定時間を待たず即座に完了してしまう不具合があったため変更した）
                                 Dim msText As String = Nothing
                                 Dim ms = 500
                                 If sa.Attributes.TryGetValue("ms", msText) Then Integer.TryParse(msText, ms)
-                                If ms > 0 Then .Speak($"<silence msec=""{ms}""/>")
+                                If ms > 0 Then
+                                    _waitTimer.Stop()
+                                    _waitTimer.Interval = ms
+                                    _waitTimer.Start()
+                                    Return
+                                End If
+                                ProcessNextSpeakSegment()
                             Case "break"
                                 ' 無音を挟んで音声としての区切りを作りつつ、この無音リクエストの
                                 ' 完了（Agent_RequestComplete）をトリガーに吹き出しを明示的に
@@ -412,38 +454,53 @@ Public Class AgentFloatingForm
                                 ' 呼ぶと、キューでまだ再生中の前のテキストの吹き出しを
                                 ' 読み上げ途中で消してしまうため使わない
                                 Dim breakReq = TryCast(.Speak($"<silence msec=""{BreakSilenceMs}""/>"), AgentObjects.IAgentCtlRequest)
-                                If breakReq IsNot Nothing Then _pendingBreakBalloonResetIds.Add(breakReq.ID)
+                                If breakReq IsNot Nothing Then
+                                    _pendingBreakBalloonResetIds.Add(breakReq.ID)
+                                    _pendingSegmentCompletionReqId = breakReq.ID
+                                    Return
+                                End If
+                                ProcessNextSpeakSegment()
+                            Case "play"
+                                ' アニメーション再生の完了（Agent_RequestComplete）を待ってから
+                                ' 次のセグメントへ進む。待たずに次へ進むと、直後の<slide>等で
+                                ' アニメーション再生中にスライドが切り替わってしまう不具合が
+                                ' 実機で確認された（他のagent操作と違い、playだけ再生に
+                                ' 数百ms～数秒かかるため影響が顕著に出る）
+                                Dim animName As String = Nothing
+                                If sa.Attributes.TryGetValue("name", animName) AndAlso Not String.IsNullOrEmpty(animName) Then
+                                    Dim playReq = TryCast(.Play(animName), AgentObjects.IAgentCtlRequest)
+                                    If playReq IsNot Nothing Then
+                                        _pendingSegmentCompletionReqId = playReq.ID
+                                        Return
+                                    End If
+                                End If
+                                ProcessNextSpeakSegment()
                             Case Else
                                 PerformAgentNoteAction(sa)
+                                ProcessNextSpeakSegment()
                         End Select
-                    End If
-                ElseIf Not String.IsNullOrEmpty(segment.PlainText) Then
-                    Dim withMarks = ExtractSlideNoteActions(segment.PlainText, _nextMarkId)
-                    Dim safeText = withMarks.Replace("|"c, "｜"c).Replace("&"c, "＆"c)
-                    ' 0幅空白挿入処理は一時的に無効化（TTS解析への影響を検証するため）
-                    ' safeText = InsertWordBreaksAtPunctuationOutsideTags(safeText)
-                    safeText = ConvertRubyTagsToMapChain(safeText)
-                    If Not String.IsNullOrWhiteSpace(safeText) Then
-                        Dim charsPerLineAtSpeak = .Balloon.CharsPerLine
-                        If useImmediateBalloonHeight Then
-                            ApplyAutoBalloonHeight(safeText, charsPerLineAtSpeak)
-                            .Speak(safeText)
-                        Else
-                            ' テキストの先頭に高さ適用専用のbookmarkを埋め込み、実際に読み上げが
-                            ' その位置に到達した瞬間（Agent_Bookmark）に高さを適用する。
-                            ' RequestStartイベント（そのSpeakリクエストがキューから処理され始めた
-                            ' タイミング）だと、TTSエンジンが次のリクエストを先読みして処理する
-                            ' ことがあり、まだ前のテキストが表示・再生されている間に次の高さが
-                            ' 適用されてしまう（実機で「1つ前のテキストの高さになる」不具合を確認）。
-                            ' bookmarkは実際の読み上げ位置に同期して発火するため、これを避けられる
-                            _nextMarkId += 1
-                            Dim heightMarkId = _nextMarkId
-                            _pendingBalloonHeightMarks(heightMarkId) = (safeText, charsPerLineAtSpeak)
-                            .Speak($"<bookmark mark=""{heightMarkId}""/>" & safeText)
-                        End If
+                End Select
+            ElseIf Not String.IsNullOrEmpty(segment.PlainText) Then
+                ' <var name="..."/>はここ（実際にこのセグメントをSpeak()する直前）で解決する
+                ' 理由はSpeakSlideNotes側のコメント参照。time／elapsed／lapのように時間で
+                ' 変わる値を、常にこの瞬間の実際の値で読み上げるようにするため
+                Dim resolvedText = ResolveVariables(segment.PlainText)
+                Dim safeText = resolvedText.Replace("|"c, "｜"c).Replace("&"c, "＆"c)
+                ' 0幅空白挿入処理は一時的に無効化（TTS解析への影響を検証するため）
+                ' safeText = InsertWordBreaksAtPunctuationOutsideTags(safeText)
+                safeText = ConvertRubyTagsToMapChain(safeText)
+                If Not String.IsNullOrWhiteSpace(safeText) Then
+                    ApplyAutoBalloonHeight(safeText, .Balloon.CharsPerLine, .Balloon.FontName, .Balloon.FontSize)
+                    Dim speakReq = TryCast(.Speak(safeText), AgentObjects.IAgentCtlRequest)
+                    If speakReq IsNot Nothing Then
+                        _pendingSegmentCompletionReqId = speakReq.ID
+                        Return
                     End If
                 End If
-            Next
+                ProcessNextSpeakSegment()
+            Else
+                ProcessNextSpeakSegment()
+            End If
         End With
     End Sub
 
@@ -467,29 +524,39 @@ Public Class AgentFloatingForm
             .Balloon.Style = BalloonStyleDefault
             .Balloon.FontSize = NormalBalloonFontSize
         End With
-        _pendingSlideNoteActions.Clear()
+        ' .StopAll()で中断された進行中のSpeakリクエストが後からStatus=3でRequestCompleteを
+        ' 発火させ、それをProcessNextSpeakSegmentの「完了待ち」と誤認して、止めたいはずの
+        ' キューの続きが再生されてしまわないようにする
+        _pendingSpeakSegments?.Clear()
+        _pendingSegmentCompletionReqId = -1
+        _pendingBreakBalloonResetIds.Clear()
+        _waitTimer.Stop()
     End Sub
 
     ' ── スピーカーノート中の<agent .../>／<slide .../>／<screen .../>／<laser .../>／
     '    <balloon .../>タグ（発話中操作） ──────
     '
-    ' <slide>／<screen>／<laser>（PowerPoint側の操作）と <agent>／<balloon>（キャラクター・
-    ' 吹き出し自身の操作）で、実現方法がまったく異なる点に注意。
+    ' 全てのタグを、ノート本文をその位置で分割する区切りとして扱い、Speak→(操作)→Speak
+    ' という順序で個別にキューへ積むことで、「直前のテキストを話し終えたら操作を実行し、
+    ' 続きを話す」という動作にしている（SplitNoteBySequentialActions／
+    ' ProcessNextSpeakSegment参照）。<agent op="break"/>は何も実行せずただ分割するだけ、
+    ' <agent op="wait"/>は無音のSpeak呼び出し（<silence>タグ）を1つキューへ積むことで、
+    ' それぞれ実現している。
     '
-    ' ● <slide> / <screen> / <laser> → SAPI5のXMLブックマークタグ<bookmark mark="値"/>に
-    '   変換し、AxAgent.Bookmarkイベントで検出して実行する。PowerPoint側の操作はキャラクターの
-    '   発話キューとは無関係な処理なので、発話が再生されている「その場」で割り込み実行できる。
-    ' ● <agent> / <balloon> → Bookmarkは使わない。Speak()も明示的なPlay()/MoveTo()/
-    '   GestureAt()も、Balloon.Visible／FontSize等のプロパティ設定も、同じキャラクターの単一の
-    '   要求キューで直列に処理される（またはSpeak()を呼んだ瞬間の値が使われる）仕様のため、
-    '   発話の再生中にBookmarkイベント経由で呼んでも「割り込み」にはならず、今の発話が完了した
-    '   後の次の要求としてキューの末尾に積まれるだけになってしまう（タグが複数あれば、発話が
-    '   全部終わってからまとめて連続実行される、という形で実機で確認済み）。そのため<agent>／
-    '   <balloon>タグは常にノート本文をその位置で分割する区切りとして扱い、Speak→(操作)→Speak
-    '   という順序で個別にキューへ積むことで、「そこで一拍おいてから動いて、続きを話す」という、
-    '   MS Agentのアーキテクチャで実現できる範囲の動作にしている（SpeakSlideNotes参照）。
-    '   <agent op="break"/>は何も実行せずただ分割するだけ、<agent op="wait"/>は無音の
-    '   Speak呼び出し（<silence>タグ）を1つキューへ積むことで、それぞれ実現している。
+    ' 【変更履歴】<slide>／<screen>／<laser>は当初、SAPI5のXMLブックマークタグ
+    ' <bookmark mark="値"/>に変換し、AxAgent.Bookmarkイベントで検出して「発話の途中」に
+    ' 割り込み実行する方式だった（PowerPoint側の操作はキャラクターの発話キューとは無関係な
+    ' 処理なので、原理上はその場で割り込める）。しかし実機検証の結果、Windows標準の日本語
+    ' 音声（Microsoft Haruka等）ではBookmarkイベントが一切発火せず、<slide op="page"/>に
+    ' よるスライド送りが機能しないことが判明した。レジストリを確認すると、現在のWindowsでは
+    ' コントロールパネル上「クラシック(Desktop)」に見える音声トークンも実体は
+    ' C:\WINDOWS\Speech_OneCore\Engines\... のOneCoreエンジンへのブリッジであり、
+    ' このブリッジがSPEI_TTS_BOOKMARK通知を実装していないためと判明した（ずんだもん
+    ' [SAPIForVOICEVOX]はFireBookmarkEventを自前実装した本物のクラシックSAPI5エンジン
+    ' だったため、Bookmark方式でも動いていた）。そのため<agent>／<balloon>と同じ
+    ' 「テキストをその位置で区切ってキューに積む」方式に統一し、全ての音声で確実に
+    ' 動くようにした（トレードオフとして、実行タイミングが「発話の途中」から
+    ' 「直前のテキストを話し終えた後」に変わっている）。
     '
     ' 対応タグ:
     '   <slide op="click|page" dir="next|prev|N"/>
@@ -540,8 +607,6 @@ Public Class AgentFloatingForm
         Public Property Attributes As New Dictionary(Of String, String)(StringComparer.OrdinalIgnoreCase)
     End Class
 
-    Private ReadOnly _pendingSlideNoteActions As New Dictionary(Of Integer, SlideNoteAction)
-
     ' <agent op="break"/>で発行した無音Speakリクエストのidを覚えておく。
     ' 吹き出し(Balloon)は「1回のSpeak()が終わるたび」ではなく「キュー全体が空になったとき」
     ' にしか自動でHideされない仕様が実機で確認された（連続する複数のSpeak呼び出しの間、
@@ -550,25 +615,30 @@ Public Class AgentFloatingForm
     ' （Agent_RequestComplete）を検知したタイミングで明示的にBalloon.Visibleを倒す
     Private ReadOnly _pendingBreakBalloonResetIds As New HashSet(Of Integer)
 
-    ' 高さ適用専用bookmarkのmarkId→(本文, その時点のCharsPerLine)の対応。
-    ' Balloon.Styleの行数計算（ApplyAutoBalloonHeight）はLeft/Topと同じくキューを経由しない
-    ' 直接プロパティ代入のため、breakで複数のSpeak呼び出しがある場合にSpeakSlideNotesの
-    ' ループ内でその場（＝まだ何も再生されていない時点）で即座に適用してしまうと、ループが
-    ' 終わった時点で最後のセグメントの行数だけが残り、それより前のセグメントは実際に
-    ' 読み上げられる時点で誤った（最後のセグメント用の）行数のまま表示されてしまう。
-    ' そのため計算だけ先にせず本文を保留しておき、そのテキストの先頭に埋め込んだbookmarkに
-    ' 読み上げが到達した瞬間（Agent_Bookmark）に適用する。RequestStartイベント（そのSpeak
-    ' リクエストがキューから処理され始めたタイミング）はTTSエンジンが先読みすることがあり、
-    ' 前のテキストがまだ表示・再生されている間に次の高さが適用されてしまう不具合が実機で
-    ' 確認されたため、bookmark（実際の読み上げ位置に同期して発火する）方式に切り替えた。
-    ' CharsPerLineは.Speak()を呼ぶ瞬間（＝そのテキストの分だけループを処理している時点）に
-    ' キャプチャしたものを使う（Bookmark発火時点で改めて.CharsPerLineを読み直すと、
-    ' <balloon op="style" width="N"/>で後続のセグメント用に幅が変更されていた場合にズレるため）
-    Private ReadOnly _pendingBalloonHeightMarks As New Dictionary(Of Integer, (Text As String, CharsPerLine As Integer))
+    ' SpeakSlideNotesで分割したセグメントの処理待ちキュー、および現在「完了待ち」にしている
+    ' RequestのID（-1なら何も待っていない）。
+    ' 吹き出し(Balloon)は「表示され始めた瞬間（BalloonShow）」のStyle（NumberOfLines）で
+    ' 矩形サイズが固定され、その後Styleを変更しても表示中は再計算されないことが実機で
+    ' 確認された（RequestStart／bookmarkのどちらに高さ適用のタイミングを合わせても、
+    ' 一度BalloonShowされた後では手遅れだった）。そのため「次のセグメントの高さを、
+    ' Speakを呼ぶより前に確定させる」ことが必須になる。ループで全セグメントのSpeakを
+    ' 一気に（同期的に）呼ぶと、その場で即座に反映される.Styleへの直接代入は結局
+    ' 「ループが終わった時点の最後の値」しか残らないため、前のセグメントの読み上げ
+    ' （Speak）が完了する（Agent_RequestComplete）のを待ってから、次のセグメントの
+    ' 高さを設定してSpeakする、という逐次処理に変更している（ProcessNextSpeakSegment参照）
+    Private _pendingSpeakSegments As Queue(Of (PlainText As String, SequentialAction As SlideNoteAction))
+    Private _pendingSegmentCompletionReqId As Integer = -1
 
-    ' bookmarkのmark番号の発行元。SpeakSlideNotesの呼び出しをまたいで単調増加させる
-    ' （理由はSpeakSlideNotes内のコメント参照）
-    Private _nextMarkId As Integer = 0
+    ' <slide dir="N"/>や<slide op="page|click".../>で実際にPowerPointのスライドが切り替わると、
+    ' GotoSlide()／View.Next()／View.Previous()の副作用としてPowerPoint側のSlideShowNextSlide
+    ' イベントが同期的に（＝呼び出しがまだ戻っていない時点で）発火し、ThisAddIn側から新しい
+    ' スライドのSpeakSlideNotesが再入で呼ばれることが実機で確認された。SpeakSlideNotesは
+    ' _pendingSpeakSegmentsを新しいキューに差し替えてしまうため、再入から戻ってきた直後の
+    ' ProcessNextSpeakSegment（PerformSlideNoteAction呼び出し元）がそのまま続行すると、
+    ' 新しいスライド用のキューを完了待ちを無視して横から荒らしてしまい、吹き出しの表示内容と
+    ' 実際に再生される音声がずれる不具合になっていた（SpeakSlideNotes参照）。
+    ' SpeakSlideNotesが呼ばれるたびに値を進め、再入が起きたかどうかを検出する世代カウンター
+    Private _speakGeneration As Integer = 0
 
     ' <agent .../>／<slide .../>／<screen .../>／<balloon .../>／<laser .../>タグにマッチする。
     ' タグ名自体が種別（SlideNoteAction.TypeName）を表す（旧<action type="..." .../>形式から変更）
@@ -699,57 +769,22 @@ Public Class AgentFloatingForm
         Return action
     End Function
 
-    ' ノート本文を、<agent>タグ（op="move"／"gesture"／"play"／"visible"／"balloon"／
-    ' "font"／"break"／"wait"のいずれも含む）を区切りとして「地の文（テキスト）」と「キューを
-    ' 分割して実行する操作」の並びに分解する。地の文中の<slide>タグは
-    ' ここでは触らない（ExtractSlideNoteActionsで各テキスト断片ごとにbookmarkへ変換し、
-    ' 発話中に割り込ませる）
+    ' ノート本文を、<agent>／<slide>／<screen>／<balloon>／<laser>タグ（ActionTagPattern
+    ' が対応する全種別）を区切りとして「地の文（テキスト）」と「キューを分割して実行する
+    ' 操作」の並びに分解する。全てのタグをここで区切ることで、発話が完了してから
+    ' 確実に操作を実行できる（詳細はこの関数群の手前のコメント参照）
     Private Shared Function SplitNoteBySequentialActions(text As String) As List(Of (PlainText As String, SequentialAction As SlideNoteAction))
         Dim result As New List(Of (PlainText As String, SequentialAction As SlideNoteAction))
         Dim lastIndex = 0
         For Each m As Match In ActionTagPattern.Matches(text)
             Dim action = ParseActionTag(m.Groups(1).Value, m.Groups(2).Value)
-            If String.Equals(action.TypeName, "agent", StringComparison.OrdinalIgnoreCase) OrElse
-               String.Equals(action.TypeName, "balloon", StringComparison.OrdinalIgnoreCase) Then
-                result.Add((text.Substring(lastIndex, m.Index - lastIndex), Nothing))
-                result.Add((Nothing, action))
-                lastIndex = m.Index + m.Length
-            End If
+            result.Add((text.Substring(lastIndex, m.Index - lastIndex), Nothing))
+            result.Add((Nothing, action))
+            lastIndex = m.Index + m.Length
         Next
         result.Add((text.Substring(lastIndex), Nothing))
         Return result
     End Function
-
-    ' テキスト断片中の<slide>タグを取り除き、代わりに
-    ' <bookmark mark="N"/>を差し込んだテキストを返す。同時に_pendingSlideNoteActionsへ、
-    ' そのNに対応するアクション内容を積む（markIdはSpeakSlideNotes側で発話全体を通して
-    ' 連番になるよう管理するため、呼び出し元からByRefで受け取る）
-    Private Function ExtractSlideNoteActions(text As String, ByRef markId As Integer) As String
-        ' ByRefパラメーターはラムダ式の中から直接更新できないため、ローカル変数に写してから
-        ' Regex.Matches + StringBuilderで手動で組み立てる（Regex.Replaceのコールバックは使わない）
-        Dim nextMarkId = markId
-        Dim sb As New StringBuilder()
-        Dim lastIndex = 0
-        For Each m As Match In ActionTagPattern.Matches(text)
-            sb.Append(text, lastIndex, m.Index - lastIndex)
-            Dim action = ParseActionTag(m.Groups(1).Value, m.Groups(2).Value)
-            nextMarkId += 1
-            _pendingSlideNoteActions(nextMarkId) = action
-            sb.Append($"<bookmark mark=""{nextMarkId}""/>")
-            lastIndex = m.Index + m.Length
-        Next
-        sb.Append(text, lastIndex, text.Length - lastIndex)
-        markId = nextMarkId
-        Return sb.ToString()
-    End Function
-
-    ' 調査用：BalloonShowのタイミングが高さ適用（Bookmark経由のApplyAutoBalloonHeight）の
-    ' 前か後かを確認する。もしBalloonShowの方が先に来ているなら、吹き出しは「最初に表示
-    ' され始めた瞬間」の矩形サイズで固定され、その後Style（NumberOfLines）を変更しても
-    ' 実際の見た目には反映されない可能性がある
-    Private Sub Agent_BalloonShow(sender As Object, e As AxAgentObjects._AgentEvents_BalloonShowEvent) Handles AxAgent.BalloonShow
-        DebugLog.Write("BalloonShow")
-    End Sub
 
     ' <agent op="break"/>で発行した無音Speakリクエストの完了を検知し、吹き出しを明示的に
     ' リセットする。吹き出し(Balloon)は「1回のSpeak()ごと」ではなく「キュー全体が空に
@@ -760,62 +795,42 @@ Public Class AgentFloatingForm
             If req IsNot Nothing AndAlso _pendingBreakBalloonResetIds.Remove(req.ID) Then
                 AxAgent.Characters("OfficeAgent").Balloon.Visible = False
             End If
+            ' ProcessNextSpeakSegmentが「完了待ち」にしていたRequestなら、次のセグメントへ進める
+            If req IsNot Nothing AndAlso req.ID = _pendingSegmentCompletionReqId Then
+                _pendingSegmentCompletionReqId = -1
+                ProcessNextSpeakSegment()
+            End If
         Catch ex As Exception
         End Try
     End Sub
 
-    ' SAPIのブックマークが読み上げ中に発火するたびに呼ばれる。対応するアクションが
-    ' 登録されていなければ何もしない（通常のスピーカーノート読み上げでは登録が無いので毎回ここで抜ける）
-    Private Sub Agent_Bookmark(sender As Object, e As AxAgentObjects._AgentEvents_BookmarkEvent) Handles AxAgent.Bookmark
-        ' 高さ適用専用のbookmark（各テキストの先頭に埋め込んだもの）なら、実際にそのテキストの
-        ' 読み上げが始まった瞬間として吹き出しの高さを適用する（_pendingBalloonHeightMarks参照）
-        Dim heightEntry As (Text As String, CharsPerLine As Integer) = (Nothing, 0)
-        If _pendingBalloonHeightMarks.TryGetValue(e.bookmarkID, heightEntry) Then
-            _pendingBalloonHeightMarks.Remove(e.bookmarkID)
-            Try
-                DebugLog.Write($"Bookmark(height) mark={e.bookmarkID} Balloon.Visible(before)={AxAgent.Characters("OfficeAgent").Balloon.Visible} Style(before)={AxAgent.Characters("OfficeAgent").Balloon.Style:X8}")
-                ApplyAutoBalloonHeight(heightEntry.Text, heightEntry.CharsPerLine)
-                DebugLog.Write($"Bookmark(height) mark={e.bookmarkID} Style(after)={AxAgent.Characters("OfficeAgent").Balloon.Style:X8}")
-            Catch ex As Exception
-            End Try
-            Return
-        End If
-
-        Dim action As SlideNoteAction = Nothing
-        If Not _pendingSlideNoteActions.TryGetValue(e.bookmarkID, action) Then Return
+    ' Speak()と同じキューに積む都合上、ProcessNextSpeakSegmentから直接呼ばれる。
+    ' 属性不正等で失敗しても、残りのSpeak呼び出しは続行させたいので例外を握りつぶす
+    Private Sub PerformSlideNoteAction(action As SlideNoteAction)
         Try
-            Select Case action.TypeName.ToLowerInvariant()
-                Case "slide"
-                    Dim opText As String = Nothing
-                    action.Attributes.TryGetValue("op", opText)
-                    Dim op = If(String.IsNullOrEmpty(opText), "click", opText.ToLowerInvariant())
-                    Dim dirText As String = Nothing
-                    action.Attributes.TryGetValue("dir", dirText)
-                    ' dirが数値ならスライド番号への直接ジャンプ、それ以外は"next"/"prev"の相対移動
-                    ' として扱う（index属性は廃止。dirだけで両方を表現できるようにした）
-                    Dim dir = "next"
-                    Dim indexValue = -1
-                    If Not String.IsNullOrEmpty(dirText) Then
-                        If Integer.TryParse(dirText, indexValue) Then
-                            dir = "goto"
-                        Else
-                            dir = dirText.ToLowerInvariant()
-                        End If
-                    End If
-                    PerformSlideActionAction?.Invoke(op, dir, indexValue)
-                Case "screen"
-                    PerformScreenActionAction?.Invoke(action.Op.ToLowerInvariant())
-                Case "laser"
-                    PerformLaserActionAction?.Invoke(action.Op.ToLowerInvariant())
-            End Select
+            Dim opText As String = Nothing
+            action.Attributes.TryGetValue("op", opText)
+            Dim op = If(String.IsNullOrEmpty(opText), "click", opText.ToLowerInvariant())
+            Dim dirText As String = Nothing
+            action.Attributes.TryGetValue("dir", dirText)
+            ' dirが数値ならスライド番号への直接ジャンプ、それ以外は"next"/"prev"の相対移動
+            ' として扱う（index属性は廃止。dirだけで両方を表現できるようにした）
+            Dim dir = "next"
+            Dim indexValue = -1
+            If Not String.IsNullOrEmpty(dirText) Then
+                If Integer.TryParse(dirText, indexValue) Then
+                    dir = "goto"
+                Else
+                    dir = dirText.ToLowerInvariant()
+                End If
+            End If
+            PerformSlideActionAction?.Invoke(op, dir, indexValue)
         Catch ex As Exception
-            ' 発話中のイベントハンドラなので、失敗しても読み上げ自体は継続させたい（例外を握りつぶす）
         End Try
     End Sub
 
-    ' Speak()と同じキューに積む都合上、SpeakSlideNotesのループから直接呼ばれる
-    ' （Bookmarkイベント経由ではない。上記コメント参照）。属性不正等で失敗しても、
-    ' 残りのSpeak呼び出しは続行させたいので例外を握りつぶす
+    ' Speak()と同じキューに積む都合上、ProcessNextSpeakSegmentから直接呼ばれる。
+    ' 属性不正等で失敗しても、残りのSpeak呼び出しは続行させたいので例外を握りつぶす
     Private Sub PerformAgentNoteAction(action As SlideNoteAction)
         Try
             Dim xText As String = Nothing, yText As String = Nothing
@@ -831,30 +846,18 @@ Public Class AgentFloatingForm
                         ' Requestとして正しくキューに乗る（moveto-method.md参照）ため、
                         ' speedを問わず常にMoveTo()を使う（speedを指定すればそのミリ秒かけて
                         ' 滑るように移動する）。
-                        ' x/yはピクセルの絶対座標ではなく、対象スクリーンに対する0～100の割合
-                        ' （x="90" y="85"なら横90%・縦85%の位置）として指定させる。ノートを
-                        ' 書く人がモニタの解像度やAxAgentの内部座標系（プライマリモニタ基準・
-                        ' DPIスケール込み）を意識しなくても位置を指定できるようにするため
-                        Dim xPercent As Double = 0, yPercent As Double = 0
-                        action.Attributes.TryGetValue("x", xText) : Double.TryParse(xText, xPercent)
-                        action.Attributes.TryGetValue("y", yText) : Double.TryParse(yText, yPercent)
                         Dim speedText As String = Nothing
                         Dim speed = 0
                         If action.Attributes.TryGetValue("speed", speedText) Then Integer.TryParse(speedText, speed)
                         Dim absX, absY As Integer
-                        ResolvePercentPosition(xPercent, yPercent, absX, absY)
-                        .MoveTo(CShort(absX), CShort(absY), speed)
+                        If ResolveMovePosition(action, isGesture:=False, absX:=absX, absY:=absY) Then
+                            .MoveTo(CShort(absX), CShort(absY), speed)
+                        End If
                     Case "gesture"
-                        ' moveと同じく、x/yは対象スクリーンに対する0～100の割合として指定させる
-                        Dim xPercent As Double = 0, yPercent As Double = 0
-                        action.Attributes.TryGetValue("x", xText) : Double.TryParse(xText, xPercent)
-                        action.Attributes.TryGetValue("y", yText) : Double.TryParse(yText, yPercent)
                         Dim absX, absY As Integer
-                        ResolvePercentPosition(xPercent, yPercent, absX, absY)
-                        .GestureAt(CShort(absX), CShort(absY))
-                    Case "play"
-                        Dim animName As String = Nothing
-                        If action.Attributes.TryGetValue("name", animName) AndAlso Not String.IsNullOrEmpty(animName) Then .Play(animName)
+                        If ResolveMovePosition(action, isGesture:=True, absX:=absX, absY:=absY) Then
+                            .GestureAt(CShort(absX), CShort(absY))
+                        End If
                     Case "show"
                         .Show(Not ReadAnimAttribute(action))
                     Case "hide"
@@ -914,53 +917,65 @@ Public Class AgentFloatingForm
         End Try
     End Sub
 
-    ' MS Agent自身のsize-to-text自動計算は、スペースの無い日本語のような言語では
-    ' 単語区切りをうまく認識できず、高さがずれる（本文が入りきらない／余白が余る）ことが
-    ' 実機で確認された。そのためこちらで文字幅から必要な行数を見積もり、size-to-textを
-    ' 使わずNumberOfLinesを直接指定する方式を試す。全角文字（おおよそLatin-1の範囲外、
-    ' AscW>255）を幅2、それ以外（半角英数字等）を幅1として概算する簡易的な計算。
-    ' （吹き出しが大きくなりすぎる不具合が実機で見つかったことがあるが、真因は空行が
-    ' 無条件に1行としてカウントされていたことで、この幅2倍の重み付け自体は妥当だった
-    ' ため元に戻した。空行の扱いはApplyAutoBalloonHeight側で対処している）
-    ' ただしInsertWordBreaksAtPunctuationOutsideTagsが句読点の後に挿入するゼロ幅スペース
-    ' （U+200B、AscW=8203で上記の条件に該当してしまう）は、見た目上は幅を持たない文字
-    ' なので、全角扱い（幅2）にしてしまうと行数を余分に見積もってしまう。幅0として除外する
-    Private Shared Function EstimateDisplayWidth(s As String) As Integer
-        Dim total = 0
-        For Each c In s
-            If AscW(c) = &H200B Then Continue For
-            total += If(AscW(c) > 255, 2, 1)
-        Next
-        Return total
+    ' 全角=2／半角=1という文字種による決め打ちの重み付けでは、実機で「27文字（全角）の
+    ' 行がcharsPerLine=28に対して計算上2行のはずなのに実際は3行」というズレが確認された
+    ' （文字ごとの実際の描画幅はフォント・文字種によって細かく異なるため、二値の重みでは
+    ' 精度が足りない）。そのためBalloon.FontName／FontSizeから実フォントを作り、
+    ' Graphics.MeasureStringで実測したピクセル幅を使う。ゼロ幅スペース（U+200B、
+    ' InsertWordBreaksAtPunctuationOutsideTagsが句読点の後に挿入する）は見た目上
+    ' 幅を持たない文字だが、フォントによってはMeasureStringが何らかの幅を返す可能性が
+    ' あるため、計測前に取り除く
+    Private Shared Function RemoveZeroWidthSpaces(s As String) As String
+        Return s.Replace(ChrW(&H200B), "")
     End Function
+
+    ' Balloonの吹き出し矩形が確保する内側余白（agentsvr.exeの逆コンパイル結果より判明。
+    ' ウィンドウ全体幅=CharsPerLine×tmAveCharWidthとは別に、そこから20pxを引いた値を
+    ' 保持するフィールドがあり、テキストの折り返し判定にはこちらが使われている）
+    Private Const BalloonInnerWidthMarginPx As Integer = 20
 
     ' spokenTextを読み上げる直前に呼ぶ。実際に吹き出しへ表示される分量（タグ・ゼロ幅スペース
     ' を除いた地の文）から必要な行数を計算し、Balloon.Styleへ反映する。
-    ' charsPerLineは呼び出し側でキャプチャした値を渡すこと（このメソッド内で.CharsPerLineを
-    ' 都度取得しない）。呼び出しタイミングがそのテキストの実際の再生時点（Agent_RequestStart）
-    ' までずれ込むため、その場で読み直すと<balloon op="style" width="N"/>で後続のセグメント用に
-    ' 幅が変更されていた場合に、そのセグメントの意図した幅とズレてしまう
-    Private Sub ApplyAutoBalloonHeight(spokenText As String, charsPerLine As Integer)
+    ' charsPerLine／fontName／fontSizeは呼び出し側でキャプチャした値を渡すこと
+    ' （このメソッド内で.Balloonの現在値を都度取得しない）。呼び出しタイミングがそのテキストの
+    ' 実際の再生時点までずれ込むと、<balloon op="style".../>で後続のセグメント用に変更された
+    ' 値を拾ってしまい、そのセグメントの意図した設定とズレるため。
+    ' 実際の計算方法はBalloonTextMetrics参照（agentsvr.exeの逆コンパイルで判明した
+    ' MS Agent本体と同じ計算式・同じWin32 API系統を使う）
+    Private Sub ApplyAutoBalloonHeight(spokenText As String, charsPerLine As Integer, fontName As String, fontSize As Integer)
         Try
             With AxAgent.Characters("OfficeAgent").Balloon
-                If charsPerLine <= 0 Then Return
+                If charsPerLine <= 0 OrElse String.IsNullOrEmpty(fontName) OrElse fontSize <= 0 Then Return
 
                 ' \Map="発声用"="表示断片"\ は<...>形式ではないためTagSpanPatternでは
                 ' 除去できない。先に表示断片（2つ目の引数）だけへ変換してから、
                 ' 既存の<...>タグ除去処理にかける
                 Dim visibleText = TagSpanPattern.Replace(MapTagPattern.Replace(spokenText, "$1"), "")
                 Dim totalLines = 0
-                For Each line In visibleText.Split({vbCr, vbLf}, StringSplitOptions.None)
-                    Dim width = EstimateDisplayWidth(line)
-                    ' 空行（width=0）は0行として扱う。breakでテキストを分割すると、分割点の
-                    ' 前後に元の改行が残ったまま断片の先頭・末尾に空文字列の行ができてしまい
-                    ' （RemoveBlankLinesはノート全体に対して1回しかかけていないため、分割後に
-                    ' 生じる空行までは除去できない）、Math.Max(1, ...)を無条件にかけると
-                    ' その空行だけで1行分の余分な高さが積み上がってしまう不具合が実機で確認された
-                    Dim lineCount = If(width = 0, 0, Math.Max(1, CInt(Math.Ceiling(width / CDbl(charsPerLine)))))
-                    totalLines += lineCount
-                    DebugLog.Write($"ApplyAutoBalloonHeight: line=""{line}"" width={width} charsPerLine={charsPerLine} lineCount={lineCount}")
-                Next
+
+                ' Balloon.FontCharSetは128（SHIFTJIS_CHARSET）に固定されている。Font側で
+                ' 文字セットを指定しないとToHfont()が既定の文字セットでLOGFONTを作ってしまい、
+                ' 実際にBalloonが使うフォント（日本語文字セット指定）とは異なるメトリクス
+                ' （tmAveCharWidthや個々の文字幅）になってしまうため、明示的に合わせる
+                Using font As New Drawing.Font(fontName, fontSize, Drawing.FontStyle.Regular, Drawing.GraphicsUnit.Point, CByte(128))
+                    BalloonTextMetrics.UsingScreenDC(
+                        Sub(hdc)
+                            Dim aveCharWidthPx As Integer, fontHeightPx As Integer
+                            If Not BalloonTextMetrics.TryGetFontMetrics(hdc, font, aveCharWidthPx, fontHeightPx) Then Return
+
+                            Dim balloonWidthPx = charsPerLine * aveCharWidthPx - BalloonInnerWidthMarginPx
+                            For Each rawLine In visibleText.Split({vbCr, vbLf}, StringSplitOptions.None)
+                                Dim line = RemoveZeroWidthSpaces(rawLine)
+                                ' 空行は0行として扱う。breakでテキストを分割すると、分割点の
+                                ' 前後に元の改行が残ったまま断片の先頭・末尾に空文字列の行が
+                                ' できてしまい（RemoveBlankLinesはノート全体に対して1回しか
+                                ' かけていないため、分割後に生じる空行までは除去できない）、
+                                ' 無条件に最低1行を保証すると、その空行だけで1行分の余分な
+                                ' 高さが積み上がってしまう不具合が実機で確認された
+                                totalLines += BalloonTextMetrics.CountWrappedLines(hdc, line, font, balloonWidthPx)
+                            Next
+                        End Sub)
+                End Using
                 totalLines = Math.Max(1, totalLines)
 
                 ' size-to-textビット(bit1)が立っていると、NumberOfLines（ビット24～31）を
@@ -969,7 +984,6 @@ Public Class AgentFloatingForm
                 Dim style = .Style And Not BalloonStyleSizeToText
                 style = (style And &HFFFFFF) Or (totalLines * (2 ^ 24))
                 .Style = style
-                DebugLog.Write($"ApplyAutoBalloonHeight: totalLines={totalLines} (applied)")
             End With
         Catch ex As Exception
         End Try
@@ -1081,6 +1095,127 @@ Public Class AgentFloatingForm
         ' どこにも見つからなかった場合のみ、素のファイル名でMS Agent自身の検索に委ねる
         ' （通常はC:\Windows\msagent\charsを見に行くが、ここに来た時点で正規の配置場所には無い）
         Return AcsFileNameFor(character)
+    End Function
+
+    ' <agent op="move"/>／<agent op="gesture"/>の移動先（／指し示す先）座標を解決する。object
+    ' 属性が指定されていればスライド上のオブジェクト基準（ResolveObjectPosition）、無ければ
+    ' 従来通りx/y（対象スクリーンに対する0～100の割合）基準で解決する。object指定時に
+    ' シェイプが見つからない場合はFalseを返し、呼び出し側は移動／ジェスチャー自体を行わない。
+    '
+    ' ResolveObjectPosition／ResolvePercentPositionが返す座標は、どちらも「エージェントの
+    ' 中心を置きたい点」の意味で計算している。一方、実際に呼び出すAxAgentのMoveTo(x,y)は
+    ' キャラクターの左上（Left/Top）を指定するAPIのため、それを補正せずそのまま渡すと
+    ' キャラクターの幅・高さの半分だけ右下にずれて表示されてしまう（実機で確認済み）。
+    ' そのためmove時（isGesture=False）はここでOriginalWidth/Heightの半分を引き、見た目の
+    ' 中心が指定点に一致するよう補正する。gesture（GestureAt）は「指す先」の座標であり
+    ' キャラクター自身の配置ではないため補正しない
+    Private Function ResolveMovePosition(action As SlideNoteAction, isGesture As Boolean, ByRef absX As Integer, ByRef absY As Integer) As Boolean
+        Dim resolved As Boolean
+        Dim objectName As String = Nothing
+        If action.Attributes.TryGetValue("obj", objectName) AndAlso Not String.IsNullOrEmpty(objectName) Then
+            Dim posText As String = Nothing
+            action.Attributes.TryGetValue("pos", posText)
+            resolved = ResolveObjectPosition(objectName, posText, isGesture, absX, absY)
+        Else
+            Dim xText As String = Nothing, yText As String = Nothing
+            Dim xPercent As Double = 0, yPercent As Double = 0
+            action.Attributes.TryGetValue("x", xText) : Double.TryParse(xText, xPercent)
+            action.Attributes.TryGetValue("y", yText) : Double.TryParse(yText, yPercent)
+            ResolvePercentPosition(xPercent, yPercent, absX, absY)
+            resolved = True
+        End If
+
+        If resolved AndAlso Not isGesture Then
+            ' absX/absYはAxAgentの座標系（論理ピクセル）。character.OriginalWidth/Heightも
+            ' 同じく論理ピクセルの値のため、ここではmagを掛けたり割ったりせずそのまま使う
+            ' （magが必要なのはResolveObjectPosition内、物理ピクセルのrectと演算する箇所だけ）
+            Dim character = AxAgent.Characters("OfficeAgent")
+            absX -= CInt(character.OriginalWidth / 2.0)
+            absY -= CInt(character.OriginalHeight / 2.0)
+        End If
+
+        Return resolved
+    End Function
+
+    ' <agent op="move|gesture" obj="シェイプ名" pos="..."/>のpos属性を、GetShapeScreenBoundsFunc
+    ' が返すシェイプの矩形（スクリーン座標・物理ピクセル）上の1点に変換する。
+    ' posはRのlegendのような9方位＋中央で指定する（大文字小文字は区別しない）。
+    '   center                                                ：矩形の中心
+    '   top/bottom/left/right/topleft/topright/
+    '   bottomleft/bottomright                                ：境界線の外側（move時のみ。詳細は下記）
+    '   innertop/innerbottom/innerleft/innerright/
+    '   innertopleft/innertopright/innerbottomleft/
+    '   innerbottomright                                      ：境界線のすぐ内側（オフセット無し。
+    '                                                            オブジェクトに重ねて強調する用途）
+    ' 「inner」の付かない指定は、move（キャラクターの立ち位置）ではオブジェクトに重ならない
+    ' よう、キャラクター自身の現在の表示サイズ（OriginalWidth/Height）分だけ境界線の外へ
+    ' 離した点にする。一方gesture（指し示す先）でこのオフセットを付けてしまうと、キャラクターが
+    ' 既にその外側の位置に立っている場合、指す先がキャラクター自身の位置とほぼ重なってしまい
+    ' 「指し示す」動作として機能しない（例：moveでオブジェクト上端の外側へ移動した直後、同じ
+    ' pos="top"でgestureすると、本来はオブジェクトが自分より下にあるので下向きに指すべきところ、
+    ' 上向きになってしまう不具合が実機で確認された）。そのためgesture指定時はinner有無に
+    ' かかわらず常にオフセット無し（＝境界線上）を対象にする
+    ' pos省略時はcenter扱い。GetShapeScreenBoundsFunc未登録、または該当シェイプが見つからない
+    ' 場合はFalseを返す
+    Private Function ResolveObjectPosition(objectName As String, posText As String, isGesture As Boolean, ByRef absX As Integer, ByRef absY As Integer) As Boolean
+        Dim bounds = GetShapeScreenBoundsFunc?.Invoke(objectName)
+        If Not bounds.HasValue Then Return False
+        Dim rect = bounds.Value
+
+        Dim pos = If(String.IsNullOrEmpty(posText), "center", posText.ToLowerInvariant())
+        Dim inner = isGesture OrElse pos.StartsWith("inner")
+        If pos.StartsWith("inner") Then pos = pos.Substring("inner".Length)
+
+        Dim character = AxAgent.Characters("OfficeAgent")
+        Dim mag = GetWindowMag()
+        ' character.OriginalWidth/Heightは論理ピクセル（96 DPI基準）の値だが、rectは
+        ' GetShapeScreenBoundsFuncが返すスクリーン座標＝物理ピクセルのため、両者を直接
+        ' 演算する前にmagを掛けて物理ピクセルへ変換する必要がある（変換せずにそのまま
+        ' 引いていたため、DPIスケールが100%を超える環境でオフセット量が実際より小さくなり、
+        ' pos="left"等でキャラクターがオブジェクトに重なってしまう不具合が実機で確認された）。
+        ' なおここで計算するx,yは「エージェントの中心を置きたい点」であり、ResolveMovePosition
+        ' で最終的にLeft/Topへ変換する際にさらにOriginalWidth/Height「の半分」が引かれる
+        ' （中心→左上への変換）。そのため、境界線からキャラクターの下端／右端等がちょうど
+        ' 接するようにするには、ここでのoffsetは「境界線から中心までの距離」＝
+        ' OriginalWidth/Heightの半分にする必要がある（丸ごと引くと、中心への変換分と
+        ' 合わせて実質1.5倍の隙間ができてしまう不具合も実機で確認された）
+        Dim offsetX = If(inner, 0, CInt(character.OriginalWidth / 2.0 * mag))
+        Dim offsetY = If(inner, 0, CInt(character.OriginalHeight / 2.0 * mag))
+
+        Dim x As Integer, y As Integer
+        Select Case pos
+            Case "top"
+                x = rect.Left + rect.Width \ 2
+                y = rect.Top - offsetY
+            Case "bottom"
+                x = rect.Left + rect.Width \ 2
+                y = rect.Bottom + offsetY
+            Case "left"
+                x = rect.Left - offsetX
+                y = rect.Top + rect.Height \ 2
+            Case "right"
+                x = rect.Right + offsetX
+                y = rect.Top + rect.Height \ 2
+            Case "topleft"
+                x = rect.Left - offsetX
+                y = rect.Top - offsetY
+            Case "topright"
+                x = rect.Right + offsetX
+                y = rect.Top - offsetY
+            Case "bottomleft"
+                x = rect.Left - offsetX
+                y = rect.Bottom + offsetY
+            Case "bottomright"
+                x = rect.Right + offsetX
+                y = rect.Bottom + offsetY
+            Case Else ' "center"（未指定・不正値もここに含める）
+                x = rect.Left + rect.Width \ 2
+                y = rect.Top + rect.Height \ 2
+        End Select
+
+        absX = CInt(x / mag)
+        absY = CInt(y / mag)
+        Return True
     End Function
 
     ' <agent op="move"/>／<agent op="gesture"/>のx/y（対象スクリーンに対する0～100の割合）を、
@@ -1616,17 +1751,28 @@ Public Class AgentFloatingForm
         _slideShowCurrentSlide = currentSlide
         _slideShowElapsedStopwatch = Stopwatch.StartNew()
         _slideShowLapStopwatch = Stopwatch.StartNew()
+        _lastLapResetSlide = currentSlide
 
         If Not OverlayEnabled() Then Return
         UpdateSlideShowOverlay()
         _slideShowOverlayTimer.Start()
     End Sub
 
+    ' 直近でラップタイムをリセットしたスライド番号。PowerPointのSlideShowNextSlideイベントは
+    ' 1回の実際のスライド送りに対して複数回連続で発火することがある既知の癖があり
+    ' （ThisAddIn.OnSlideShowNextSlideのコメント参照）、その重複発火のたびにここでラップタイムを
+    ' リセットしてしまうと、実際にはスライドが変わっていないのに「このスライドに来てからの
+    ' 経過時間」（lap）が0に戻り続けてしまう不具合が実機で確認された
+    Private _lastLapResetSlide As Integer = -1
+
     ' スライドが切り替わるたび（ThisAddIn側のSlideShowNextSlideハンドラから呼ぶ）に
     ' ラップタイム（このスライドに来てからの経過時間）をリセットする
     Public Sub NotifySlideShowSlideChanged(currentSlide As Integer)
         _slideShowCurrentSlide = currentSlide
-        _slideShowLapStopwatch?.Restart()
+        If currentSlide <> _lastLapResetSlide Then
+            _lastLapResetSlide = currentSlide
+            _slideShowLapStopwatch?.Restart()
+        End If
         If OverlayEnabled() Then UpdateSlideShowOverlay()
     End Sub
 
@@ -1688,6 +1834,12 @@ Public Class AgentFloatingForm
         If elapsed.Hours > 0 Then Return $"{elapsed.Hours}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}"
         Return $"{elapsed.Minutes}:{elapsed.Seconds:D2}"
     End Function
+
+    ' <agent op="wait" ms="N"/>の実時間待機が満了した（_waitTimer宣言箇所のコメント参照）
+    Private Sub WaitTimer_Tick(sender As Object, e As EventArgs) Handles _waitTimer.Tick
+        _waitTimer.Stop()
+        ProcessNextSpeakSegment()
+    End Sub
 
     ' 発表時間の吹き出しを表示してから約30秒経ったら自動的に閉じる
     Private Sub PresentationBalloonTimer_Tick(sender As Object, e As EventArgs) Handles _presentationBalloonTimer.Tick

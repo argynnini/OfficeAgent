@@ -17,6 +17,12 @@ Public Class AgentRibbon
     ' 各Officeアドインが登録する（第1引数=開始タグ、第2引数=終了タグ）
     Public Shared InsertSapiTagAction As Action(Of String, String)
 
+    ' 各Officeアドイン（ThisAddIn_Startup）が、現在スライド上で選択されているシェイプの名前を
+    ' 返す処理を登録する。<agent op="move|gesture" obj="..."/>タグ挿入時、ノートを書く人が
+    ' シェイプ名を別途調べなくても済むよう、選択中のシェイプがあればその名前を自動入力するために
+    ' 使用する（未選択・テキスト選択中・スライドショー中など対象が無ければNothingを返す）
+    Public Shared GetSelectedShapeNameFunc As Func(Of String)
+
     Public Sub New()
     End Sub
 
@@ -199,8 +205,11 @@ Public Class AgentRibbon
 
     ' ── 発話中操作タグ挿入（PowerPointの「スライド ショー」タブ） ──────────
     ' <agent>／<slide>／<screen>は自作の記法（SAPI標準タグではない）。ノート読み上げ時に
-    ' AgentFloatingForm.ExtractSlideNoteActionsがSAPIの<bookmark mark="N"/>へ変換し、発話中に
-    ' そのマークへ到達したタイミングでスライド操作・エージェント操作を実行する
+    ' AgentFloatingForm.SplitNoteBySequentialActionsがノート本文をタグの位置で区切り、
+    ' 直前のテキストを話し終えたタイミングでスライド操作・エージェント操作を実行する
+    ' （以前はSAPIのBookmarkイベントで発話「途中」に割り込ませていたが、Windows標準の
+    ' 日本語音声（Haruka等、実体はOneCoreブリッジ）がBookmark通知を発火しないため
+    ' スライド送りが機能しない不具合があり、全音声で確実に動くこの方式に変更した）
     Public Sub InsertActionSlideClickTag_Click(control As Office.IRibbonControl)
         InsertSapiTagAction?.Invoke("<slide op=""click"" dir=""next""/>", "")
     End Sub
@@ -228,6 +237,26 @@ Public Class AgentRibbon
     Public Sub InsertActionAgentGestureAtTag_Click(control As Office.IRibbonControl)
         InsertSapiTagAction?.Invoke("<agent op=""gesture"" x=""90"" y=""85""/>", "")
     End Sub
+
+    ' <agent op="move|gesture" obj="..." pos="..."/>タグを挿入する。挿入時点でPowerPoint上に
+    ' 選択中のシェイプがあれば、その名前をobject属性へ自動入力する（無ければ空欄のまま挿入し、
+    ' ノートを書く人が後で手入力する）
+    Public Sub InsertActionAgentMoveObjectTag_Click(control As Office.IRibbonControl)
+        Dim objectName = EscapeXmlAttribute(GetSelectedShapeNameFunc?.Invoke())
+        InsertSapiTagAction?.Invoke($"<agent op=""move"" obj=""{objectName}"" pos=""top"" speed=""1000""/>", "")
+    End Sub
+
+    Public Sub InsertActionAgentGestureObjectTag_Click(control As Office.IRibbonControl)
+        Dim objectName = EscapeXmlAttribute(GetSelectedShapeNameFunc?.Invoke())
+        InsertSapiTagAction?.Invoke($"<agent op=""gesture"" obj=""{objectName}"" pos=""top""/>", "")
+    End Sub
+
+    ' シェイプ名をXML属性値として安全に埋め込めるようエスケープする。取得失敗時（Nothing）は
+    ' 空文字列を返す（ノートを書く人が後で手入力できるよう、タグ自体は空のobject属性で挿入する）
+    Private Shared Function EscapeXmlAttribute(value As String) As String
+        If String.IsNullOrEmpty(value) Then Return ""
+        Return value.Replace("&", "&amp;").Replace("""", "&quot;").Replace("<", "&lt;").Replace(">", "&gt;")
+    End Function
 
     Public Sub InsertActionAgentPlayTag_Click(control As Office.IRibbonControl)
         InsertSapiTagAction?.Invoke("<agent op=""play"" name=""Wave""/>", "")

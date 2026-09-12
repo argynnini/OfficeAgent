@@ -1,3 +1,5 @@
+Imports System.Drawing
+Imports System.Windows.Forms
 Imports OfficeAgent.Core
 
 Partial Public Class ThisAddIn
@@ -19,6 +21,14 @@ Partial Public Class ThisAddIn
     ' 同じスライドに対する重複呼び出しをスキップする
     Private _lastSpokenSlideNotesIndex As Integer = -1
 
+    ' 「移動(オブジェクト)」「指し示す(オブジェクト)」タグ挿入用：直近にスライド上で選択されて
+    ' いたシェイプの名前。ノートの編集欄をクリックした瞬間にPowerPointの選択がテキストへ
+    ' 切り替わり、シェイプの選択情報が失われてしまう（＝シェイプ選択→ノートにカーソルを
+    ' 移動→挿入ボタンを押す、という自然な操作順序ではSelectionから直接は取得できない）ため、
+    ' WindowSelectionChangeイベントで選択がシェイプに変わるたびにここへ保存しておき、
+    ' GetSelectedShapeNameで「今の選択」が無ければこちらにフォールバックする
+    Private _lastSelectedShapeName As String
+
     Protected Overrides Function CreateRibbonExtensibilityObject() As Microsoft.Office.Core.IRibbonExtensibility
         Return New AgentRibbon()
     End Function
@@ -37,15 +47,18 @@ Partial Public Class ThisAddIn
         AgentRibbon.IsSettingsPaneVisibleFunc = Function() IsSettingsPaneVisible
         AgentRibbon.ToggleSettingsPaneAction = AddressOf ToggleSettingsPane
         AgentRibbon.InsertSapiTagAction = AddressOf InsertSapiTagIntoSelection
+        AgentRibbon.GetSelectedShapeNameFunc = AddressOf GetSelectedShapeName
         OfficeAgent.Core.AgentFloatingForm.PerformSlideActionAction = AddressOf PerformSlideAction
         OfficeAgent.Core.AgentFloatingForm.PerformScreenActionAction = AddressOf PerformScreenAction
         OfficeAgent.Core.AgentFloatingForm.PerformLaserActionAction = AddressOf PerformLaserAction
         OfficeAgent.Core.AgentFloatingForm.GetSlideVariablesFunc = AddressOf GetSlideVariables
         OfficeAgent.Core.AgentFloatingForm.GetHostWindowHandleFunc = AddressOf GetHostWindowHandle
         OfficeAgent.Core.AgentFloatingForm.GetSlideShowWindowHandleFunc = AddressOf GetSlideShowWindowHandle
+        OfficeAgent.Core.AgentFloatingForm.GetShapeScreenBoundsFunc = AddressOf GetShapeScreenBounds
 
         _agentForm.Show()
 
+        AddHandler Me.Application.WindowSelectionChange, AddressOf OnWindowSelectionChange
         AddHandler Me.Application.PresentationBeforeSave, AddressOf OnBeforeSave
         AddHandler Me.Application.PresentationSave, AddressOf OnAfterSave
         AddHandler Me.Application.PresentationPrint, AddressOf OnAfterPrint
@@ -142,6 +155,37 @@ Partial Public Class ThisAddIn
         End Try
     End Function
 
+    ' PowerPointの選択状態が変わるたびに発火する。ノートの編集欄にカーソルを合わせた瞬間
+    ' 選択がテキストへ切り替わりシェイプの選択情報が失われてしまうため、シェイプが選択された
+    ' 時点でその名前を_lastSelectedShapeNameへ保存しておき、GetSelectedShapeNameからの
+    ' フォールバック先として使えるようにする
+    Private Sub OnWindowSelectionChange(sel As Microsoft.Office.Interop.PowerPoint.Selection)
+        Try
+            If sel IsNot Nothing AndAlso sel.Type = Microsoft.Office.Interop.PowerPoint.PpSelectionType.ppSelectionShapes AndAlso
+               sel.ShapeRange IsNot Nothing AndAlso sel.ShapeRange.Count > 0 Then
+                _lastSelectedShapeName = sel.ShapeRange(1).Name
+            End If
+        Catch ex As Exception
+        End Try
+    End Sub
+
+    ' リボンの「移動(オブジェクト)」「指し示す(オブジェクト)」タグ挿入から呼ばれる：現在
+    ' スライド上で選択されているシェイプの名前を返す（複数選択時は先頭のシェイプ）。
+    ' 今の選択がシェイプでない場合（ノートにカーソルを移してから挿入ボタンを押す、という
+    ' 自然な操作順序では大抵ここに来る）は、OnWindowSelectionChangeで記憶しておいた
+    ' 直近の選択シェイプ名にフォールバックする
+    Private Function GetSelectedShapeName() As String
+        Try
+            Dim selection = Me.Application.ActiveWindow?.Selection
+            If selection IsNot Nothing AndAlso selection.Type = Microsoft.Office.Interop.PowerPoint.PpSelectionType.ppSelectionShapes AndAlso
+               selection.ShapeRange IsNot Nothing AndAlso selection.ShapeRange.Count > 0 Then
+                Return selection.ShapeRange(1).Name
+            End If
+        Catch ex As Exception
+        End Try
+        Return _lastSelectedShapeName
+    End Function
+
     ' リボンの「タグ挿入」メニューから呼ばれる：ノート編集中に選択している文字列を
     ' 指定のSAPI5 XMLタグで挟む（選択が無い場合はカーソル位置にタグのペアだけ挿入する）。
     ' テキスト選択（ppSelectionText）以外のとき（図形選択・スライド一覧表示中等）は
@@ -191,6 +235,130 @@ Partial Public Class ThisAddIn
         Catch ex As Exception
             Return IntPtr.Zero
         End Try
+    End Function
+
+    ' AgentFloatingForm側のGetShapeScreenBoundsFuncから呼ばれる：<agent op="move|gesture"
+    ' obj="シェイプ名" .../>タグの基準にするため、指定した名前のシェイプの矩形をスクリーン座標
+    ' （物理ピクセル）で返す。編集中はDocumentWindow.PointsToScreenPixelsX/Y（PowerPoint自身が
+    ' ズーム・スクロール位置を考慮して変換してくれる）を使う。スライドショー中はSlideShowWindow
+    ' に同等のAPIが無いため、ShapeBoundsInSlideShowで自前計算する。
+    ' 該当スライド・シェイプが見つからない場合はNothingを返す
+    Private Function GetShapeScreenBounds(objectName As String) As Rectangle?
+        Try
+            Dim wnShow = _activeSlideShowWindow
+            If wnShow IsNot Nothing Then
+                Dim shp = FindShapeOnSlide(wnShow.View.Slide, objectName)
+                If shp Is Nothing Then Return Nothing
+                Return ShapeBoundsInSlideShow(wnShow, shp)
+            End If
+
+            Dim wnDoc = Me.Application.ActiveWindow
+            If wnDoc Is Nothing Then Return Nothing
+            Dim slide = TryCast(wnDoc.View.Slide, Microsoft.Office.Interop.PowerPoint.Slide)
+            If slide Is Nothing Then Return Nothing
+            Dim editShp = FindShapeOnSlide(slide, objectName)
+            If editShp Is Nothing Then Return Nothing
+            Return Rectangle.FromLTRB(
+                wnDoc.PointsToScreenPixelsX(editShp.Left),
+                wnDoc.PointsToScreenPixelsY(editShp.Top),
+                wnDoc.PointsToScreenPixelsX(editShp.Left + editShp.Width),
+                wnDoc.PointsToScreenPixelsY(editShp.Top + editShp.Height))
+        Catch ex As Exception
+            Return Nothing
+        End Try
+    End Function
+
+    ' スライド直下のトップレベルシェイプから名前で検索する（グループ内の要素は対象外）。
+    ' 見つからない場合（存在しない名前・COMException）はNothingを返す
+    Private Function FindShapeOnSlide(slide As Microsoft.Office.Interop.PowerPoint.Slide, name As String) As Microsoft.Office.Interop.PowerPoint.Shape
+        Try
+            Return slide.Shapes.Item(name)
+        Catch ex As Exception
+            Return Nothing
+        End Try
+    End Function
+
+    ' ウィンドウの実際のクライアント領域を取得するためのWin32 API。Screen.FromHandle().Boundsは
+    ' 呼び出し元プロセス（本アドイン＝PowerPoint本体側のDPI Awareness設定）によってはOSに
+    ' 仮想化された値を返すことがあり、SlideShowWindow.Width/Height（ポイント単位）との
+    ' 単位が食い違って座標がずれる不具合が実機で確認された。
+    ' GetClientRect／ClientToScreenは対象ウィンドウ自身の実ピクセルサイズ・位置を返すため、
+    ' 「同じウィンドウ」のポイント⇔ピクセル比を直接計算でき、モニタのDPI設定に左右されない
+    <Runtime.InteropServices.StructLayout(Runtime.InteropServices.LayoutKind.Sequential)>
+    Private Structure RECT
+        Public Left As Integer
+        Public Top As Integer
+        Public Right As Integer
+        Public Bottom As Integer
+    End Structure
+
+    <Runtime.InteropServices.StructLayout(Runtime.InteropServices.LayoutKind.Sequential)>
+    Private Structure POINT
+        Public X As Integer
+        Public Y As Integer
+    End Structure
+
+    <Runtime.InteropServices.DllImport("user32.dll")>
+    Private Shared Function GetClientRect(hWnd As IntPtr, ByRef lpRect As RECT) As Boolean
+    End Function
+
+    <Runtime.InteropServices.DllImport("user32.dll")>
+    Private Shared Function ClientToScreen(hWnd As IntPtr, ByRef lpPoint As POINT) As Boolean
+    End Function
+
+    ' スライドショー中のシェイプ矩形をスクリーン座標（物理ピクセル）で計算する。
+    ' SlideShowWindowにはDocumentWindow.PointsToScreenPixelsX/Yに相当するAPIが無いため、
+    ' 自前で計算する：
+    '   1. HWNDから、そのウィンドウ自身のクライアント領域の実ピクセルサイズ・位置を
+    '      GetClientRect／ClientToScreenで取得する（上記コメント参照）
+    '   2. SlideShowWindow.Width/Height（ポイント単位、Windowオブジェクト共通の慣例に従う）と
+    '      1のピクセル幅から、ポイント→ピクセルの倍率を逆算する
+    '   3. スライドとウィンドウのアスペクト比が異なる場合、PowerPointはスライドを中央に
+    '      フィットさせ上下または左右に均等な余白（レターボックス）を入れるため、その分の
+    '      オフセットも計算に含める
+    Private Function ShapeBoundsInSlideShow(wn As Microsoft.Office.Interop.PowerPoint.SlideShowWindow,
+                                             shp As Microsoft.Office.Interop.PowerPoint.Shape) As Rectangle?
+        If wn.Width <= 0 OrElse wn.Height <= 0 Then Return Nothing
+
+        Dim slideWidthPt = wn.Presentation.PageSetup.SlideWidth
+        Dim slideHeightPt = wn.Presentation.PageSetup.SlideHeight
+        If slideWidthPt <= 0 OrElse slideHeightPt <= 0 Then Return Nothing
+
+        Dim hwnd = New IntPtr(wn.HWND)
+        Dim clientRect As RECT
+        If Not GetClientRect(hwnd, clientRect) Then Return Nothing
+        Dim clientWidthPx = clientRect.Right - clientRect.Left
+        Dim clientHeightPx = clientRect.Bottom - clientRect.Top
+        If clientWidthPx <= 0 OrElse clientHeightPx <= 0 Then Return Nothing
+
+        Dim origin As New POINT With {.X = 0, .Y = 0}
+        If Not ClientToScreen(hwnd, origin) Then Return Nothing
+        Dim screenBounds = New Rectangle(origin.X, origin.Y, clientWidthPx, clientHeightPx)
+        Dim pxPerPt = screenBounds.Width / wn.Width
+
+        Dim windowAspect = wn.Width / wn.Height
+        Dim slideAspect = slideWidthPt / slideHeightPt
+        Dim slideDisplayWidthPt As Double, slideDisplayHeightPt As Double
+        Dim slideOffsetXPt As Double, slideOffsetYPt As Double
+        If slideAspect > windowAspect Then
+            slideDisplayWidthPt = wn.Width
+            slideDisplayHeightPt = wn.Width / slideAspect
+            slideOffsetXPt = 0
+            slideOffsetYPt = (wn.Height - slideDisplayHeightPt) / 2
+        Else
+            slideDisplayHeightPt = wn.Height
+            slideDisplayWidthPt = wn.Height * slideAspect
+            slideOffsetYPt = 0
+            slideOffsetXPt = (wn.Width - slideDisplayWidthPt) / 2
+        End If
+        Dim scale = slideDisplayWidthPt / slideWidthPt
+
+        Dim left = screenBounds.Left + (slideOffsetXPt + shp.Left * scale) * pxPerPt
+        Dim top = screenBounds.Top + (slideOffsetYPt + shp.Top * scale) * pxPerPt
+        Dim right = left + shp.Width * scale * pxPerPt
+        Dim bottom = top + shp.Height * scale * pxPerPt
+
+        Return Rectangle.FromLTRB(CInt(left), CInt(top), CInt(right), CInt(bottom))
     End Function
 
     Private Sub OnBeforeSave(pres As Microsoft.Office.Interop.PowerPoint.Presentation, ByRef cancel As Boolean)
@@ -439,12 +607,14 @@ Partial Public Class ThisAddIn
         AgentRibbon.IsSettingsPaneVisibleFunc = Nothing
         AgentRibbon.ToggleSettingsPaneAction = Nothing
         AgentRibbon.InsertSapiTagAction = Nothing
+        AgentRibbon.GetSelectedShapeNameFunc = Nothing
         OfficeAgent.Core.AgentFloatingForm.PerformSlideActionAction = Nothing
         OfficeAgent.Core.AgentFloatingForm.PerformScreenActionAction = Nothing
         OfficeAgent.Core.AgentFloatingForm.PerformLaserActionAction = Nothing
         OfficeAgent.Core.AgentFloatingForm.GetSlideVariablesFunc = Nothing
         OfficeAgent.Core.AgentFloatingForm.GetHostWindowHandleFunc = Nothing
         OfficeAgent.Core.AgentFloatingForm.GetSlideShowWindowHandleFunc = Nothing
+        OfficeAgent.Core.AgentFloatingForm.GetShapeScreenBoundsFunc = Nothing
 
         If _settingsTaskPane IsNot Nothing Then
             RemoveHandler _settingsTaskPane.VisibleChanged, AddressOf SettingsPane_VisibleChanged

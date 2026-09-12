@@ -120,7 +120,7 @@
     <Compile Include="AiChatClientFactory.vb" />
     <Compile Include="SearchEngines.vb" />
     <Compile Include="WindowHelper.vb" />
-    <Compile Include="DebugLog.vb" />
+    <Compile Include="BalloonTextMetrics.vb" />
     <Compile Include="AgentSettings.vb" />
     <Compile Include="AgentCharacterCatalog.vb" />
     <Compile Include="AssemblyRedirectHelper.vb" />
