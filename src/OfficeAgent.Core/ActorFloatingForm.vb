@@ -12,7 +12,7 @@ Public Class ActorFloatingForm
 
     Private WithEvents _actor As New FrontierActorControl.FrontierActorControl()
     Private _loadedPath As String
-    Private ReadOnly _actionRandom As New Random()
+    Private WithEvents _actionMenu As New ToolStripMenuItem("アクション再生")
 
     Protected Overrides ReadOnly Property ShowWithoutActivation As Boolean
         Get
@@ -35,24 +35,33 @@ Public Class ActorFloatingForm
         Controls.Add(_actor)
 
         Dim menu As New ContextMenuStrip()
-        menu.Items.Add("アニメーション再生", Nothing, AddressOf OnPlayRandomActionClick)
+        menu.Items.Add(_actionMenu)
         menu.Items.Add(New ToolStripSeparator())
         menu.Items.Add("隠す", Nothing, Sub() HideActorAgent())
         ContextMenuStrip = menu
         _actor.ContextMenuStrip = menu
     End Sub
 
-    Private Sub OnPlayRandomActionClick(sender As Object, e As EventArgs)
-        PlayRandomAction()
+    ' アクションIDと名前の対応付け（Microsoft Agentの.Play("名前")のような名前ベースの
+    ' マッピングテーブル）はまだ無いため、フェーズ1では「アクション0」～「アクションN」という
+    ' 連番のまま整数IDで選ばせる。メニューを開くたびに作り直すのは、キャラクター読み込み
+    ' （CharacterAnimationCount確定）がメニュー構築より後になるケースがあるため
+    Private Sub ActionMenu_DropDownOpening(sender As Object, e As EventArgs) Handles _actionMenu.DropDownOpening
+        _actionMenu.DropDownItems.Clear()
+        Dim count = _actor.CharacterAnimationCount
+        If count <= 0 Then
+            _actionMenu.DropDownItems.Add("(未読み込み)").Enabled = False
+            Return
+        End If
+        For i = 0 To count - 1
+            Dim actionId = i
+            _actionMenu.DropDownItems.Add($"アクション {actionId}", Nothing, Sub() PlayAction(actionId))
+        Next
     End Sub
 
-    ' 収録アクション数（CharacterAnimationCount）からランダムに1つ再生する。
-    ' Microsoft Agentの.Play("名前")と違い、Actorはアクションを整数IDでしか指定できないため
-    ' （PlayAction(actionId)）、名前ベースの対応付けはフェーズ2以降の課題とする
-    Public Sub PlayRandomAction()
-        If _actor.CharacterAnimationCount <= 0 Then Return
+    Public Sub PlayAction(actionId As Integer)
         _actor.StopPlayback()
-        _actor.PlayAction(_actionRandom.Next(_actor.CharacterAnimationCount))
+        _actor.PlayAction(actionId)
     End Sub
 
     Private Sub Actor_ActorLoadFailed(message As String) Handles _actor.ActorLoadFailed
