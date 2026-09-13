@@ -542,6 +542,12 @@ Partial Public Class ThisAddIn
 
     Private Sub SpeakCurrentSlideNotesIfEnabled(wn As Microsoft.Office.Interop.PowerPoint.SlideShowWindow)
         If Not AgentSettings.SpeakSlideNotesDuringSlideShow Then Return
+        ' エージェントが非表示（HideForSlideShowによる発表中非表示・リボンの「終了」操作の
+        ' いずれも含む）の間は、読み上げそのものだけでなく、ノート中の<slide>/<screen>/<laser>
+        ' タグによるスライド送り・ブラックアウト・レーザーポインター操作も一切行わない。
+        ' 「非表示＝エージェント機能は丸ごとOFF」という直感に反し、見えないところで
+        ' スライドが勝手に動いてしまう不具合が実機で確認されたため、ここで一括ガードする
+        If Not CharacterHostCoordinator.IsVisible(AgentSettings.CharacterId) Then Return
 
         Dim slideIndex = wn.View.Slide.SlideIndex
         If slideIndex = _lastSpokenSlideNotesIndex Then Return

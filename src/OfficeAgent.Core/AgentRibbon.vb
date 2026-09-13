@@ -79,7 +79,7 @@ Public Class AgentRibbon
     End Sub
 
     ' ── スライドショー中は非表示（PowerPointの「スライド ショー」タブ） ──────
-    ' スピーカーノート読み上げ（chkSpeakSlideNotes）とは互いに機能上の競合がある
+    ' スピーカーノート読み上げ（tglSpeakSlideNotes）とは互いに機能上の競合がある
     ' （下記GetEnabled群のコメント参照）ため、読み上げがONの間はこの項目を操作不可にする
     Public Function HideDuringSlideShow_GetPressed(control As Office.IRibbonControl) As Boolean
         Return AgentSettings.HideAgentDuringSlideShow

@@ -11,10 +11,10 @@
       <tab idMso="TabSlideShow">
         <group id="grpKyleSlideShow" label="OfficeAgent">
           <toggleButton id="tglHideDuringSlideShow" label="発表中は非表示" size="large" imageMso="SlideHide" onAction="HideDuringSlideShow_Toggle" getPressed="HideDuringSlideShow_GetPressed" getEnabled="HideDuringSlideShow_GetEnabled" />
+          <toggleButton id="tglSpeakSlideNotes" label="ノート操作" size="large" imageMso="SoundCheck" onAction="SpeakSlideNotes_Toggle" getPressed="SpeakSlideNotes_GetPressed" screentip="スピーカーノートの読み上げ・タグ操作の有効/無効" supertip="OFFにすると、スピーカーノートの読み上げと、ノート中の&lt;slide&gt;等のタグによるスライド送り・画面操作・エージェント操作が一切行われなくなります（エージェントは通常どおり表示されます）。" />
           <checkBox id="chkShowSlideNumber" label="スライド番号" onAction="ShowSlideNumber_Toggle" getPressed="ShowSlideNumber_GetPressed" getEnabled="ShowSlideNumber_GetEnabled" />
           <checkBox id="chkShowElapsedTime" label="発表時間" onAction="ShowElapsedTime_Toggle" getPressed="ShowElapsedTime_GetPressed" getEnabled="ShowElapsedTime_GetEnabled" />
           <checkBox id="chkShowLapTime" label="ラップ" onAction="ShowLapTime_Toggle" getPressed="ShowLapTime_GetPressed" getEnabled="ShowLapTime_GetEnabled" />
-          <checkBox id="chkSpeakSlideNotes" label="スライドノート読み上げ" onAction="SpeakSlideNotes_Toggle" getPressed="SpeakSlideNotes_GetPressed" />
           <button id="btnOpenVoiceSettings" label="読み上げ音声の設定" imageMso="SoundCheck" onAction="OpenVoiceSettings_Click" screentip="読み上げに使う既定の音声を変更する" supertip="変更した内容は、Officeを再起動するまで反映されません。" />
           <menu id="mnuTagInsert" label="読み上げタグ挿入" imageMso="SoundCheck">
             <menu id="mnuInsertSapiTag" label="音声" imageMso="SoundCheck">
