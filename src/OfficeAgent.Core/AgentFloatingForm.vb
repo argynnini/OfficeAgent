@@ -1006,6 +1006,22 @@ Public Class AgentFloatingForm
         End Using
     End Function
 
+    ' AI応答吹き出し（ResponseBalloonForm）・検索吹き出し（SearchBalloonForm）の追従先座標。
+    ' CharacterHostCoordinator.GetActiveCharacterScreenPositionから、.acsがアクティブな時に呼ばれる
+    Public Function GetAgentScreenPosition() As (Left As Integer, Top As Integer, Mag As Single)
+        Dim c = AxAgent.Characters("OfficeAgent")
+        Return (c.Left, c.Top, GetWindowMag())
+    End Function
+
+    ' 「考え中」「休止」等、意味ベースのアニメーション再生。CharacterHostCoordinator.PlayCommonAnimation
+    ' から、.acsがアクティブな時に呼ばれる（実際のアニメーション名への変換はResolveCharacterAnimationが行う）
+    Public Sub PlayLogicalAnimation(logicalName As String)
+        With AxAgent.Characters("OfficeAgent")
+            .StopAll()
+            .Play(ResolveCharacterAnimation(logicalName))
+        End With
+    End Sub
+
     ' 検索吹き出し（SearchBalloonForm）を隠す。AI問い合わせや検索実行後など、
     ' 吹き出しを閉じてOfficeへ視覚的な注意を戻したい場面で呼ぶ。
     ' 一度も表示されておらずウィンドウハンドルが未作成の場合、BeginInvokeが例外を投げるため、
@@ -1242,6 +1258,19 @@ Public Class AgentFloatingForm
         Return ResolveScreenFromHandleFunc(GetHostWindowHandleFunc)
     End Function
 
+    ' ActorFloatingForm（.actキャラ）の初回表示位置も、Kyle（AxAgent）と同じ基準
+    ' （Officeウィンドウのあるモニタ）に揃えるためShared公開する
+    Public Shared Function ResolveHostScreen() As Screen
+        Try
+            Dim hwnd = GetHostWindowHandleFunc?.Invoke()
+            If hwnd.HasValue AndAlso hwnd.Value <> IntPtr.Zero Then
+                Return Screen.FromHandle(hwnd.Value)
+            End If
+        Catch ex As Exception
+        End Try
+        Return Screen.PrimaryScreen
+    End Function
+
     ' ウィンドウハンドルを返すFuncから、そのウィンドウがあるモニタを解決する共通処理。
     ' Func未登録・取得失敗（発表中以外にスライドショーウィンドウが無い等）の場合はプライマリモニタを返す
     Private Function ResolveScreenFromHandleFunc(handleFunc As Func(Of IntPtr)) As Screen
@@ -1295,23 +1324,36 @@ Public Class AgentFloatingForm
         _positionBeforeSlideShow = Nothing
     End Sub
 
+    ' このフォームはAxAgent（.acsしか読めない）を常に内部で1つ抱える設計のため、
+    ' ユーザーが実際に選んでいるキャラクター（AgentSettings.CharacterId）が.act（Actor）の
+    ' 場合でも、AxAgent自体にはDolphinを内部的に読み込ませておく（検索吹き出し等、AxAgentの
+    ' 存在を前提にした機能のため）。表示自体・「起動時に表示」設定の反映はActorFloatingForm側
+    ' （各ThisAddIn_Startup）が担うため、ここではAgentSettings.CharacterIdを書き換えず、
+    ' Kyleの自動表示（ShowAgent）もスキップする
+    Public ReadOnly Property IsActCharacterSelected As Boolean
+        Get
+            Return AgentCharacterCatalog.GetFormat(AgentSettings.CharacterId) = AgentCharacterCatalog.CharacterFormat.Act
+        End Get
+    End Property
+
     Private Sub AgentFloatingForm_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Instance = Me
         _searchBalloon = New SearchBalloonForm(Me)
 
-        ' 設定されているキャラクターの.acsがこのアプリのフォルダに無い場合
-        ' （例: FinFin切り替え後、他のOfficeアプリのアドインフォルダにはFINFIN.ACSが未配置）、
-        ' 起動時にクラッシュさせずDolphinにフォールバックする
         Dim character = AgentSettings.CharacterId
-        Dim acsPath = ResolveAcsPath(character)
+        Dim characterForAxAgent = If(IsActCharacterSelected, AnimationEvents.CharacterDolphin, character)
+        Dim acsPath = ResolveAcsPath(characterForAxAgent)
+        ' 設定されているキャラクターの.acsがこのアプリのフォルダに無い場合
+        ' （例: FinFin切り替え後、他のOfficeアプリのアドインフォルダにはFINFIN.ACSが未配置）は、
+        ' 起動時にクラッシュさせずDolphinにフォールバックする
         If Not IO.File.Exists(acsPath) Then
             MessageBox.Show(
-                $"{AcsFileNameFor(character)} が見つからないため、Dolphinで起動します。" & Environment.NewLine &
+                $"{AcsFileNameFor(characterForAxAgent)} が見つからないため、Dolphinで起動します。" & Environment.NewLine &
                 $"想定パス: {acsPath}",
                 "OfficeAgent", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-            character = AnimationEvents.CharacterDolphin
-            AgentSettings.CharacterId = character
-            acsPath = ResolveAcsPath(character)
+            characterForAxAgent = AnimationEvents.CharacterDolphin
+            If Not IsActCharacterSelected Then AgentSettings.CharacterId = characterForAxAgent
+            acsPath = ResolveAcsPath(characterForAxAgent)
         End If
         AxAgent.Characters.Load("OfficeAgent", acsPath)
 
@@ -1348,9 +1390,12 @@ Public Class AgentFloatingForm
         SearchEngine.ToolTipText = "検索エンジンを変更します"
         MenuSetting.ToolTipText = "検索方法などを設定します"
 
-        ' 「起動時に表示」が有効な場合のみ、Office起動と同時にエージェントを表示する
+        ' 「起動時に表示」が有効な場合のみ、Office起動と同時にエージェントを表示する。
+        ' 実際に選ばれているキャラクターが.act（Actor）の場合は、Kyle（AxAgent、ここでは
+        ' ShowAgent()を直接呼ばない）ではなくActorFloatingFormが表示される
+        ' （CharacterHostCoordinator.Show参照。ThisAddIn側は関与せず、ここで完結させる）
         If AgentSettings.ShowOnStartup Then
-            ShowAgent()
+            CharacterHostCoordinator.Show(AgentSettings.CharacterId)
         End If
 
         ' Loadが完了した後にフォームを隠す（AxAgentホスト自体は画面に見せる必要が無いため）
@@ -1518,6 +1563,14 @@ Public Class AgentFloatingForm
         Hide()
     End Sub
 
+    ' ActorFloatingForm（.actキャラ）左クリック時に呼ばれる：検索吹き出しをその実際の画面位置
+    ' （物理ピクセル）に表示する。AxAgent座標系（.Left/.Topがモニタ間の論理ピクセル、magで
+    ' 物理ピクセルへ変換）とは異なり、Actor側は素のスクリーン座標を渡してくるため、
+    ' SearchBalloonForm.ShowNearのmagには1.0（変換なし）を渡す
+    Public Sub ShowSearchBalloonNear(screenLeft As Integer, screenTop As Integer)
+        _searchBalloon.ShowNear(screenLeft, screenTop, 1.0F)
+    End Sub
+
     ' 検索吹き出し（SearchBalloonForm）から呼ばれる：入力中の合図としてWritingアニメーションを再生する
     Public Sub PlayWritingAnimation()
         With AxAgent.Characters("OfficeAgent")
@@ -1599,26 +1652,25 @@ Public Class AgentFloatingForm
                 Await RunAiQuery(BuildAiPrompt(searchText))
             Else
                 ' ウェブ検索（全てUIスレッドで同期実行）
-                With AxAgent.Characters("OfficeAgent")
-                    HideAndRestoreOfficeFocus()
-                    .StopAll()
-                    If searchText.Trim = "" Then
-                        .Play("RestPose")
-                        Return
-                    End If
-                    If searchText = "お前を消す方法" Then
+                HideAndRestoreOfficeFocus()
+                CharacterHostCoordinator.PlayCommonAnimation("RestPose")
+                If searchText.Trim = "" Then Return
+                If searchText = "お前を消す方法" Then
+                    ' 吹き出しでのセリフ表示・waveアニメーションは.acs（AxAgent）専用機能のため
+                    ' そのまま直接呼ぶ（.actアクティブ時は何も起きない）
+                    With AxAgent.Characters("OfficeAgent")
                         .Balloon.FontSize = 12
                         SpeakOrThink("質問の意味がわかりません。")
                         .Play("wave")
-                    End If
-                    Dim engines = SearchEngines.List
-                    Dim url = engines(engineIndex, 1) & Web.HttpUtility.UrlEncode(searchText.Replace(Environment.NewLine, " ")) & engines(engineIndex, 2)
-                    Dim psi As New ProcessStartInfo(url) With {
-                        .UseShellExecute = True
-                    }
-                    Process.Start(psi)
-                    .Play("RestPose")
-                End With
+                    End With
+                End If
+                Dim engines = SearchEngines.List
+                Dim url = engines(engineIndex, 1) & Web.HttpUtility.UrlEncode(searchText.Replace(Environment.NewLine, " ")) & engines(engineIndex, 2)
+                Dim psi As New ProcessStartInfo(url) With {
+                    .UseShellExecute = True
+                }
+                Process.Start(psi)
+                CharacterHostCoordinator.PlayCommonAnimation("RestPose")
             End If
         Catch ex As Exception
             ShowSearchError(ex)
@@ -1645,22 +1697,20 @@ Public Class AgentFloatingForm
         Dim client = AiChatClientFactory.CreateClient()
 
         ' Await前のUI操作（UIスレッドで安全）
-        With AxAgent.Characters("OfficeAgent")
-            HideAndRestoreOfficeFocus()
-            _responseBalloonInstance?.Hide()
-            .StopAll()
-            .Play(ResolveCharacterAnimation("Thinking"))
-        End With
+        HideAndRestoreOfficeFocus()
+        _responseBalloonInstance?.Hide()
+        CharacterHostCoordinator.PlayCommonAnimation("Thinking")
 
         Dim messages As New List(Of ChatMessage) From {
             New SystemChatMessage(AgentSettings.GPT_RULE),
             New UserChatMessage(userPrompt)
         }
 
-        ' Await前にエージェント座標を取得
-        Dim agL = AxAgent.Characters("OfficeAgent").Left
-        Dim agT = AxAgent.Characters("OfficeAgent").Top
-        Dim capturedMag = GetWindowMag()
+        ' Await前に、表示中のキャラクター（.act/.acsどちらでも）の座標を取得
+        Dim pos = CharacterHostCoordinator.GetActiveCharacterScreenPosition()
+        Dim agL = pos.Left
+        Dim agT = pos.Top
+        Dim capturedMag = pos.Mag
 
         ' ストリーミング
         Dim fullText As New StringBuilder()
@@ -1676,10 +1726,7 @@ Public Class AgentFloatingForm
                     isFirst = False
                     Dim localText = fullText.ToString()
                     BeginInvoke(Sub()
-                                    With AxAgent.Characters("OfficeAgent")
-                                        .StopAll()
-                                        .Play("RestPose")
-                                    End With
+                                    CharacterHostCoordinator.PlayCommonAnimation("RestPose")
                                     ResponseBalloon.StartResponse(localText, agL, agT, capturedMag)
                                 End Sub)
                 Else

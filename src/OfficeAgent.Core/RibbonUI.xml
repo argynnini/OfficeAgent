@@ -6,7 +6,6 @@
         <group id="grpKyle" label="OfficeAgent">
           <button id="btnShowHide" getLabel="ShowHide_GetLabel" size="large" getImage="ShowHide_GetImage" onAction="ShowHide_Click" />
           <toggleButton id="tglDetail" label="詳細設定" size="large" imageMso="ApplicationOptionsDialog" onAction="Detail_Toggle" getPressed="Detail_GetPressed" />
-          <button id="btnActorShowHide" getLabel="ActorShowHide_GetLabel" size="large" imageMso="Info" onAction="ActorShowHide_Click" screentip="Microsoft Actor形式(.act)のキャラクターを表示／終了する" supertip="試験実装：発話中操作タグ等の高度な連携はまだ対応していません" />
         </group>
       </tab>
       <tab idMso="TabSlideShow">

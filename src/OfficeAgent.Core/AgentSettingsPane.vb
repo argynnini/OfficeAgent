@@ -160,15 +160,15 @@ Public Class AgentSettingsPane
         ComboBoxCharacter.Items.Clear()
         ComboBoxCharacter.BeginUpdate()
         For i = 0 To _characters.Count - 1
+            ' 表示名は、既知のテーブルではなく.acs/.actに実際に埋め込まれた名前を優先する
+            ' （一度読み込んだキャラクターはAgentCharacterCatalog側でキャッシュされ、
+            ' 以降は再読み込みしない）。.act（Actor）はエンジンが分かるよう末尾に"(Actor)"を付ける
             Dim info = _characters(i)
-            ' 表示名は、既知のテーブルではなく.acsに実際に埋め込まれた名前を優先する
-            ' （一度読み込んだ.acsはAgentCharacterCatalog側でキャッシュされ、以降は再読み込みしない）。
-            ' .act（Actor）はAxAgent経由で読めないため常にNothingが返るだけで無駄なので、
-            ' DiscoverCharactersが付けた"(Actor)"付きの表示名をそのまま使う
-            If info.Format = AgentCharacterCatalog.CharacterFormat.Acs Then
-                info.DisplayName = AgentCharacterCatalog.ResolveLiveDisplayName(info)
-                _characters(i) = info
+            info.DisplayName = AgentCharacterCatalog.ResolveLiveDisplayName(info)
+            If info.Format = AgentCharacterCatalog.CharacterFormat.Act Then
+                info.DisplayName &= " (Actor)"
             End If
+            _characters(i) = info
             ComboBoxCharacter.Items.Add(info.DisplayName)
         Next
         ComboBoxCharacter.EndUpdate()
@@ -337,13 +337,12 @@ Public Class AgentSettingsPane
     Private Sub LoadAnimationEventsGrid()
         Dim rows = AnimationEvents.GetAll(HostApp, AgentSettings.CharacterId)
 
-        Dim items As New List(Of String)
-        Dim animationNames = AgentFloatingForm.Instance?.GetAvailableAnimationNames()
-        If animationNames IsNot Nothing Then items.AddRange(animationNames)
+        ' .acsは収録されているアニメーション名、.actは収録数から組み立てた"0"～"N-1"の連番
+        ' （名前ベースの再生ができないため）。振り分けはCharacterHostCoordinatorに任せる
+        Dim items As New List(Of String)(CharacterHostCoordinator.GetAnimationChoices(AgentSettings.CharacterId))
 
-        ' カイル・フィンフィン以外の未知キャラクターは、既定アニメーション名がDolphinのもの
-        ' （GetAttention/Save等）にフォールバックする。そのキャラクターが同名のアニメーションを
-        ' 収録していない場合、セルの値がComboBoxColumnのItemsに存在しなくなりDataErrorの原因になるため、
+        ' 収録されていない値（キャラクター切替前の設定や、.actの収録数を取得できなかった場合等）でも、
+        ' セルの値がComboBoxColumnのItemsに存在しなくなりDataErrorの原因になるため、
         ' 実在しない値でも一覧に足しておく（保存された値をそのまま表示・維持できるようにする）
         For Each r In rows
             If Not String.IsNullOrEmpty(r.Animation) AndAlso Not items.Contains(r.Animation, StringComparer.OrdinalIgnoreCase) Then
@@ -432,9 +431,12 @@ Public Class AgentSettingsPane
 
     ' キャラクター切り替え：設定を保存し、実際に表示中のキャラクターを差し替える。
     ' .acs（Microsoft Agent／AxAgent）と.act（Microsoft Actor／FrontierActorControl）は
-    ' 完全に別エンジンのため、選択した形式に応じてどちらのフォームを表示するか切り替え、
-    ' 元々表示中だった側は隠す。GPTルール既定文・アニメーション設定グリッドは.acs専用の
-    ' 概念（発話タグ・アニメーション名連携）のため、.act選択時は更新しない（フェーズ1では未対応）
+    ' 完全に別エンジンだが、その振り分け（表示中だった側を隠し、新しい側に表示状態を
+    ' 引き継ぐ）はCharacterHostCoordinator.SwitchToに任せる。GPTルール既定文（性格設定の
+    ' テキスト）・アニメーション設定グリッドは、どちらも.act選択時は実際の名前・説明・
+    ' 収録アクション数（ActorFloatingForm.TryReadCharacterProfile経由）から生成して更新する。
+    ' ただし実際のイベント（保存・印刷等）発生時にそのアクションを再生する連携自体は、
+    ' 発話タグ連携含めフェーズ1ではまだ未対応（設定はできるが反映されない）
     Private Sub ComboBoxCharacter_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ComboBoxCharacter.SelectedIndexChanged
         If _loading Then Return
         If ComboBoxCharacter.SelectedIndex < 0 OrElse ComboBoxCharacter.SelectedIndex >= _characters.Count Then Return
@@ -442,21 +444,7 @@ Public Class AgentSettingsPane
         Dim info = _characters(ComboBoxCharacter.SelectedIndex)
         Dim character = info.Id
 
-        Dim succeeded As Boolean
-        If info.Format = AgentCharacterCatalog.CharacterFormat.Act Then
-            Dim wasAgentVisible = AgentFloatingForm.Instance IsNot Nothing AndAlso AgentFloatingForm.Instance.IsCharacterVisible
-            If wasAgentVisible Then AgentFloatingForm.Instance.HideAgent()
-            If ActorFloatingForm.Instance Is Nothing Then ActorFloatingForm.Instance = New ActorFloatingForm()
-            succeeded = ActorFloatingForm.Instance.SwitchCharacter(info.AcsPath)
-            If succeeded AndAlso wasAgentVisible Then ActorFloatingForm.Instance.ShowActorAgent()
-        Else
-            Dim wasActorVisible = ActorFloatingForm.Instance IsNot Nothing AndAlso ActorFloatingForm.Instance.IsActorVisible
-            If wasActorVisible Then ActorFloatingForm.Instance.HideActorAgent()
-            succeeded = AgentFloatingForm.Instance IsNot Nothing AndAlso AgentFloatingForm.Instance.SwitchCharacter(character)
-            If succeeded AndAlso wasActorVisible Then AgentFloatingForm.Instance.ShowAgent()
-        End If
-
-        If Not succeeded Then
+        If Not CharacterHostCoordinator.SwitchTo(info) Then
             _loading = True
             Dim previousIndex = _characters.FindIndex(Function(c) String.Equals(c.Id, previousCharacter, StringComparison.OrdinalIgnoreCase))
             ComboBoxCharacter.SelectedIndex = Math.Max(0, previousIndex)
@@ -466,18 +454,19 @@ Public Class AgentSettingsPane
 
         AgentSettings.CharacterId = character
 
-        If info.Format = AgentCharacterCatalog.CharacterFormat.Acs Then
-            ' GPTルールがまだ切替前キャラクターの既定文のままなら（＝ユーザーが未編集なら）、
-            ' 新しいキャラクターに合わせた既定文に更新する。ユーザーが自分で編集済みの内容は上書きしない
-            If TextBoxRule.Text = AgentSettings.DefaultRuleFor(previousCharacter) Then
-                AgentSettings.GPT_RULE = AgentSettings.DefaultRuleFor(character)
-                _loading = True
-                TextBoxRule.Text = AgentSettings.GPT_RULE
-                _loading = False
-            End If
-
-            LoadAnimationEventsGrid()
+        ' GPTルールがまだ切替前キャラクターの既定文のままなら（＝ユーザーが未編集なら）、
+        ' 新しいキャラクターに合わせた既定文に更新する。ユーザーが自分で編集済みの内容は上書きしない。
+        ' .act選択時もDefaultRuleFor内部でActorFloatingForm.TryReadCharacterProfileが呼ばれ、
+        ' 実際の名前・説明から生成される
+        If TextBoxRule.Text = AgentSettings.DefaultRuleFor(previousCharacter) Then
+            AgentSettings.GPT_RULE = AgentSettings.DefaultRuleFor(character)
+            _loading = True
+            TextBoxRule.Text = AgentSettings.GPT_RULE
+            _loading = False
         End If
+
+        ' アニメーション設定グリッドの選択肢・表示も、切り替えた形式（.acs名前一覧／.actアクションID一覧）に合わせて作り直す
+        LoadAnimationEventsGrid()
     End Sub
 
     Private Sub TextBoxAPI_TextChanged(sender As Object, e As EventArgs) Handles TextBoxAPI.TextChanged
@@ -557,8 +546,7 @@ Public Class AgentSettingsPane
     Private Sub DataGridViewAnimationEvents_CellContentClick(sender As Object, e As DataGridViewCellEventArgs) Handles DataGridViewAnimationEvents.CellContentClick
         If e.RowIndex < 0 OrElse e.ColumnIndex <> ColAnimPreview.Index Then Return
         Dim animation = CStr(If(DataGridViewAnimationEvents.Rows(e.RowIndex).Cells(ColAnimAnimation.Index).Value, ""))
-        If animation.Length = 0 Then Return
-        AgentFloatingForm.Instance?.PlayAnimation(animation)
+        CharacterHostCoordinator.PreviewAnimation(AgentSettings.CharacterId, animation)
     End Sub
 
     ' コンボボックスの上でマウスホイールを回しても選択値が変わらないようにする

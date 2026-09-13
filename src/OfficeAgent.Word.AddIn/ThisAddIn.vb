@@ -175,7 +175,10 @@ Partial Public Class ThisAddIn
         End If
 
         If _agentForm IsNot Nothing Then
-            _agentForm.HideAgent(checkOtherApps:=True)
+            ' 実際に選ばれているキャラクターが.act（Actor）の場合は、Kyle（AxAgent）ではなく
+            ' ActorFloatingForm側にGoodbyeアニメーション再生・非表示を委ねる
+            ' （CharacterHostCoordinator.Hide参照。起動時のCharacterHostCoordinator.Showと対）
+            CharacterHostCoordinator.Hide(AgentSettings.CharacterId, checkOtherApps:=True)
             _agentForm.Dispose()
             _agentForm = Nothing
         End If

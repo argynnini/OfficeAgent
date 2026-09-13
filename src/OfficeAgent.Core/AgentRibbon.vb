@@ -45,54 +45,29 @@ Public Class AgentRibbon
     End Sub
 
     ' ── 表示/終了 ──────────────────────────
+    ' 現在選択中のキャラクター（AgentSettings.CharacterId）が.acs（AgentFloatingForm／AxAgent）
+    ' と.act（ActorFloatingForm／FrontierActorControl）のどちらかで操作対象が変わるが、
+    ' その振り分けはCharacterHostCoordinatorに任せる。ボタン自体は1つのまま両エンジンに対応する
     Public Function ShowHide_GetLabel(control As Office.IRibbonControl) As String
-        Dim form = OfficeAgent.Core.AgentFloatingForm.Instance
-        If form IsNot Nothing AndAlso form.IsCharacterVisible Then
-            Return "終了"
-        End If
+        If CharacterHostCoordinator.IsVisible(AgentSettings.CharacterId) Then Return "終了"
         Return "表示"
     End Function
 
     Public Sub ShowHide_Click(control As Office.IRibbonControl)
-        Dim form = OfficeAgent.Core.AgentFloatingForm.Instance
-        If form Is Nothing Then Return
-        If form.IsCharacterVisible Then
-            form.HideAgent()
+        Dim character = AgentSettings.CharacterId
+        If CharacterHostCoordinator.IsVisible(character) Then
+            CharacterHostCoordinator.Hide(character)
         Else
-            form.ShowAgent()
+            CharacterHostCoordinator.Show(character)
         End If
         InvalidateRibbon()
     End Sub
 
     Public Function ShowHide_GetImage(control As Office.IRibbonControl) As stdole.IPictureDisp
-        Dim form = OfficeAgent.Core.AgentFloatingForm.Instance
-        Dim isVisible = form IsNot Nothing AndAlso form.IsCharacterVisible
-        Using bmp = ShowHideIcon.Draw(isVisible)
+        Using bmp = ShowHideIcon.Draw(CharacterHostCoordinator.IsVisible(AgentSettings.CharacterId))
             Return IconConverter.ToIPictureDisp(bmp)
         End Using
     End Function
-
-    ' ── .act（Microsoft Actor）キャラクター表示/終了（フェーズ1・試験実装） ──────
-    Public Function ActorShowHide_GetLabel(control As Office.IRibbonControl) As String
-        Dim form = OfficeAgent.Core.ActorFloatingForm.Instance
-        If form IsNot Nothing AndAlso form.IsActorVisible Then
-            Return "Actor終了"
-        End If
-        Return "Actor表示"
-    End Function
-
-    Public Sub ActorShowHide_Click(control As Office.IRibbonControl)
-        If OfficeAgent.Core.ActorFloatingForm.Instance Is Nothing Then
-            OfficeAgent.Core.ActorFloatingForm.Instance = New OfficeAgent.Core.ActorFloatingForm()
-        End If
-        Dim form = OfficeAgent.Core.ActorFloatingForm.Instance
-        If form.IsActorVisible Then
-            form.HideActorAgent()
-        Else
-            form.ShowActorAgent()
-        End If
-        InvalidateRibbon()
-    End Sub
 
     ' ── 詳細設定 ──────────────────────────
     Public Function Detail_GetPressed(control As Office.IRibbonControl) As Boolean

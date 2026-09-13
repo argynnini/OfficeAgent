@@ -133,6 +133,8 @@
     <Compile Include="BalloonTextMetrics.vb" />
     <Compile Include="AgentSettings.vb" />
     <Compile Include="AgentCharacterCatalog.vb" />
+    <Compile Include="CharacterHostCoordinator.vb" />
+    <Compile Include="MsoAnimationType.vb" />
     <Compile Include="AssemblyRedirectHelper.vb" />
     <Compile Include="AnimationEvents.vb" />
     <Compile Include="ResponseBalloonForm.vb" />

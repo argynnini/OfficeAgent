@@ -30,30 +30,37 @@ Public Module AgentCharacterCatalog
         Return id
     End Function
 
-    ' TryReadCharacterProfile（AgentFloatingForm、.acsを実際に読み込んでName/Descriptionプロパティを
-    ' 取得する）の結果をキャッシュする。一度読み込んだ.acsは、パスが変わらない限り
-    ' アプリ実行中は再読み込みしない（Name/Descriptionは同じ読み込みで一緒に取得するため、
-    ' キャッシュも1つにまとめている）
-    Private ReadOnly _liveProfileCache As New Dictionary(Of String, (Name As String, Description As String))(StringComparer.OrdinalIgnoreCase)
+    ' TryReadCharacterProfile（.acsを実際に読み込んでName/Description、.actはさらに
+    ' CharacterAnimationCountも取得する）の結果をキャッシュする。一度読み込んだファイルは、
+    ' パスが変わらない限りアプリ実行中は再読み込みしない
+    Private ReadOnly _liveProfileCache As New Dictionary(Of String, (Name As String, Description As String, ActionCount As Integer))(StringComparer.OrdinalIgnoreCase)
 
-    ' 実際に.acsを一度読み込んで、埋め込まれたName/Descriptionプロパティを取得する
-    ' （重いためDiscoverCharacters()では行わず、実際に必要になった場面でのみ呼ぶ）。
-    ' AxAgentがまだ使えない場合や読み込みに失敗した場合は両方Nothingになる
-    Private Function ResolveLiveProfile(info As CharacterInfo) As (Name As String, Description As String)
-        Dim cached As (Name As String, Description As String) = Nothing
+    ' 実際にファイルを一度読み込んで、埋め込まれたName/Descriptionプロパティ（.actは加えて
+    ' CharacterAnimationCount）を取得する（重いためDiscoverCharacters()では行わず、実際に
+    ' 必要になった場面でのみ呼ぶ）。.acsはAgentFloatingForm（AxAgent）経由、.actは
+    ' ActorFloatingForm（FrontierActorControl）経由と、形式によって読み込み方法が異なる。
+    ' 読み込みに失敗した場合はName/DescriptionがNothing、ActionCountが0になる
+    Private Function ResolveLiveProfile(info As CharacterInfo) As (Name As String, Description As String, ActionCount As Integer)
+        Dim cached As (Name As String, Description As String, ActionCount As Integer) = Nothing
         If _liveProfileCache.TryGetValue(info.AcsPath, cached) Then Return cached
 
-        Dim profile = AgentFloatingForm.Instance?.TryReadCharacterProfile(info.AcsPath)
-        Dim resolved = If(profile.HasValue, profile.Value, (CStr(Nothing), CStr(Nothing)))
+        Dim resolved As (Name As String, Description As String, ActionCount As Integer)
+        If info.Format = CharacterFormat.Act Then
+            resolved = ActorFloatingForm.TryReadCharacterProfile(info.AcsPath)
+        Else
+            Dim profile = AgentFloatingForm.Instance?.TryReadCharacterProfile(info.AcsPath)
+            resolved = If(profile.HasValue, (profile.Value.Name, profile.Value.Description, 0), (CStr(Nothing), CStr(Nothing), 0))
+        End If
         _liveProfileCache(info.AcsPath) = resolved
         Return resolved
     End Function
 
     ' キャラクター選択リストの表示名を解決する。実際のNameが取れなければ
-    ' 既知の表示名テーブル、それも無ければIDそのものにフォールバックする
+    ' DiscoverCharactersが設定したフォールバック名（既知の表示名テーブル、それも無ければ
+    ' 拡張子を除いたファイル名）を使う
     Public Function ResolveLiveDisplayName(info As CharacterInfo) As String
         Dim profile = ResolveLiveProfile(info)
-        Return If(Not String.IsNullOrWhiteSpace(profile.Name), profile.Name, DisplayNameFor(info.Id))
+        Return If(Not String.IsNullOrWhiteSpace(profile.Name), profile.Name, info.DisplayName)
     End Function
 
     ' キャラクターの紹介文（Description）を取得する。ACS側に無い場合はNothingを返す
@@ -77,6 +84,25 @@ Public Module AgentCharacterCatalog
         Dim found = Find(id)
         If found.AcsPath Is Nothing Then Return Nothing
         Return ResolveLiveDescription(found)
+    End Function
+
+    ' .actキャラクターの収録アクション数（PlayAction(0～N-1)で指定できる範囲）を取得する。
+    ' .acs（名前ベースのMicrosoft Agentアニメーション）には無い概念のため0を返す。
+    ' 設定タスクパネルの「アニメーション設定」グリッドが、.act選択時に選択肢一覧を
+    ' 組み立てるために使う
+    Public Function ResolveLiveActionCount(id As String) As Integer
+        Dim found = Find(id)
+        If found.AcsPath Is Nothing OrElse found.Format <> CharacterFormat.Act Then Return 0
+        Return ResolveLiveProfile(found).ActionCount
+    End Function
+
+    ' 指定IDのキャラクターファイル形式を返す。見つからない場合はAcs扱い
+    ' （リボンの表示/終了ボタンが、AgentFloatingForm/ActorFloatingFormのどちらを
+    ' 操作すべきか判断するために使う）
+    Public Function GetFormat(id As String) As CharacterFormat
+        Dim found = Find(id)
+        If found.AcsPath Is Nothing Then Return CharacterFormat.Acs
+        Return found.Format
     End Function
 
     ' .acsの探索候補フォルダ。アプリに同梱されたフォルダ（インストール先の"agents"フォルダ等）を
@@ -147,9 +173,12 @@ Public Module AgentCharacterCatalog
                 If seenActIds.Contains(baseId) Then Continue For
                 seenActIds.Add(baseId)
                 Dim id = If(seenAcsIds.Contains(baseId), baseId & "_ACT", baseId)
+                ' KnownDisplayNames（"DOLPHIN"→"カイル"等）は.acs版カイル専用の対応表であり、
+                ' 同名の.actファイルは中身が別物（別キャラクター）である可能性があるため流用しない。
+                ' フォールバック名は素直にファイル名（baseId）そのものにする
                 result.Add(New CharacterInfo With {
                     .Id = id,
-                    .DisplayName = DisplayNameFor(baseId) & " (Actor)",
+                    .DisplayName = baseId,
                     .AcsPath = path,
                     .Format = CharacterFormat.Act
                 })
