@@ -103,6 +103,15 @@ Public Class AgentFloatingForm
     Private Const BalloonStyleDefault As Integer =
         BalloonStyleBalloonOn Or BalloonStyleSizeToText Or BalloonStyleAutoPace
 
+    ' auto-paceビットだけを外したスタイル。発表時間のお知らせ（AnnouncePresentationTime）と
+    ' スライドショー中のオーバーレイ（UpdateSlideShowOverlay：スライド番号／経過時間／
+    ' ラップタイム）は、逐次的に単語が出てくる演出が不要かつ見づらいため、この2箇所でだけ
+    ' 一時的にこちらへ切り替える。Style（FontSize同様）はキャラクターに紐づく共有状態で
+    ' 変更すると残り続けるため、その吹き出しの役目が終わったタイミングで必ず
+    ' BalloonStyleDefaultへ戻すこと（他の吹き出し機能に影響してしまうため）
+    Private Const BalloonStyleInstant As Integer =
+        BalloonStyleBalloonOn Or BalloonStyleSizeToText
+
     ' 発表時間の吹き出し（AnnouncePresentationTime）を一定時間で自動的に閉じるためのタイマー
     Private Const PresentationBalloonLifetimeMs As Integer = 30000
     Private WithEvents _presentationBalloonTimer As New Windows.Forms.Timer With {.Interval = PresentationBalloonLifetimeMs}
@@ -309,13 +318,23 @@ Public Class AgentFloatingForm
     ' そのため「TTSエンジンが無い」場合はどうせ音声が出ないので.Speak()を使い、
     ' 「TTSエンジンがある」場合は.Speak()を使うと実際に喋ってしまうため、
     ' 音声を一切出さない.Think()をあえて使う。これでどちらのケースも音声なし（吹き出しのみ）になる
-    Private Sub SpeakOrThink(text As String)
-        Dim wrapped = InsertWordBreaks(text)
+    '
+    ' InsertWordBreaks（文字間へのゼロ幅スペース挿入）は、Microsoft Agentの吹き出しが
+    ' 「空白文字を単語の区切りとして扱い、単語ごとに逐次表示していく」仕様
+    ' （think-method.mdの「自動単語区切り」の記述）に対して、日本語のようにスペースの
+    ' ない言語でも意図した単位で単語境界を定義するためのもの。この仕組みは元々
+    ' .Speak()（TTSが無い環境向け、音声合成へ単語区切りを伝える目的も兼ねる）のために
+    ' 用意されたものだが、挿入したゼロ幅スペースの数だけ吹き出しが逐次的（単語ずつ）に
+    ' 表示されるため、スライド番号／経過時間／ラップタイムのような短い状態表示では
+    ' 「一個ずつ出てくる」見づらい演出になってしまう。呼び出し側の用途に応じて
+    ' 挿入する・しないを選べるようにしておく（既定はTrueで、従来の見た目のまま）
+    Private Sub SpeakOrThink(text As String, Optional useWordBreaks As Boolean = True)
+        Dim outputText = If(useWordBreaks, InsertWordBreaks(text), text)
         With AxAgent.Characters("OfficeAgent")
             If .TTSModeID = "" Then
-                .Speak(wrapped)
+                .Speak(outputText)
             Else
-                .Think(wrapped)
+                .Think(outputText)
             End If
         End With
     End Sub
@@ -1784,7 +1803,10 @@ Public Class AgentFloatingForm
         With AxAgent.Characters("OfficeAgent")
             .StopAll()
             .Balloon.FontSize = 12
-            SpeakOrThink($"発表時間は{String.Join("", parts)}でした！お疲れさま！")
+            ' auto-paceでの逐次表示ではなく一括表示にする。表示が終わったら
+            ' （PresentationBalloonTimer_Tickで吹き出しを閉じる際に）必ずデフォルトへ戻す
+            .Balloon.Style = BalloonStyleInstant
+            SpeakOrThink($"発表時間は{String.Join("", parts)}でした！お疲れさま！", useWordBreaks:=False)
         End With
 
         _presentationBalloonTimer.Stop()
@@ -1828,6 +1850,16 @@ Public Class AgentFloatingForm
         _slideShowOverlayTimer.Stop()
         _slideShowElapsedStopwatch = Nothing
         _slideShowLapStopwatch = Nothing
+        ' UpdateSlideShowOverlayでBalloonStyleInstantに切り替えたままにしないよう、
+        ' オーバーレイ機能自体の終了（この吹き出しの役目が終わったタイミング）で
+        ' 必ずデフォルトへ戻す。直後にAnnouncePresentationTime側で改めてInstantへ
+        ' 切り替えるが、それとは独立にここでも一度戻しておく
+        Try
+            AxAgent.Characters("OfficeAgent").Balloon.Style = BalloonStyleDefault
+        Catch ex As COMException
+            ' 全Officeウィンドウ最小化時などAxAgentの描画サーフェスが無効な状態で
+            ' 呼ばれることがあるため、失敗は無視する
+        End Try
     End Sub
 
     ' リボンのチェックボックスが切り替えられた直後、表示中のオーバーレイに即座に反映させる
@@ -1869,8 +1901,11 @@ Public Class AgentFloatingForm
             With AxAgent.Characters("OfficeAgent")
                 .StopAll()
                 .Balloon.FontSize = 10
+                ' auto-paceでの逐次表示ではなく一括表示にする。表示が終わったら
+                ' （StopSlideShowOverlayでオーバーレイ機能自体を終了する際に）デフォルトへ戻す
+                .Balloon.Style = BalloonStyleInstant
             End With
-            SpeakOrThink(String.Join("  ", parts))
+            SpeakOrThink(String.Join("  ", parts), useWordBreaks:=False)
         Catch ex As COMException
             ' 全Officeウィンドウ最小化時などAxAgentの描画サーフェスが無効な状態で
             ' 呼ばれることがあるため、失敗は無視する
@@ -1892,7 +1927,12 @@ Public Class AgentFloatingForm
     Private Sub PresentationBalloonTimer_Tick(sender As Object, e As EventArgs) Handles _presentationBalloonTimer.Tick
         _presentationBalloonTimer.Stop()
         Try
-            AxAgent.Characters("OfficeAgent").Balloon.Visible = False
+            With AxAgent.Characters("OfficeAgent")
+                .Balloon.Visible = False
+                ' AnnouncePresentationTimeでBalloonStyleInstantに切り替えたままにしないよう、
+                ' 表示終了（この吹き出しの役目が終わったタイミング）で必ずデフォルトへ戻す
+                .Balloon.Style = BalloonStyleDefault
+            End With
         Catch ex As COMException
             ' 全Officeウィンドウ最小化時などAxAgentの描画サーフェスが無効な状態で
             ' 呼ばれることがあるため、失敗は無視する
