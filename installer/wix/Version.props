@@ -5,6 +5,6 @@
        OfficeAgentSetup.wixproj の OutputName（生成されるexe名）に反映する。
        各アドインのAssemblyVersion（src\*\My Project\AssemblyInfo.vb）とは別管理。 -->
   <PropertyGroup>
-    <ProductVersion>3.1.0</ProductVersion>
+    <ProductVersion>3.2.0</ProductVersion>
   </PropertyGroup>
 </Project>
