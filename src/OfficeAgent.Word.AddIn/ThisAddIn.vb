@@ -28,7 +28,12 @@ Partial Public Class ThisAddIn
         AddHandler Me.Application.DocumentBeforeClose, AddressOf OnBeforeClose
         AddHandler Me.Application.ProtectedViewWindowOpen, AddressOf OnProtectedViewWindowOpen
 
-        _agentForm = New OfficeAgent.Core.AgentFloatingForm()
+        Try
+            _agentForm = New OfficeAgent.Core.AgentFloatingForm()
+        Catch ex As Exception When OfficeAgent.Core.MsAgentRuntimeRecovery.IsMsAgentRuntimeMissing(ex)
+            OfficeAgent.Core.MsAgentRuntimeRecovery.HandleMissingRuntime()
+            Return
+        End Try
         _agentForm.Show()
     End Sub
 

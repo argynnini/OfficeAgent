@@ -136,6 +136,7 @@
     <Compile Include="CharacterHostCoordinator.vb" />
     <Compile Include="MsoAnimationType.vb" />
     <Compile Include="AssemblyRedirectHelper.vb" />
+    <Compile Include="MsAgentRuntimeRecovery.vb" />
     <Compile Include="AnimationEvents.vb" />
     <Compile Include="ResponseBalloonForm.vb" />
     <Compile Include="SearchBalloonForm.vb">

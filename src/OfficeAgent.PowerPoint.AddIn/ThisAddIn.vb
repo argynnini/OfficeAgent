@@ -36,7 +36,12 @@ Partial Public Class ThisAddIn
     Private Sub ThisAddIn_Startup() Handles Me.Startup
         OfficeAgent.Core.AssemblyRedirectHelper.EnsureRegistered()
 
-        _agentForm = New OfficeAgent.Core.AgentFloatingForm()
+        Try
+            _agentForm = New OfficeAgent.Core.AgentFloatingForm()
+        Catch ex As Exception When OfficeAgent.Core.MsAgentRuntimeRecovery.IsMsAgentRuntimeMissing(ex)
+            OfficeAgent.Core.MsAgentRuntimeRecovery.HandleMissingRuntime()
+            Return
+        End Try
 
         ' _agentForm.Show()はフォームのハンドル未作成時に同期的にLoadイベントを発火させる。
         ' AgentFloatingForm_Load内で初回表示位置の計算にGetHostWindowHandleFuncを使うため、
