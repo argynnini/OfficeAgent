@@ -1,6 +1,7 @@
 Imports System.Reflection
 Imports System.Runtime.InteropServices
 Imports System.Linq
+Imports System.Text
 
 Public Class AgentSettingsPane
     Inherits System.Windows.Forms.UserControl
@@ -10,6 +11,90 @@ Public Class AgentSettingsPane
     End Function
     Private Const EM_SETCUEBANNER = &H1501
     Private Const QueryPlaceholder As String = "(検索内容)"
+
+    ' 「キャラクター」ドロップダウン一覧の各項目にホバーした際、その.acs/.actの
+    ' 実際のパスをツールチップで出すための下請け（CharacterListHoverTooltip参照）
+    <DllImport("user32.dll")>
+    Private Shared Function SendMessage(hWnd As IntPtr, msg As Integer, wParam As IntPtr, lParam As IntPtr) As IntPtr
+    End Function
+    <DllImport("user32.dll")>
+    Private Shared Function EnumWindows(lpEnumFunc As EnumWindowsProc, lParam As IntPtr) As Boolean
+    End Function
+    <DllImport("user32.dll", CharSet:=CharSet.Unicode)>
+    Private Shared Function GetClassName(hWnd As IntPtr, lpClassName As StringBuilder, nMaxCount As Integer) As Integer
+    End Function
+    <DllImport("user32.dll")>
+    Private Shared Function GetWindowThreadProcessId(hWnd As IntPtr, ByRef lpdwProcessId As Integer) As Integer
+    End Function
+    <DllImport("user32.dll")>
+    Private Shared Function IsWindowVisible(hWnd As IntPtr) As Boolean
+    End Function
+    Private Delegate Function EnumWindowsProc(hWnd As IntPtr, lParam As IntPtr) As Boolean
+
+    Private Const WM_MOUSEMOVE = &H200
+    Private Const WM_MOUSELEAVE = &H2A3
+    Private Const LB_ITEMFROMPOINT = &H1A9
+
+    ' ComboBoxのドロップダウン一覧（ネイティブの"ComboLBox"ウィンドウ、.NETのControlではない）を
+    ' サブクラス化し、マウス位置からLB_ITEMFROMPOINTでホバー中の項目indexを求めてツールチップを出す。
+    ' ComboBoxStyle.DropDownListは非オーナードローのため、.NET側にはアイテム単位のホバー通知が無く、
+    ' この方法以外に項目ごとのツールチップを出す手段が無い
+    Private NotInheritable Class CharacterListHoverTooltip
+        Inherits NativeWindow
+
+        Private ReadOnly _pane As AgentSettingsPane
+        Private _lastIndex As Integer = -1
+
+        Public Sub New(pane As AgentSettingsPane, listHandle As IntPtr)
+            _pane = pane
+            AssignHandle(listHandle)
+        End Sub
+
+        Protected Overrides Sub WndProc(ByRef m As Message)
+            Select Case m.Msg
+                Case WM_MOUSEMOVE
+                    Dim raw = SendMessage(Handle, LB_ITEMFROMPOINT, IntPtr.Zero, m.LParam).ToInt32()
+                    Dim index = raw And &HFFFF
+                    Dim outside = (raw >> 16) <> 0
+                    If outside OrElse index < 0 OrElse index >= _pane._characters.Count Then
+                        HideTip()
+                    ElseIf index <> _lastIndex Then
+                        _lastIndex = index
+                        Dim path = _pane._characters(index).AcsPath
+                        Dim lp = m.LParam.ToInt32()
+                        Dim x = CShort(lp And &HFFFF)
+                        Dim y = CShort((lp >> 16) And &HFFFF)
+                        _pane.ToolTipset.Show(If(path, "(パス不明)"), New Win32WindowHandle(Handle), x + 16, y + 16)
+                    End If
+                Case WM_MOUSELEAVE
+                    HideTip()
+            End Select
+            MyBase.WndProc(m)
+        End Sub
+
+        Private Sub HideTip()
+            If _lastIndex = -1 Then Return
+            _lastIndex = -1
+            _pane.ToolTipset.Hide(New Win32WindowHandle(Handle))
+        End Sub
+
+        Public Sub Detach()
+            HideTip()
+            ReleaseHandle()
+        End Sub
+    End Class
+
+    Private NotInheritable Class Win32WindowHandle
+        Implements IWin32Window
+
+        Public ReadOnly Property Handle As IntPtr Implements IWin32Window.Handle
+
+        Public Sub New(handle As IntPtr)
+            Me.Handle = handle
+        End Sub
+    End Class
+
+    Private _characterListHover As CharacterListHoverTooltip
 
     ' 各要素間の余白
     Private Const GapLabel As Integer = 4
@@ -555,6 +640,49 @@ Public Class AgentSettingsPane
         Dim handledArgs = TryCast(e, HandledMouseEventArgs)
         If handledArgs IsNot Nothing Then handledArgs.Handled = True
     End Sub
+
+    ' 「キャラクター」ドロップダウンが開いたら、ネイティブの一覧ウィンドウ（ComboLBox）を
+    ' サブクラス化してホバー中の項目に対応するパスをツールチップ表示する。
+    ' Open直後はまだ一覧ウィンドウが生成し切っていないことがあるため、次のメッセージループまで
+    ' 遅延させる（BeginInvoke）
+    Private Sub ComboBoxCharacter_DropDown(sender As Object, e As EventArgs) Handles ComboBoxCharacter.DropDown
+        BeginInvoke(New MethodInvoker(
+            Sub()
+                Dim listHandle = FindComboListBoxHandle()
+                If listHandle <> IntPtr.Zero Then
+                    _characterListHover = New CharacterListHoverTooltip(Me, listHandle)
+                End If
+            End Sub))
+    End Sub
+
+    Private Sub ComboBoxCharacter_DropDownClosed(sender As Object, e As EventArgs) Handles ComboBoxCharacter.DropDownClosed
+        _characterListHover?.Detach()
+        _characterListHover = Nothing
+    End Sub
+
+    ' 現在開いているComboBoxのドロップダウン一覧（クラス名"ComboLBox"）のウィンドウハンドルを探す。
+    ' ドロップダウン中の一覧は.NETのControlではなく、ComboBoxの子ウィンドウでもない
+    ' （別ウィンドウとして生成される）ため、プロセス内を列挙して探す必要がある。
+    ' 同時に開けるドロップダウンは1つだけなので、自プロセスの可視なComboLBoxが見つかればそれで確定する
+    Private Function FindComboListBoxHandle() As IntPtr
+        Dim found As IntPtr = IntPtr.Zero
+        Dim currentPid = Process.GetCurrentProcess().Id
+        EnumWindows(
+            Function(hWnd, lParam)
+                Dim className As New StringBuilder(32)
+                GetClassName(hWnd, className, className.Capacity)
+                If className.ToString() = "ComboLBox" Then
+                    Dim windowPid As Integer
+                    GetWindowThreadProcessId(hWnd, windowPid)
+                    If windowPid = currentPid AndAlso IsWindowVisible(hWnd) Then
+                        found = hWnd
+                        Return False
+                    End If
+                End If
+                Return True
+            End Function, IntPtr.Zero)
+        Return found
+    End Function
 
     Private Sub LabelVersion_LinkClicked(sender As Object, e As LinkLabelLinkClickedEventArgs) Handles LabelVersion.LinkClicked
         Dim psi As New Diagnostics.ProcessStartInfo("https://github.com/argynnini/OfficeAgent") With {
