@@ -12,14 +12,14 @@
   LocalMachine\TrustedPublisherストアにインストール時にインポートする
   （certutil.exe -addstore、WixQuietExec経由）。
 
-  DOLPHIN.ACS/FINFIN.ACSはWord/Excel/PowerPointで重複させず、共通の
-  %ProgramFiles%\OfficeAgent\assets\ に1セットだけ配置する
-  （OfficeAgent.Core.vbのResolveAcsPathが "..\assets" を検索候補に含む設計になっている）。
+  DOLPHIN.ACS等の.acsはWord/Excel/PowerPointで重複させず、共通の
+  %ProgramFiles%\OfficeAgent\agents\ に1セットだけ配置する
+  （AgentCharacterCatalog.vbのCandidateDirsが "..\agents" を検索候補に含む設計になっている）。
 -->
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
   <Package Name="OfficeAgent Add-ins"
            Manufacturer="OfficeAgent"
-           Version="3.0.0.0"
+           Version="$(var.ProductVersion).0"
            UpgradeCode="5D2E8F1A-6B3C-4D9E-8A1F-2C3B4D5E6F7A"
            Scope="perMachine"
            Codepage="65001">
@@ -56,33 +56,35 @@
   </Package>
 
   <Fragment>
-    <!-- Word本体のビルド出力一式。DOLPHIN.ACS/FINFIN.ACSはassets側に一本化するため除外する -->
+    <!-- Word本体のビルド出力一式。.acsはagents側に一本化するため除外する
+         （ワイルドカードにしているのは、agents\に新しい.acsを追加した場合も
+         　各アプリのフォルダに二重インストールされないようにするため） -->
     <ComponentGroup Id="AddinFiles_Word" Directory="ADDIN_WORD">
       <Files Include="..\..\src\OfficeAgent.Word.AddIn\bin\Release\**">
-        <Exclude Files="..\..\src\OfficeAgent.Word.AddIn\bin\Release\DOLPHIN.ACS" />
-        <Exclude Files="..\..\src\OfficeAgent.Word.AddIn\bin\Release\FINFIN.ACS" />
+        <Exclude Files="..\..\src\OfficeAgent.Word.AddIn\bin\Release\*.ACS" />
       </Files>
     </ComponentGroup>
 
-    <!-- Excel本体のビルド出力一式。DOLPHIN.ACS/FINFIN.ACSはassets側に一本化するため除外する -->
+    <!-- Excel本体のビルド出力一式。.acsはagents側に一本化するため除外する -->
     <ComponentGroup Id="AddinFiles_Excel" Directory="ADDIN_EXCEL">
       <Files Include="..\..\src\OfficeAgent.Excel.AddIn\bin\Release\**">
-        <Exclude Files="..\..\src\OfficeAgent.Excel.AddIn\bin\Release\DOLPHIN.ACS" />
-        <Exclude Files="..\..\src\OfficeAgent.Excel.AddIn\bin\Release\FINFIN.ACS" />
+        <Exclude Files="..\..\src\OfficeAgent.Excel.AddIn\bin\Release\*.ACS" />
       </Files>
     </ComponentGroup>
 
-    <!-- PowerPoint本体のビルド出力一式。DOLPHIN.ACS/FINFIN.ACSはassets側に一本化するため除外する -->
+    <!-- PowerPoint本体のビルド出力一式。.acsはagents側に一本化するため除外する -->
     <ComponentGroup Id="AddinFiles_PowerPoint" Directory="ADDIN_POWERPOINT">
       <Files Include="..\..\src\OfficeAgent.PowerPoint.AddIn\bin\Release\**">
-        <Exclude Files="..\..\src\OfficeAgent.PowerPoint.AddIn\bin\Release\DOLPHIN.ACS" />
-        <Exclude Files="..\..\src\OfficeAgent.PowerPoint.AddIn\bin\Release\FINFIN.ACS" />
+        <Exclude Files="..\..\src\OfficeAgent.PowerPoint.AddIn\bin\Release\*.ACS" />
       </Files>
     </ComponentGroup>
 
-    <!-- 共通アセット（.acs）。今はリポジトリ直下のassets\から取得する -->
+    <!-- 共通アセット（.acs / .act）。リポジトリ直下のagents\から取得し、インストール先の
+         "agents"フォルダ（ADDIN_ASSETS、Directories.wxs参照）に配置する。
+         .actは*.ACSパターンに一致しないため個別に指定する -->
     <ComponentGroup Id="AddinFiles_Assets" Directory="ADDIN_ASSETS">
-      <Files Include="..\..\assets\*.ACS" />
+      <Files Include="..\..\agents\*.ACS" />
+      <Files Include="..\..\agents\*.act" />
     </ComponentGroup>
 
     <!-- Office各アプリへのVSTOアドイン登録（HKCU、ユーザー単位）。ファイルComponentとは別にする

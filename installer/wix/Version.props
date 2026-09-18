@@ -1,0 +1,10 @@
+<Project>
+  <!-- インストーラ（OfficeAgentAddins.msi / OfficeAgentSetup.exe）のバージョンを
+       ここ1箇所で管理する。各wixprojからImportし、DefineConstants経由で
+       Bundle.wxs / OfficeAgentAddins.wxs の Version 属性、および
+       OfficeAgentSetup.wixproj の OutputName（生成されるexe名）に反映する。
+       各アドインのAssemblyVersion（src\*\My Project\AssemblyInfo.vb）とは別管理。 -->
+  <PropertyGroup>
+    <ProductVersion>3.2.0</ProductVersion>
+  </PropertyGroup>
+</Project>

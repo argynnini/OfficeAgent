@@ -1,27 +1,4 @@
-Imports System.Drawing
-Imports System.Runtime.InteropServices
-
 Public Module WindowHelper
-
-    <DllImport("user32.dll")>
-    Private Function GetWindowRect(hWnd As IntPtr, ByRef rect As RECT) As Boolean
-    End Function
-
-    Private Structure RECT
-        Public Left As Integer
-        Public Top As Integer
-        Public Right As Integer
-        Public Bottom As Integer
-    End Structure
-
-    ' 指定ウィンドウの画面上の矩形（ピクセル）を取得する。
-    ' 取得に失敗した場合はNullを返す。
-    Public Function GetWindowBounds(hWnd As IntPtr) As Rectangle?
-        If hWnd = IntPtr.Zero Then Return Nothing
-        Dim rect As RECT = Nothing
-        If Not GetWindowRect(hWnd, rect) Then Return Nothing
-        Return Rectangle.FromLTRB(rect.Left, rect.Top, rect.Right, rect.Bottom)
-    End Function
 
     ' Word/Excel/PowerPointのDocument/Workbook/Presentationが持つ「AutoSaveOn」プロパティ
     ' （OneDrive/SharePoint上のファイルのクラウド自動保存）は、このプロジェクトが参照している

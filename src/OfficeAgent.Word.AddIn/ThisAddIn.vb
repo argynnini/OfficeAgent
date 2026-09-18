@@ -15,16 +15,11 @@ Partial Public Class ThisAddIn
     Private Sub ThisAddIn_Startup() Handles Me.Startup
         OfficeAgent.Core.AssemblyRedirectHelper.EnsureRegistered()
 
-        Dim pane As New OfficeAgent.Core.AgentSettingsPane() With {.HostApp = AnimationEvents.HostApp.Word}
-        _settingsTaskPane = Me.CustomTaskPanes.Add(pane, "OfficeAgent 設定")
-        _settingsTaskPane.Width = 260
-        _settingsTaskPane.Visible = False
-        AddHandler _settingsTaskPane.VisibleChanged, AddressOf SettingsPane_VisibleChanged
-
         OfficeAgent.Core.AgentFloatingForm.OpenSettingsPaneAction = AddressOf ShowSettingsPane
         OfficeAgent.Core.AgentFloatingForm.GetSelectedTextAction = AddressOf GetSelectedText
         AgentRibbon.IsSettingsPaneVisibleFunc = Function() IsSettingsPaneVisible
         AgentRibbon.ToggleSettingsPaneAction = AddressOf ToggleSettingsPane
+        OfficeAgent.Core.AgentFloatingForm.GetHostWindowHandleFunc = AddressOf GetHostWindowHandle
 
         AddHandler Me.Application.DocumentBeforeSave, AddressOf OnBeforeSave
         AddHandler Me.Application.DocumentBeforePrint, AddressOf OnBeforePrint
@@ -32,11 +27,27 @@ Partial Public Class ThisAddIn
         AddHandler Me.Application.DocumentOpen, AddressOf OnOpen
         AddHandler Me.Application.DocumentBeforeClose, AddressOf OnBeforeClose
         AddHandler Me.Application.ProtectedViewWindowOpen, AddressOf OnProtectedViewWindowOpen
-        AddHandler Me.Application.WindowActivate, AddressOf OnWindowActivateOrDeactivate
 
-        _agentForm = New OfficeAgent.Core.AgentFloatingForm()
+        Try
+            _agentForm = New OfficeAgent.Core.AgentFloatingForm()
+        Catch ex As Exception When OfficeAgent.Core.MsAgentRuntimeRecovery.IsMsAgentRuntimeMissing(ex)
+            OfficeAgent.Core.MsAgentRuntimeRecovery.HandleMissingRuntime()
+            Return
+        End Try
         _agentForm.Show()
     End Sub
+
+    ' 設定タスクパネル（AgentSettingsPane）はCustomTaskPanes.Addのコストが実測200～460msあり、
+    ' 起動時には使わない機能のため、初めて「設定」が開かれるタイミングまで生成を遅延させる
+    Private Function EnsureSettingsTaskPane() As Microsoft.Office.Tools.CustomTaskPane
+        If _settingsTaskPane IsNot Nothing Then Return _settingsTaskPane
+        Dim pane As New OfficeAgent.Core.AgentSettingsPane() With {.HostApp = AnimationEvents.HostApp.Word}
+        _settingsTaskPane = Me.CustomTaskPanes.Add(pane, "OfficeAgent 設定")
+        _settingsTaskPane.Width = 260
+        _settingsTaskPane.Visible = False
+        AddHandler _settingsTaskPane.VisibleChanged, AddressOf SettingsPane_VisibleChanged
+        Return _settingsTaskPane
+    End Function
 
     Public ReadOnly Property IsSettingsPaneVisible As Boolean
         Get
@@ -50,13 +61,13 @@ Partial Public Class ThisAddIn
     End Property
 
     Public Sub ToggleSettingsPane()
-        If _settingsTaskPane Is Nothing Then Return
+        Dim pane = EnsureSettingsTaskPane()
         Try
-            If Not _settingsTaskPane.Visible Then
-                DirectCast(_settingsTaskPane.Control, OfficeAgent.Core.AgentSettingsPane).LoadSettings()
-                _settingsTaskPane.Visible = True
+            If Not pane.Visible Then
+                DirectCast(pane.Control, OfficeAgent.Core.AgentSettingsPane).LoadSettings()
+                pane.Visible = True
             Else
-                _settingsTaskPane.Visible = False
+                pane.Visible = False
             End If
         Catch ex As ObjectDisposedException
             _settingsTaskPane = Nothing
@@ -65,10 +76,10 @@ Partial Public Class ThisAddIn
 
     ' カイル右クリックの「設定」から呼ばれる：閉じていれば開くだけ（トグルしない）
     Public Sub ShowSettingsPane()
-        If _settingsTaskPane Is Nothing Then Return
+        Dim pane = EnsureSettingsTaskPane()
         Try
-            DirectCast(_settingsTaskPane.Control, OfficeAgent.Core.AgentSettingsPane).LoadSettings()
-            _settingsTaskPane.Visible = True
+            DirectCast(pane.Control, OfficeAgent.Core.AgentSettingsPane).LoadSettings()
+            pane.Visible = True
         Catch ex As ObjectDisposedException
             _settingsTaskPane = Nothing
         End Try
@@ -77,6 +88,16 @@ Partial Public Class ThisAddIn
     Private Sub SettingsPane_VisibleChanged(sender As Object, e As EventArgs)
         AgentRibbon.Instance?.InvalidateRibbon()
     End Sub
+
+    ' AgentFloatingForm側のGetHostWindowHandleFuncから呼ばれる：エージェントの初回表示位置を
+    ' 「Officeウィンドウがあるモニタ」基準にするため、Wordのメインウィンドウハンドルを返す
+    Private Function GetHostWindowHandle() As IntPtr
+        Try
+            Return New IntPtr(CLng(Me.Application.Hwnd))
+        Catch ex As Exception
+            Return IntPtr.Zero
+        End Try
+    End Function
 
     ' カイル右クリックの「選択範囲について」から呼ばれる：現在選択中の文字列を返す（未選択・空ならNothing）
     Private Function GetSelectedText() As String
@@ -146,15 +167,12 @@ Partial Public Class ThisAddIn
         If _agentForm IsNot Nothing Then _agentForm.PlayConfiguredAnimation("ProtectedViewWindowOpen")
     End Sub
 
-    Private Sub OnWindowActivateOrDeactivate(doc As Microsoft.Office.Interop.Word.Document, wn As Microsoft.Office.Interop.Word.Window)
-        If _agentForm IsNot Nothing Then _agentForm.PlayLookAnimationTowardWindow(New IntPtr(CInt(wn.Hwnd)))
-    End Sub
-
     Private Sub ThisAddIn_Shutdown() Handles Me.Shutdown
         OfficeAgent.Core.AgentFloatingForm.OpenSettingsPaneAction = Nothing
         OfficeAgent.Core.AgentFloatingForm.GetSelectedTextAction = Nothing
         AgentRibbon.IsSettingsPaneVisibleFunc = Nothing
         AgentRibbon.ToggleSettingsPaneAction = Nothing
+        OfficeAgent.Core.AgentFloatingForm.GetHostWindowHandleFunc = Nothing
 
         If _settingsTaskPane IsNot Nothing Then
             RemoveHandler _settingsTaskPane.VisibleChanged, AddressOf SettingsPane_VisibleChanged
@@ -162,7 +180,10 @@ Partial Public Class ThisAddIn
         End If
 
         If _agentForm IsNot Nothing Then
-            _agentForm.HideAgent(checkOtherApps:=True)
+            ' 実際に選ばれているキャラクターが.act（Actor）の場合は、Kyle（AxAgent）ではなく
+            ' ActorFloatingForm側にGoodbyeアニメーション再生・非表示を委ねる
+            ' （CharacterHostCoordinator.Hide参照。起動時のCharacterHostCoordinator.Showと対）
+            CharacterHostCoordinator.Hide(AgentSettings.CharacterId, checkOtherApps:=True)
             _agentForm.Dispose()
             _agentForm = Nothing
         End If

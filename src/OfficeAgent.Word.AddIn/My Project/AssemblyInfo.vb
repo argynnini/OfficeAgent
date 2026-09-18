@@ -25,19 +25,8 @@ Imports System.Security
 'このプロジェクトが COM に公開される場合、次の GUID が typelib の ID になります
 <Assembly: Guid("677f9ec4-b621-48d8-bf8a-c05301acfa40")>
 
-' アセンブリのバージョン情報は次の 4 つの値で構成されています:
-'
-'      メジャー バージョン
-'      マイナー バージョン
-'      ビルド番号
-'      リビジョン
-'
-' すべての値を指定するか、以下のように '*' を使ってビルドおよびリビジョン番号を
-' 既定値にすることができます:
-' <Assembly: AssemblyVersion("1.0.*")> 
+' アセンブリバージョンはSharedAssemblyInfo.vb（src直下、4プロジェクト共通リンク）で一元管理する
 
-<Assembly: AssemblyVersion("3.0.0.0")>
-<Assembly: AssemblyFileVersion("3.0.0.0")>
 <Assembly: NeutralResourcesLanguage("ja-JP")>
 Friend Module DesignTimeConstants
     Public Const RibbonTypeSerializer As String = "Microsoft.VisualStudio.Tools.Office.Ribbon.Serialization.RibbonTypeCodeDomSerializer, Microsoft.VisualStudio.Tools.Office.Designer, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"

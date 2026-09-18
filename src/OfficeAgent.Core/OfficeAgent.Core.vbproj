@@ -98,6 +98,16 @@
       <Private>True</Private>
     </Reference>
   </ItemGroup>
+  <!-- .act形式（Microsoft Actor）キャラクター用。非公式の再実装コントロール
+       Frontier Actor（https://github.com/TMAFE/Frontier-Actor-Code-Samples）の
+       ビルド済みDLLをそのままコミット済みのものを参照する。ライセンス表記が
+       配布元に見当たらないため、将来的な取り扱いには注意が必要 -->
+  <ItemGroup>
+    <Reference Include="FrontierActorControl">
+      <HintPath>..\..\installer\wix\vendor\FrontierActor\FrontierActorControl.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+  </ItemGroup>
   <!-- グローバルImports -->
   <ItemGroup>
     <Import Include="Microsoft.VisualBasic" />
@@ -120,14 +130,22 @@
     <Compile Include="AiChatClientFactory.vb" />
     <Compile Include="SearchEngines.vb" />
     <Compile Include="WindowHelper.vb" />
+    <Compile Include="BalloonTextMetrics.vb" />
     <Compile Include="AgentSettings.vb" />
+    <Compile Include="AgentCharacterCatalog.vb" />
+    <Compile Include="CharacterHostCoordinator.vb" />
+    <Compile Include="MsoAnimationType.vb" />
     <Compile Include="AssemblyRedirectHelper.vb" />
+    <Compile Include="MsAgentRuntimeRecovery.vb" />
     <Compile Include="AnimationEvents.vb" />
     <Compile Include="ResponseBalloonForm.vb" />
     <Compile Include="SearchBalloonForm.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="AgentFloatingForm.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ActorFloatingForm.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="AgentFloatingForm.Designer.vb">
@@ -141,6 +159,9 @@
       <DependentUpon>AgentSettingsPane.vb</DependentUpon>
     </Compile>
     <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="..\SharedAssemblyInfo.vb">
+      <Link>My Project\SharedAssemblyInfo.vb</Link>
+    </Compile>
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
       <DependentUpon>Application.myapp</DependentUpon>
@@ -184,14 +205,16 @@
       <LastGenOutput>Settings.Designer.vb</LastGenOutput>
     </None>
   </ItemGroup>
-  <!-- DLLフォルダにコピーするリソースファイル（本体はリポジトリルートのassetsに置く） -->
+  <!-- DLLフォルダにコピーするリソースファイル（本体はリポジトリルートのagentsに置く）。
+       ワイルドカードでagents\配下の.acsを全てコピーする。カイル・フィンフィン以外の
+       カスタムエージェントをagents\に追加しても、ビルドし直すだけで自動的に反映される -->
   <ItemGroup>
-    <Content Include="..\..\assets\DOLPHIN.ACS">
-      <Link>DOLPHIN.ACS</Link>
+    <Content Include="..\..\agents\*.ACS">
+      <Link>%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\assets\FINFIN.ACS">
-      <Link>FINFIN.ACS</Link>
+    <Content Include="..\..\agents\*.act">
+      <Link>%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

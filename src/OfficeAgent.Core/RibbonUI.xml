@@ -8,6 +8,83 @@
           <toggleButton id="tglDetail" label="詳細設定" size="large" imageMso="ApplicationOptionsDialog" onAction="Detail_Toggle" getPressed="Detail_GetPressed" />
         </group>
       </tab>
+      <tab idMso="TabSlideShow">
+        <group id="grpKyleSlideShow" label="OfficeAgent">
+          <toggleButton id="tglHideDuringSlideShow" label="発表中は非表示" size="large" imageMso="SlideHide" onAction="HideDuringSlideShow_Toggle" getPressed="HideDuringSlideShow_GetPressed" getEnabled="HideDuringSlideShow_GetEnabled" />
+          <toggleButton id="tglSpeakSlideNotes" label="ノート操作" size="large" imageMso="SoundCheck" onAction="SpeakSlideNotes_Toggle" getPressed="SpeakSlideNotes_GetPressed" screentip="スピーカーノートの読み上げ・タグ操作の有効/無効" supertip="OFFにすると、スピーカーノートの読み上げと、ノート中の&lt;slide&gt;等のタグによるスライド送り・画面操作・エージェント操作が一切行われなくなります（エージェントは通常どおり表示されます）。" />
+          <checkBox id="chkShowSlideNumber" label="スライド番号" onAction="ShowSlideNumber_Toggle" getPressed="ShowSlideNumber_GetPressed" getEnabled="ShowSlideNumber_GetEnabled" />
+          <checkBox id="chkShowElapsedTime" label="発表時間" onAction="ShowElapsedTime_Toggle" getPressed="ShowElapsedTime_GetPressed" getEnabled="ShowElapsedTime_GetEnabled" />
+          <checkBox id="chkShowLapTime" label="ラップ" onAction="ShowLapTime_Toggle" getPressed="ShowLapTime_GetPressed" getEnabled="ShowLapTime_GetEnabled" />
+          <button id="btnOpenVoiceSettings" label="読み上げ音声の設定" imageMso="SoundCheck" onAction="OpenVoiceSettings_Click" screentip="読み上げに使う既定の音声を変更する" supertip="変更した内容は、Officeを再起動するまで反映されません。" />
+          <menu id="mnuTagInsert" label="読み上げタグ挿入" imageMso="SoundCheck">
+            <menu id="mnuInsertSapiTag" label="音声" imageMso="SoundCheck">
+              <button id="btnInsertVolume" label="音量" onAction="InsertVolumeTag_Click" imageMso="SoundCheck" screentip="読み上げ音量を変更する" supertip="&lt;volume level=&quot;50&quot;&gt;...&lt;/volume&gt;　levelは0～100で設定" />
+              <button id="btnInsertRate" label="速度" onAction="InsertRateTag_Click" imageMso="SoundCheck" screentip="読み上げ速度を変更する" supertip="&lt;rate speed=&quot;5&quot;&gt;...&lt;/rate&gt;　speedは-10～10で設定" />
+              <button id="btnInsertPitch" label="声高" onAction="InsertPitchTag_Click" imageMso="SoundCheck" screentip="読み上げの声の高さを変更する" supertip="&lt;pitch middle=&quot;5&quot;&gt;...&lt;/pitch&gt;　middleは-10～10で設定" />
+              <button id="btnInsertSpell" label="1文字づつ" onAction="InsertSpellTag_Click" imageMso="SoundCheck" screentip="1文字ずつ区切って読み上げる" supertip="&lt;spell&gt;...&lt;/spell&gt;" />
+              <button id="btnInsertEmph" label="強調" onAction="InsertEmphTag_Click" imageMso="SoundCheck" screentip="次の単語を強調して読み上げる" supertip="&lt;emph&gt;...&lt;/emph&gt;" />
+              <button id="btnInsertActionBreak" label="読み上げ区切り" onAction="InsertActionBreakTag_Click" imageMso="SoundCheck" screentip="発話をここで区切る" supertip="&lt;agent op=&quot;break&quot;/&gt;" />
+				<button id="btnInsertSilence" label="無音" onAction="InsertSilenceTag_Click" imageMso="SoundCheck" screentip="指定ミリ秒の無音を挿入する" supertip="&lt;silence msec=&quot;500&quot;/&gt;" />
+				<button id="btnInsertComment" label="コメント" onAction="InsertCommentTag_Click" imageMso="SoundCheck" screentip="読み上げないコメントを挿入する" supertip="&lt;!-- ... --&gt;　読み上げも吹き出し表示もされない" />
+			</menu>
+            <menu id="mnuActionSlide" label="スライド" imageMso="NextSlideShow">
+              <button id="btnInsertActionClick" label="クリック送り" onAction="InsertActionSlideClickTag_Click" imageMso="NextSlideShow" screentip="1クリック分進める" supertip="&lt;slide op=&quot;click&quot; dir=&quot;next&quot;/&gt;" />
+              <button id="btnInsertActionClickPrev" label="クリック戻り" onAction="InsertActionSlideClickPrevTag_Click" imageMso="NextSlideShow" screentip="1クリック分戻る" supertip="&lt;slide op=&quot;click&quot; dir=&quot;prev&quot;/&gt;" />
+              <button id="btnInsertActionPage" label="ページ送り" onAction="InsertActionSlidePageTag_Click" imageMso="NextSlideShow" screentip="次スライドへ移動する" supertip="&lt;slide op=&quot;page&quot; dir=&quot;next&quot;/&gt;" />
+              <button id="btnInsertActionPagePrev" label="ページ戻り" onAction="InsertActionSlidePagePrevTag_Click" imageMso="NextSlideShow" screentip="前スライドへ移動する" supertip="&lt;slide op=&quot;page&quot; dir=&quot;prev&quot;/&gt;" />
+              <button id="btnInsertActionPageGoto" label="指定ページへ移動" onAction="InsertActionSlidePageGotoTag_Click" imageMso="NextSlideShow" screentip="指定スライドへジャンプする" supertip="&lt;slide dir=&quot;1&quot;/&gt;　dirは1始まりのスライド番号で設定" />
+              <button id="btnInsertActionBlackout" label="スクリーン暗転" onAction="InsertActionBlackoutTag_Click" imageMso="SlideHide" screentip="画面を暗転させる" supertip="&lt;screen op=&quot;blackout&quot;/&gt;" />
+              <button id="btnInsertActionWhiteout" label="スクリーン白転" onAction="InsertActionWhiteoutTag_Click" imageMso="SlideHide" screentip="画面を白転させる" supertip="&lt;screen op=&quot;whiteout&quot;/&gt;" />
+              <button id="btnInsertActionScreenResume" label="スクリーン復帰" onAction="InsertActionScreenResumeTag_Click" imageMso="SlideHide" screentip="暗転／白転を解除する" supertip="&lt;screen op=&quot;resume&quot;/&gt;" />
+              <button id="btnInsertActionLaserOn" label="レーザーポインターON" onAction="InsertActionLaserOnTag_Click" imageMso="SlideHide" screentip="レーザーポインターを表示する" supertip="&lt;laser op=&quot;on&quot;/&gt;" />
+              <button id="btnInsertActionLaserOff" label="レーザーポインターOFF" onAction="InsertActionLaserOffTag_Click" imageMso="SlideHide" screentip="レーザーポインターを隠す" supertip="&lt;laser op=&quot;off&quot;/&gt;" />
+            </menu>
+            <menu id="mnuActionAgent" label="エージェント" imageMso="Info">
+              <button id="btnInsertActionAgentMove" label="移動(座標)" onAction="InsertActionAgentMoveTag_Click" imageMso="Info" screentip="画面上の位置(x,y)へ移動する" supertip="&lt;agent op=&quot;move&quot; x=&quot;90&quot; y=&quot;85&quot; speed=&quot;1000&quot;/&gt;　x/yは画面に対する0～100の割合（横90%・縦85%の位置）。speedを消すと瞬間移動、指定するとミリ秒かけて移動" />
+              <button id="btnInsertActionAgentMoveObject" label="移動(オブジェクト)" onAction="InsertActionAgentMoveObjectTag_Click" imageMso="Info" screentip="スライド上のオブジェクトの位置へ移動する" supertip="&lt;agent op=&quot;move&quot; obj=&quot;シェイプ名&quot; pos=&quot;top&quot; speed=&quot;1000&quot;/&gt;　挿入時にオブジェクトを選択していれば自動でobjに入る。posはtop/bottom/left/right/topleft/topright/bottomleft/bottomright/centerと、内側指定のinnerを前置したもの（innertop等）" />
+              <button id="btnInsertActionAgentGestureAt" label="指し示す(座標)" onAction="InsertActionAgentGestureAtTag_Click" imageMso="Info" screentip="画面上の位置(x,y)の方向を指す" supertip="&lt;agent op=&quot;gesture&quot; x=&quot;90&quot; y=&quot;85&quot;/&gt;　x/yはmoveと同じく画面に対する0～100の割合" />
+              <button id="btnInsertActionAgentGestureObject" label="指し示す(オブジェクト)" onAction="InsertActionAgentGestureObjectTag_Click" imageMso="Info" screentip="スライド上のオブジェクトの方向を指す" supertip="&lt;agent op=&quot;gesture&quot; obj=&quot;シェイプ名&quot; pos=&quot;top&quot;/&gt;　挿入時にオブジェクトを選択していれば自動でobjに入る。posの指定方法はmove(オブジェクト)と同じ" />
+              <button id="btnInsertActionAgentPlay" label="アニメーション" onAction="InsertActionAgentPlayTag_Click" imageMso="Info" screentip="指定アニメーションを再生する" supertip="&lt;agent op=&quot;play&quot; name=&quot;Wave&quot;/&gt;" />
+				<button id="btnInsertActionWait" label="待機" onAction="InsertActionWaitTag_Click" imageMso="Info" screentip="指定ミリ秒だけ待機" supertip="&lt;agent op=&quot;wait&quot; ms=&quot;1000&quot;/&gt;" />
+				<button id="btnInsertActionAgentShow" label="エージェント表示" onAction="InsertActionAgentShowTag_Click" imageMso="Info" screentip="エージェントを表示する" supertip="&lt;agent op=&quot;show&quot;/&gt;" />
+              <button id="btnInsertActionAgentHide" label="エージェント非表示" onAction="InsertActionAgentHideTag_Click" imageMso="Info" screentip="エージェントを隠す" supertip="&lt;agent op=&quot;hide&quot;/&gt;" />
+            </menu>
+            <menu id="mnuActionBalloon" label="吹き出し" imageMso="ApplicationOptionsDialog">
+              <button id="btnInsertActionBalloonShow" label="表示" onAction="InsertActionBalloonShowTag_Click" imageMso="ApplicationOptionsDialog" screentip="吹き出しを表示する" supertip="&lt;balloon op=&quot;show&quot;/&gt;" />
+              <button id="btnInsertActionBalloonHide" label="非表示" onAction="InsertActionBalloonHideTag_Click" imageMso="ApplicationOptionsDialog" screentip="吹き出しを隠す" supertip="&lt;balloon op=&quot;hide&quot;/&gt;" />
+              <button id="btnInsertActionBalloonStyle" label="スタイル" onAction="InsertActionBalloonStyleTag_Click" imageMso="ApplicationOptionsDialog" screentip="吹き出しのフォント／横幅を変更する" supertip="&lt;balloon op=&quot;style&quot; size=&quot;12&quot; font=&quot;&quot; width=&quot;40&quot;/&gt;　指定した属性だけ変わる（widthは1行あたりの文字数）" />
+            </menu>
+            <menu id="mnuInsertVarTag" label="変数" imageMso="ApplicationOptionsDialog">
+              <menu id="mnuVarSlide" label="PowerPoint" imageMso="NextSlideShow">
+                <button id="btnInsertVarSlideNumber" label="スライド番号" onAction="InsertVarSlideNumberTag_Click" imageMso="NextSlideShow" screentip="現在のスライド番号に置き換える" supertip="&lt;var name=&quot;slideNumber&quot;/&gt;" />
+                <button id="btnInsertVarSlideCount" label="総スライド数" onAction="InsertVarSlideCountTag_Click" imageMso="NextSlideShow" screentip="スライドの総数に置き換える" supertip="&lt;var name=&quot;slideCount&quot;/&gt;" />
+                <button id="btnInsertVarSlidesRemaining" label="残りスライド数" onAction="InsertVarSlidesRemainingTag_Click" imageMso="NextSlideShow" screentip="残りスライド数に置き換える" supertip="&lt;var name=&quot;slidesRemaining&quot;/&gt;　総数-現在番号" />
+                <button id="btnInsertVarFileName" label="ファイル名" onAction="InsertVarFileNameTag_Click" imageMso="NextSlideShow" screentip="ファイル名に置き換える" supertip="&lt;var name=&quot;fileName&quot;/&gt;" />
+                <button id="btnInsertVarSlideTitle" label="スライドタイトル" onAction="InsertVarSlideTitleTag_Click" imageMso="NextSlideShow" screentip="スライドのタイトルに置き換える" supertip="&lt;var name=&quot;slideTitle&quot;/&gt;" />
+                <button id="btnInsertVarSectionName" label="セクション名" onAction="InsertVarSectionNameTag_Click" imageMso="NextSlideShow" screentip="所属セクション名に置き換える" supertip="&lt;var name=&quot;sectionName&quot;/&gt;　未使用時は空文字" />
+                <button id="btnInsertVarAuthor" label="作成者" onAction="InsertVarAuthorTag_Click" imageMso="NextSlideShow" screentip="ドキュメントの作成者に置き換える" supertip="&lt;var name=&quot;author&quot;/&gt;" />
+              </menu>
+              <menu id="mnuVarTime" label="時間" imageMso="InsertDateAndTime">
+                <button id="btnInsertVarTime" label="現在時刻" onAction="InsertVarTimeTag_Click" imageMso="InsertDateAndTime" screentip="現在時刻に置き換える" supertip="&lt;var name=&quot;time&quot;/&gt;　例：14:35" />
+                <button id="btnInsertVarDate" label="今日の日付" onAction="InsertVarDateTag_Click" imageMso="InsertDateAndTime" screentip="今日の日付に置き換える" supertip="&lt;var name=&quot;date&quot;/&gt;　例：2026年9月8日" />
+                <button id="btnInsertVarElapsed" label="発表経過時間" onAction="InsertVarElapsedTag_Click" imageMso="InsertDateAndTime" screentip="発表開始からの経過時間に置き換える" supertip="&lt;var name=&quot;elapsed&quot;/&gt;　例：5:32" />
+                <button id="btnInsertVarLap" label="このスライドの経過時間" onAction="InsertVarLapTag_Click" imageMso="InsertDateAndTime" screentip="このスライドに来てからの経過時間に置き換える" supertip="&lt;var name=&quot;lap&quot;/&gt;　例：0:45" />
+              </menu>
+              <menu id="mnuVarOther" label="その他" imageMso="Info">
+                <button id="btnInsertVarUserName" label="ユーザー名" onAction="InsertVarUserNameTag_Click" imageMso="Info" screentip="Windowsのユーザー名に置き換える" supertip="&lt;var name=&quot;userName&quot;/&gt;" />
+                <button id="btnInsertVarComputerName" label="コンピューター名" onAction="InsertVarComputerNameTag_Click" imageMso="Info" screentip="コンピューター名に置き換える" supertip="&lt;var name=&quot;computerName&quot;/&gt;" />
+                <button id="btnInsertVarAgentName" label="エージェント名" onAction="InsertVarAgentNameTag_Click" imageMso="Info" screentip="キャラクターの名前に置き換える" supertip="&lt;var name=&quot;agentName&quot;/&gt;" />
+                <button id="btnInsertVarAgentDescription" label="エージェントの説明" onAction="InsertVarAgentDescriptionTag_Click" imageMso="Info" screentip="キャラクターの説明文に置き換える" supertip="&lt;var name=&quot;agentDescription&quot;/&gt;" />
+              </menu>
+            </menu>
+          </menu>
+        </group>
+      </tab>
+      <tab idMso="TabFormulas">
+        <group id="grpKyleFormulas" label="OfficeAgent">
+          <toggleButton id="tglFormulaErrorDetection" label="数式エラー検知" size="large" imageMso="ErrorChecking" onAction="FormulaErrorDetection_Toggle" getPressed="FormulaErrorDetection_GetPressed" />
+        </group>
+      </tab>
     </tabs>
   </ribbon>
 </customUI>

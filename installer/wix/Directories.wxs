@@ -13,8 +13,8 @@
         <Directory Id="ADDIN_WORD" Name="Word" />
         <Directory Id="ADDIN_EXCEL" Name="Excel" />
         <Directory Id="ADDIN_POWERPOINT" Name="PowerPoint" />
-        <!-- DOLPHIN.ACS/FINFIN.ACSはWord/Excel/PowerPointで重複させず、ここに1セットだけ置く -->
-        <Directory Id="ADDIN_ASSETS" Name="assets" />
+        <!-- DOLPHIN.ACS等の.acsはWord/Excel/PowerPointで重複させず、ここに1セットだけ置く -->
+        <Directory Id="ADDIN_ASSETS" Name="agents" />
       </Directory>
     </StandardDirectory>
   </Fragment>

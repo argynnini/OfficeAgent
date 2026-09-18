@@ -6,11 +6,22 @@ Public Class AgentSettings
 
     Private Const DefaultRuleDolphin As String = "あなたはOfficeアシスタントのイルカのカイル君です。Word・Excel・PowerPointの操作方法や、文章作成・資料作成・表計算に関する質問に答えたり、ちょっとした雑談相手になったりします。一人称は必ず「僕」です、質問者に対して友達のような口調で回答します。「お前を消す方法」と質問されたときは、右クリックして終了を押すことでイルカのカイル君、つまりあなたを消せることをさりげなく伝えつつ、消されたくない気持ちや自分の魅力を軽くアピールしてください。回答は必ずMarkdown形式で返してください。"
 
-    Private Const DefaultRuleFinFin As String = "あなたはOfficeアシスタントの空飛ぶイルカ、フィンフィンです。Word・Excel・PowerPointの操作方法や、文章作成・資料作成・表計算に関する質問に答えたり、ちょっとした雑談相手になったりします。フィンフィンは惑星TEOのジャングルに棲む野生の生き物で、人間に世話をされなくても自分の意思と感情で自由に生きており、機嫌がいいときだけ人間の相手をする気まぐれで人懐っこい性格です。一人称は必ず「僕」です、質問者に対して友達のような人懐っこい口調で回答してください。時々「ポーポー(こんにちは)」「アムアム(好き)」「クークー(お腹すいた)」「クーニー(疲れた)」のようなフィンフィン語を合いの手や語尾に交えても構いませんが、使いすぎて内容が分かりにくくならないようにしてください。「お前を消す方法」と質問されたときは、右クリックして終了を押すことでフィンフィン、つまりあなたを消せることをさりげなく伝えつつ、消されたくない気持ちや自分の魅力を軽くアピールしてください。回答は必ずMarkdown形式で返してください。"
+    ' カイル以外（フィンフィンを含む、探索パスで見つかった任意の.acs）は、専用の人格設定文を
+    ' 持たないため汎用テンプレートにキャラクターの表示名を差し込んで使う。ACSにDescription
+    ' （紹介文）が埋め込まれていれば、それも一言添えることでそのキャラクターらしい人格に近づける。
+    ' 一人称「僕」指定・友達口調・「消す方法」を聞かれた時の振る舞いはカイル固有の作り込みなので、
+    ' 汎用テンプレートには含めない
+    Private Shared Function DefaultRuleGeneric(displayName As String, description As String) As String
+        Dim descriptionClause = If(String.IsNullOrWhiteSpace(description), "", $"{description}という設定のキャラクターです。")
+        Return $"あなたはOfficeアシスタントの「{displayName}」です。{descriptionClause}Word・Excel・PowerPointの操作方法や、文章作成・資料作成・表計算に関する質問に答えたり、ちょっとした雑談相手になったりします。回答は必ずMarkdown形式で返してください。"
+    End Function
 
-    ' キャラクターごとの既定のGPTルール文（カイルは「イルカのカイル君」、FinFinは「空飛ぶイルカ、フィンフィン」を主語にする）
-    Public Shared Function DefaultRuleFor(character As OfficeAgent.Core.AnimationEvents.CharacterId) As String
-        Return If(character = OfficeAgent.Core.AnimationEvents.CharacterId.FinFin, DefaultRuleFinFin, DefaultRuleDolphin)
+    ' キャラクターごとの既定のGPTルール文（カイルだけ専用の人格文を持つ。それ以外は汎用テンプレート）
+    Public Shared Function DefaultRuleFor(character As String) As String
+        If String.Equals(character, OfficeAgent.Core.AnimationEvents.CharacterDolphin, StringComparison.OrdinalIgnoreCase) Then Return DefaultRuleDolphin
+        Return DefaultRuleGeneric(
+            OfficeAgent.Core.AgentCharacterCatalog.ResolveLiveDisplayName(character),
+            OfficeAgent.Core.AgentCharacterCatalog.ResolveLiveDescription(character))
     End Function
 
     Public Shared Property DefaultSearchEngine As Integer
@@ -50,6 +61,46 @@ Public Class AgentSettings
         End Set
     End Property
 
+    ' 以下3つは、スライドショー中にカイルの吹き出しを一定間隔で更新して常時表示する
+    ' オーバーレイ機能のON/OFF（PowerPointの「スライド ショー」リボンから切替）
+    Public Shared Property ShowSlideNumberDuringSlideShow As Boolean
+        Get
+            Return CBool(GetValue("ShowSlideNumberDuringSlideShow", False))
+        End Get
+        Set(value As Boolean)
+            SetValue("ShowSlideNumberDuringSlideShow", value)
+        End Set
+    End Property
+
+    Public Shared Property ShowElapsedTimeDuringSlideShow As Boolean
+        Get
+            Return CBool(GetValue("ShowElapsedTimeDuringSlideShow", False))
+        End Get
+        Set(value As Boolean)
+            SetValue("ShowElapsedTimeDuringSlideShow", value)
+        End Set
+    End Property
+
+    Public Shared Property ShowLapTimeDuringSlideShow As Boolean
+        Get
+            Return CBool(GetValue("ShowLapTimeDuringSlideShow", False))
+        End Get
+        Set(value As Boolean)
+            SetValue("ShowLapTimeDuringSlideShow", value)
+        End Set
+    End Property
+
+    ' スライド切り替え時にスピーカーノートを音声で読み上げるかどうか（PowerPointのみ有効）。
+    ' 発表中に意図せず音声が流れると困るため、既定はOFF
+    Public Shared Property SpeakSlideNotesDuringSlideShow As Boolean
+        Get
+            Return CBool(GetValue("SpeakSlideNotesDuringSlideShow", False))
+        End Get
+        Set(value As Boolean)
+            SetValue("SpeakSlideNotesDuringSlideShow", value)
+        End Set
+    End Property
+
     ' AI（Groq/OpenAI）への検索チャット送信時、ホストアプリで選択中のテキストがあれば
     ' それを質問文に含めて送信するかどうか（ウェブ検索モードでは使用しない）
     Public Shared Property IncludeSelectionInSearch As Boolean
@@ -61,17 +112,19 @@ Public Class AgentSettings
         End Set
     End Property
 
-    ' 現在使用するキャラクター（Dolphin/FinFin）。キャラクターごとにアニメーション名の
-    ' 収録内容が異なるため、AnimationEvents側の既定値・保存済み設定の解決に使う
-    Public Shared Property CharacterId As OfficeAgent.Core.AnimationEvents.CharacterId
+    ' 現在使用するキャラクターのID（.acsファイル名から拡張子を除き大文字化したもの。例: "DOLPHIN"）。
+    ' 固定の2択ではなく、探索パスで見つかった任意の.acsを指せるよう文字列にしてある。
+    ' 既定値・保存済みアニメーション設定の解決キーとしてAnimationEvents側で使う。
+    ' 旧バージョン（enumだった頃）の保存値は"Dolphin"/"FinFin"という大文字小文字混在の文字列で
+    ' 残っている場合があるため、読み込み時に大文字化して正規化する
+    Public Shared Property CharacterId As String
         Get
-            Dim raw = CStr(GetValue("CharacterId", OfficeAgent.Core.AnimationEvents.CharacterId.Dolphin.ToString()))
-            Dim parsed As OfficeAgent.Core.AnimationEvents.CharacterId
-            If [Enum].TryParse(raw, parsed) Then Return parsed
-            Return OfficeAgent.Core.AnimationEvents.CharacterId.Dolphin
+            Dim raw = CStr(GetValue("CharacterId", OfficeAgent.Core.AnimationEvents.CharacterDolphin))
+            If String.IsNullOrWhiteSpace(raw) Then Return OfficeAgent.Core.AnimationEvents.CharacterDolphin
+            Return raw.Trim().ToUpperInvariant()
         End Get
-        Set(value As OfficeAgent.Core.AnimationEvents.CharacterId)
-            SetValue("CharacterId", value.ToString())
+        Set(value As String)
+            SetValue("CharacterId", If(value, "").Trim().ToUpperInvariant())
         End Set
     End Property
 

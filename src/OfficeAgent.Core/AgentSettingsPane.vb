@@ -1,5 +1,7 @@
 Imports System.Reflection
 Imports System.Runtime.InteropServices
+Imports System.Linq
+Imports System.Text
 
 Public Class AgentSettingsPane
     Inherits System.Windows.Forms.UserControl
@@ -9,6 +11,90 @@ Public Class AgentSettingsPane
     End Function
     Private Const EM_SETCUEBANNER = &H1501
     Private Const QueryPlaceholder As String = "(検索内容)"
+
+    ' 「キャラクター」ドロップダウン一覧の各項目にホバーした際、その.acs/.actの
+    ' 実際のパスをツールチップで出すための下請け（CharacterListHoverTooltip参照）
+    <DllImport("user32.dll")>
+    Private Shared Function SendMessage(hWnd As IntPtr, msg As Integer, wParam As IntPtr, lParam As IntPtr) As IntPtr
+    End Function
+    <DllImport("user32.dll")>
+    Private Shared Function EnumWindows(lpEnumFunc As EnumWindowsProc, lParam As IntPtr) As Boolean
+    End Function
+    <DllImport("user32.dll", CharSet:=CharSet.Unicode)>
+    Private Shared Function GetClassName(hWnd As IntPtr, lpClassName As StringBuilder, nMaxCount As Integer) As Integer
+    End Function
+    <DllImport("user32.dll")>
+    Private Shared Function GetWindowThreadProcessId(hWnd As IntPtr, ByRef lpdwProcessId As Integer) As Integer
+    End Function
+    <DllImport("user32.dll")>
+    Private Shared Function IsWindowVisible(hWnd As IntPtr) As Boolean
+    End Function
+    Private Delegate Function EnumWindowsProc(hWnd As IntPtr, lParam As IntPtr) As Boolean
+
+    Private Const WM_MOUSEMOVE = &H200
+    Private Const WM_MOUSELEAVE = &H2A3
+    Private Const LB_ITEMFROMPOINT = &H1A9
+
+    ' ComboBoxのドロップダウン一覧（ネイティブの"ComboLBox"ウィンドウ、.NETのControlではない）を
+    ' サブクラス化し、マウス位置からLB_ITEMFROMPOINTでホバー中の項目indexを求めてツールチップを出す。
+    ' ComboBoxStyle.DropDownListは非オーナードローのため、.NET側にはアイテム単位のホバー通知が無く、
+    ' この方法以外に項目ごとのツールチップを出す手段が無い
+    Private NotInheritable Class CharacterListHoverTooltip
+        Inherits NativeWindow
+
+        Private ReadOnly _pane As AgentSettingsPane
+        Private _lastIndex As Integer = -1
+
+        Public Sub New(pane As AgentSettingsPane, listHandle As IntPtr)
+            _pane = pane
+            AssignHandle(listHandle)
+        End Sub
+
+        Protected Overrides Sub WndProc(ByRef m As Message)
+            Select Case m.Msg
+                Case WM_MOUSEMOVE
+                    Dim raw = SendMessage(Handle, LB_ITEMFROMPOINT, IntPtr.Zero, m.LParam).ToInt32()
+                    Dim index = raw And &HFFFF
+                    Dim outside = (raw >> 16) <> 0
+                    If outside OrElse index < 0 OrElse index >= _pane._characters.Count Then
+                        HideTip()
+                    ElseIf index <> _lastIndex Then
+                        _lastIndex = index
+                        Dim path = _pane._characters(index).AcsPath
+                        Dim lp = m.LParam.ToInt32()
+                        Dim x = CShort(lp And &HFFFF)
+                        Dim y = CShort((lp >> 16) And &HFFFF)
+                        _pane.ToolTipset.Show(If(path, "(パス不明)"), New Win32WindowHandle(Handle), x + 16, y + 16)
+                    End If
+                Case WM_MOUSELEAVE
+                    HideTip()
+            End Select
+            MyBase.WndProc(m)
+        End Sub
+
+        Private Sub HideTip()
+            If _lastIndex = -1 Then Return
+            _lastIndex = -1
+            _pane.ToolTipset.Hide(New Win32WindowHandle(Handle))
+        End Sub
+
+        Public Sub Detach()
+            HideTip()
+            ReleaseHandle()
+        End Sub
+    End Class
+
+    Private NotInheritable Class Win32WindowHandle
+        Implements IWin32Window
+
+        Public ReadOnly Property Handle As IntPtr Implements IWin32Window.Handle
+
+        Public Sub New(handle As IntPtr)
+            Me.Handle = handle
+        End Sub
+    End Class
+
+    Private _characterListHover As CharacterListHoverTooltip
 
     ' 各要素間の余白
     Private Const GapLabel As Integer = 4
@@ -24,6 +110,10 @@ Public Class AgentSettingsPane
     Private _groqKey As String = String.Empty
     Private _prevIndex As Integer = 0
     Private _loading As Boolean = True
+
+    ' 「キャラクター」コンボボックスの項目一覧。探索パス上に見つかった.acsから毎回作り直すため、
+    ' 選択中インデックスに対応するキャラクターID（.acsファイル名由来）はこのリストを介して引く
+    Private _characters As New List(Of AgentCharacterCatalog.CharacterInfo)
 
     ' 各ThisAddIn_Startupが生成直後に設定する、自分のアプリ種別。
     ' アニメーション設定グリッドで、そのアプリに関係するイベントだけを表示するために使う
@@ -45,6 +135,7 @@ Public Class AgentSettingsPane
         ToolTipset.SetToolTip(TextBoxModel, "例: gpt-4o、llama-3.3-70b-versatile")
         ToolTipset.SetToolTip(CheckBoxIncludeSelection, "選択中のテキストも一緒にAIへ送信")
         ToolTipset.SetToolTip(TextBoxRule, "AIへの指示（プロンプト）")
+        ToolTipset.SetToolTip(LinkResetRule, "性格設定を既定の文章に戻す")
         ToolTipset.SetToolTip(ComboBoxDefaultSearchEngine, "既定の検索サイト")
         ToolTipset.SetToolTip(DataGridViewSearchEngines, "検索サイト一覧の編集")
         ToolTipset.SetToolTip(DataGridViewAnimationEvents, "イベントごとのアニメーション設定")
@@ -142,7 +233,34 @@ Public Class AgentSettingsPane
         ColAnimName.DefaultCellStyle.ForeColor = textSub
 
         LinkAPI.LinkColor = accent
+        LinkResetRule.LinkColor = accent
         LabelVersion.LinkColor = textSub
+    End Sub
+
+    ' 探索パス上に見つかった.acsから「キャラクター」コンボボックスの項目を作り直す。
+    ' 現在保存されているCharacterIdが一覧に無い場合（.acsが後から削除された等）も、
+    ' 一覧の先頭（通常はカイル）を暫定選択にしておく
+    Private Sub PopulateCharacterCombo()
+        _characters = AgentCharacterCatalog.DiscoverCharacters()
+        ComboBoxCharacter.Items.Clear()
+        ComboBoxCharacter.BeginUpdate()
+        For i = 0 To _characters.Count - 1
+            ' 表示名は、既知のテーブルではなく.acs/.actに実際に埋め込まれた名前を優先する
+            ' （一度読み込んだキャラクターはAgentCharacterCatalog側でキャッシュされ、
+            ' 以降は再読み込みしない）。.act（Actor）はエンジンが分かるよう末尾に"(Actor)"を付ける
+            Dim info = _characters(i)
+            info.DisplayName = AgentCharacterCatalog.ResolveLiveDisplayName(info)
+            If info.Format = AgentCharacterCatalog.CharacterFormat.Act Then
+                info.DisplayName &= " (Actor)"
+            End If
+            _characters(i) = info
+            ComboBoxCharacter.Items.Add(info.DisplayName)
+        Next
+        ComboBoxCharacter.EndUpdate()
+
+        If ComboBoxCharacter.Items.Count = 0 Then Return
+        Dim index = _characters.FindIndex(Function(c) String.Equals(c.Id, AgentSettings.CharacterId, StringComparison.OrdinalIgnoreCase))
+        ComboBoxCharacter.SelectedIndex = Math.Max(0, Math.Min(If(index >= 0, index, 0), ComboBoxCharacter.Items.Count - 1))
     End Sub
 
     Public Sub LoadSettings()
@@ -160,7 +278,7 @@ Public Class AgentSettingsPane
         CheckBoxShowOnStartup.Checked = AgentSettings.ShowOnStartup
         CheckBoxHideDuringSlideShow.Checked = AgentSettings.HideAgentDuringSlideShow
         CheckBoxIncludeSelection.Checked = AgentSettings.IncludeSelectionInSearch
-        ComboBoxCharacter.SelectedIndex = CInt(AgentSettings.CharacterId)
+        PopulateCharacterCombo()
         RelayoutForHost()
         TextBoxRule.Text = AgentSettings.GPT_RULE
         LoadSearchEngineGrid()
@@ -259,6 +377,7 @@ Public Class AgentSettingsPane
             y = StackY(TextBoxModel, y, GapField)
             y = StackY(CheckBoxIncludeSelection, y, GapSection)
             y = StackY(SectionPersonality, y, GapLabel)
+            LinkResetRule.Top = SectionPersonality.Top + 1
             y = StackY(Label1, y, GapLabel)
             y = StackY(TextBoxRule, y, GapField)
         End If
@@ -301,12 +420,26 @@ Public Class AgentSettingsPane
     End Sub
 
     Private Sub LoadAnimationEventsGrid()
-        Dim animationNames = AgentFloatingForm.Instance?.GetAvailableAnimationNames()
+        Dim rows = AnimationEvents.GetAll(HostApp, AgentSettings.CharacterId)
+
+        ' .acsは収録されているアニメーション名、.actは収録数から組み立てた"0"～"N-1"の連番
+        ' （名前ベースの再生ができないため）。振り分けはCharacterHostCoordinatorに任せる
+        Dim items As New List(Of String)(CharacterHostCoordinator.GetAnimationChoices(AgentSettings.CharacterId))
+
+        ' 収録されていない値（キャラクター切替前の設定や、.actの収録数を取得できなかった場合等）でも、
+        ' セルの値がComboBoxColumnのItemsに存在しなくなりDataErrorの原因になるため、
+        ' 実在しない値でも一覧に足しておく（保存された値をそのまま表示・維持できるようにする）
+        For Each r In rows
+            If Not String.IsNullOrEmpty(r.Animation) AndAlso Not items.Contains(r.Animation, StringComparer.OrdinalIgnoreCase) Then
+                items.Add(r.Animation)
+            End If
+        Next
+
         ColAnimAnimation.Items.Clear()
-        If animationNames IsNot Nothing Then ColAnimAnimation.Items.AddRange(animationNames)
+        ColAnimAnimation.Items.AddRange(items.ToArray())
 
         DataGridViewAnimationEvents.Rows.Clear()
-        For Each row In AnimationEvents.GetAll(HostApp, AgentSettings.CharacterId)
+        For Each row In rows
             Dim idx = DataGridViewAnimationEvents.Rows.Add(row.Enabled, row.Def.DisplayName, row.Animation)
             DataGridViewAnimationEvents.Rows(idx).Tag = row.Def.EventKey
         Next
@@ -373,6 +506,7 @@ Public Class AgentSettingsPane
     Private Sub CheckBoxHideDuringSlideShow_CheckedChanged(sender As Object, e As EventArgs) Handles CheckBoxHideDuringSlideShow.CheckedChanged
         If _loading Then Return
         AgentSettings.HideAgentDuringSlideShow = CheckBoxHideDuringSlideShow.Checked
+        AgentRibbon.Instance?.InvalidateRibbon()
     End Sub
 
     Private Sub CheckBoxIncludeSelection_CheckedChanged(sender As Object, e As EventArgs) Handles CheckBoxIncludeSelection.CheckedChanged
@@ -380,16 +514,25 @@ Public Class AgentSettingsPane
         AgentSettings.IncludeSelectionInSearch = CheckBoxIncludeSelection.Checked
     End Sub
 
-    ' キャラクター切り替え：設定を保存し、実際に表示中のキャラクターを差し替えたうえで、
-    ' キャラクターごとに収録アニメーションが異なるためアニメーション設定グリッドを再読み込みする
+    ' キャラクター切り替え：設定を保存し、実際に表示中のキャラクターを差し替える。
+    ' .acs（Microsoft Agent／AxAgent）と.act（Microsoft Actor／FrontierActorControl）は
+    ' 完全に別エンジンだが、その振り分け（表示中だった側を隠し、新しい側に表示状態を
+    ' 引き継ぐ）はCharacterHostCoordinator.SwitchToに任せる。GPTルール既定文（性格設定の
+    ' テキスト）・アニメーション設定グリッドは、どちらも.act選択時は実際の名前・説明・
+    ' 収録アクション数（ActorFloatingForm.TryReadCharacterProfile経由）から生成して更新する。
+    ' ただし実際のイベント（保存・印刷等）発生時にそのアクションを再生する連携自体は、
+    ' 発話タグ連携含めフェーズ1ではまだ未対応（設定はできるが反映されない）
     Private Sub ComboBoxCharacter_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ComboBoxCharacter.SelectedIndexChanged
         If _loading Then Return
+        If ComboBoxCharacter.SelectedIndex < 0 OrElse ComboBoxCharacter.SelectedIndex >= _characters.Count Then Return
         Dim previousCharacter = AgentSettings.CharacterId
-        Dim character = CType(ComboBoxCharacter.SelectedIndex, AnimationEvents.CharacterId)
-        Dim succeeded = AgentFloatingForm.Instance IsNot Nothing AndAlso AgentFloatingForm.Instance.SwitchCharacter(character)
-        If Not succeeded Then
+        Dim info = _characters(ComboBoxCharacter.SelectedIndex)
+        Dim character = info.Id
+
+        If Not CharacterHostCoordinator.SwitchTo(info) Then
             _loading = True
-            ComboBoxCharacter.SelectedIndex = CInt(AgentSettings.CharacterId)
+            Dim previousIndex = _characters.FindIndex(Function(c) String.Equals(c.Id, previousCharacter, StringComparison.OrdinalIgnoreCase))
+            ComboBoxCharacter.SelectedIndex = Math.Max(0, previousIndex)
             _loading = False
             Return
         End If
@@ -397,7 +540,9 @@ Public Class AgentSettingsPane
         AgentSettings.CharacterId = character
 
         ' GPTルールがまだ切替前キャラクターの既定文のままなら（＝ユーザーが未編集なら）、
-        ' 新しいキャラクターに合わせた既定文に更新する。ユーザーが自分で編集済みの内容は上書きしない
+        ' 新しいキャラクターに合わせた既定文に更新する。ユーザーが自分で編集済みの内容は上書きしない。
+        ' .act選択時もDefaultRuleFor内部でActorFloatingForm.TryReadCharacterProfileが呼ばれ、
+        ' 実際の名前・説明から生成される
         If TextBoxRule.Text = AgentSettings.DefaultRuleFor(previousCharacter) Then
             AgentSettings.GPT_RULE = AgentSettings.DefaultRuleFor(character)
             _loading = True
@@ -405,6 +550,7 @@ Public Class AgentSettingsPane
             _loading = False
         End If
 
+        ' アニメーション設定グリッドの選択肢・表示も、切り替えた形式（.acs名前一覧／.actアクションID一覧）に合わせて作り直す
         LoadAnimationEventsGrid()
     End Sub
 
@@ -432,6 +578,21 @@ Public Class AgentSettingsPane
     Private Sub TextBoxRule_TextChanged(sender As Object, e As EventArgs) Handles TextBoxRule.TextChanged
         If _loading Then Return
         AgentSettings.GPT_RULE = TextBoxRule.Text
+    End Sub
+
+    ' 性格設定（GPTルール）を、現在のキャラクターの既定文章に戻す。
+    ' 自由記述で上書きしてしまった内容が消えるため、実行前に確認を挟む
+    Private Sub LinkResetRule_LinkClicked(sender As Object, e As LinkLabelLinkClickedEventArgs) Handles LinkResetRule.LinkClicked
+        Dim confirm = MessageBox.Show(
+            "性格設定を既定の文章に戻します。現在の内容は失われます。よろしいですか？",
+            "性格設定のリセット", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning)
+        If confirm <> DialogResult.OK Then Return
+
+        Dim defaultRule = AgentSettings.DefaultRuleFor(AgentSettings.CharacterId)
+        AgentSettings.GPT_RULE = defaultRule
+        _loading = True
+        TextBoxRule.Text = defaultRule
+        _loading = False
     End Sub
 
     Private Sub ComboBoxDefaultSearchEngine_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ComboBoxDefaultSearchEngine.SelectedIndexChanged
@@ -464,13 +625,13 @@ Public Class AgentSettingsPane
     Private Sub DataGridViewAnimationEvents_CellValueChanged(sender As Object, e As DataGridViewCellEventArgs) Handles DataGridViewAnimationEvents.CellValueChanged
         If _loading OrElse e.RowIndex < 0 Then Return
         SaveAnimationEventsGrid()
+        AgentRibbon.Instance?.InvalidateRibbon()
     End Sub
 
     Private Sub DataGridViewAnimationEvents_CellContentClick(sender As Object, e As DataGridViewCellEventArgs) Handles DataGridViewAnimationEvents.CellContentClick
         If e.RowIndex < 0 OrElse e.ColumnIndex <> ColAnimPreview.Index Then Return
         Dim animation = CStr(If(DataGridViewAnimationEvents.Rows(e.RowIndex).Cells(ColAnimAnimation.Index).Value, ""))
-        If animation.Length = 0 Then Return
-        AgentFloatingForm.Instance?.PlayAnimation(animation)
+        CharacterHostCoordinator.PreviewAnimation(AgentSettings.CharacterId, animation)
     End Sub
 
     ' コンボボックスの上でマウスホイールを回しても選択値が変わらないようにする
@@ -479,6 +640,49 @@ Public Class AgentSettingsPane
         Dim handledArgs = TryCast(e, HandledMouseEventArgs)
         If handledArgs IsNot Nothing Then handledArgs.Handled = True
     End Sub
+
+    ' 「キャラクター」ドロップダウンが開いたら、ネイティブの一覧ウィンドウ（ComboLBox）を
+    ' サブクラス化してホバー中の項目に対応するパスをツールチップ表示する。
+    ' Open直後はまだ一覧ウィンドウが生成し切っていないことがあるため、次のメッセージループまで
+    ' 遅延させる（BeginInvoke）
+    Private Sub ComboBoxCharacter_DropDown(sender As Object, e As EventArgs) Handles ComboBoxCharacter.DropDown
+        BeginInvoke(New MethodInvoker(
+            Sub()
+                Dim listHandle = FindComboListBoxHandle()
+                If listHandle <> IntPtr.Zero Then
+                    _characterListHover = New CharacterListHoverTooltip(Me, listHandle)
+                End If
+            End Sub))
+    End Sub
+
+    Private Sub ComboBoxCharacter_DropDownClosed(sender As Object, e As EventArgs) Handles ComboBoxCharacter.DropDownClosed
+        _characterListHover?.Detach()
+        _characterListHover = Nothing
+    End Sub
+
+    ' 現在開いているComboBoxのドロップダウン一覧（クラス名"ComboLBox"）のウィンドウハンドルを探す。
+    ' ドロップダウン中の一覧は.NETのControlではなく、ComboBoxの子ウィンドウでもない
+    ' （別ウィンドウとして生成される）ため、プロセス内を列挙して探す必要がある。
+    ' 同時に開けるドロップダウンは1つだけなので、自プロセスの可視なComboLBoxが見つかればそれで確定する
+    Private Function FindComboListBoxHandle() As IntPtr
+        Dim found As IntPtr = IntPtr.Zero
+        Dim currentPid = Process.GetCurrentProcess().Id
+        EnumWindows(
+            Function(hWnd, lParam)
+                Dim className As New StringBuilder(32)
+                GetClassName(hWnd, className, className.Capacity)
+                If className.ToString() = "ComboLBox" Then
+                    Dim windowPid As Integer
+                    GetWindowThreadProcessId(hWnd, windowPid)
+                    If windowPid = currentPid AndAlso IsWindowVisible(hWnd) Then
+                        found = hWnd
+                        Return False
+                    End If
+                End If
+                Return True
+            End Function, IntPtr.Zero)
+        Return found
+    End Function
 
     Private Sub LabelVersion_LinkClicked(sender As Object, e As LinkLabelLinkClickedEventArgs) Handles LabelVersion.LinkClicked
         Dim psi As New Diagnostics.ProcessStartInfo("https://github.com/argynnini/OfficeAgent") With {

@@ -5,6 +5,7 @@ obj/
 *.user
 .vs/
 packages/
+tmp/
 
 # WiX Toolset ローカルツールキャッシュ
 .wix/
