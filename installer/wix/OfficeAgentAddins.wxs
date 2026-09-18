@@ -79,10 +79,12 @@
       </Files>
     </ComponentGroup>
 
-    <!-- 共通アセット（.acs）。リポジトリ直下のagents\から取得し、インストール先の
-         "agents"フォルダ（ADDIN_ASSETS、Directories.wxs参照）に配置する -->
+    <!-- 共通アセット（.acs / .act）。リポジトリ直下のagents\から取得し、インストール先の
+         "agents"フォルダ（ADDIN_ASSETS、Directories.wxs参照）に配置する。
+         .actは*.ACSパターンに一致しないため個別に指定する -->
     <ComponentGroup Id="AddinFiles_Assets" Directory="ADDIN_ASSETS">
       <Files Include="..\..\agents\*.ACS" />
+      <Files Include="..\..\agents\*.act" />
     </ComponentGroup>
 
     <!-- Office各アプリへのVSTOアドイン登録（HKCU、ユーザー単位）。ファイルComponentとは別にする
