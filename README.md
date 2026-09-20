@@ -168,7 +168,9 @@ Groq の API キーは以下の リンク から取得できます．
 ## 必要な環境
 * Visual Studio 2026（「Office/SharePoint 開発」ワークロード，Visual Basic 対応）
 * .NET Framework 4.8.1 Developer Pack
-* 動作確認用の Word / Excel / PowerPoint
+* HeatWave for Visual Studio [拡張機能](https://marketplace.visualstudio.com/items?itemName=FireGiant.FireGiantHeatWaveDev17)
+* NuGet パッケージ ([Markdig](https://www.nuget.org/packages/Markdig)、[Newtonsoft.Json](https://www.nuget.org/packages/Newtonsoft.Json)、[OpenAI](https://www.nuget.org/packages/OpenAI)
+* 動作確認用の Microsoft Office Word / Excel / PowerPoint
 
 ## アドインのビルド
 `OfficeAgent.slnx` を Visual Studio で開いてビルドします．
