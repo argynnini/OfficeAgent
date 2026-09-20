@@ -143,7 +143,19 @@ Groq の API キーは以下の リンク から取得できます．
 
 ### 「発行元を確認できません」という確認ダイアログが出る場合
 
-各アドインのマニフェスト署名に自己署名のテスト証明書を使っているために表示されることがあります．`OfficeAgentSetup.exe` によるインストール時に証明書を信頼済み発行元ストアへ自動登録するため，通常はこのダイアログは出ません．
+各アドインのマニフェスト署名に，ビルド用の自己署名テスト証明書（リポジトリに含まれる `*_TemporaryKey.pfx`．公開されているテスト用の鍵です）を使っているために表示されることがあります．
+
+`OfficeAgentSetup.exe` は，この証明書をマシンの証明書ストア（信頼された発行元／信頼されたルート）へ登録しません．公開されている鍵で署名されたコードまで信頼してしまうことになるためです．
+
+### 旧バージョン（v3.0.0）が登録した証明書を削除したい場合
+
+v3.0.0 の `OfficeAgentSetup.exe` は，このテスト証明書を「信頼された発行元」ストアに登録していました．不要であれば，管理者権限のコマンドプロンプトで次を実行して削除できます．
+
+```
+certutil -delstore TrustedPublisher 4C189B342E3371817C9D07ECE0829B105F019B0B
+certutil -delstore TrustedPublisher BE16C71520EAAEE92C7B498C178070BBFA29EEF5
+certutil -delstore TrustedPublisher 6EFEA0A6C8623D1CFDF5E6792460ACEB14529FE0
+```
 
 ### 起動時に「An application is attempting to load a Microsoft Agent character from an untrusted Web site.」と出る場合
 

@@ -5,15 +5,9 @@
   HKCU\Software\Microsoft\Office\<App>\Addins\<ProgId> に
   Manifest=...\<App>.vsto|vstolocal 形式でVSTOアドインとして直接登録する。
 
-  実機検証済み: この方式でOfficeは実際にアドインをロードする。ただし各アドインの
-  マニフェスト署名に使っている自己署名テスト証明書（<App>_TemporaryKey.pfx）が
-  信頼済み発行元ストアに無いと、初回に「発行元を確認できません」という確認ダイアログが
-  出る。これを避けるため、対応する.cer（公開鍵のみ、certs\に配置）を
-  LocalMachine\TrustedPublisherストアにインストール時にインポートする
-  （certutil.exe -addstore、WixQuietExec経由）。
-  自己署名のためTrustedPublisherだけではチェーン検証が通らず、Rootストアに証明書が
-  無い新規マシンではVSTOがアドインを読み込まない。そのためLocalMachine\Rootにも
-  同じ.cerをインポートする。
+  実機検証済み: この方式でOfficeは実際にアドインをロードする。
+  マニフェスト署名の自己署名証明書は、マシンの証明書ストア(TrustedPublisher/Root)へは導入しない
+  （Program Filesに置くMSI配置のため信頼リストは確認されない、という仕様に基づく検証中の構成）。
 
   DOLPHIN.ACS等の.acsはWord/Excel/PowerPointで重複させず、共通の
   %ProgramFiles%\OfficeAgent\agents\ に1セットだけ配置する
@@ -34,31 +28,19 @@
       <ComponentGroupRef Id="AddinFiles_Word" />
       <ComponentGroupRef Id="AddinFiles_Assets" />
       <ComponentRef Id="AddinRegistry_Word" />
-      <ComponentRef Id="TrustCert_Word" />
     </Feature>
 
     <Feature Id="ExcelAddin" Title="OfficeAgent for Excel" Level="1">
       <ComponentGroupRef Id="AddinFiles_Excel" />
       <ComponentGroupRef Id="AddinFiles_Assets" />
       <ComponentRef Id="AddinRegistry_Excel" />
-      <ComponentRef Id="TrustCert_Excel" />
     </Feature>
 
     <Feature Id="PowerPointAddin" Title="OfficeAgent for PowerPoint" Level="1">
       <ComponentGroupRef Id="AddinFiles_PowerPoint" />
       <ComponentGroupRef Id="AddinFiles_Assets" />
       <ComponentRef Id="AddinRegistry_PowerPoint" />
-      <ComponentRef Id="TrustCert_PowerPoint" />
     </Feature>
-
-    <!-- CustomAction/InstallExecuteSequenceはFragmentに書いただけでは
-         どこからも参照されずWiXのリンカーに除外されてしまうため、ここで明示的に取り込む -->
-    <CustomActionRef Id="ImportWordCert" />
-    <CustomActionRef Id="ImportExcelCert" />
-    <CustomActionRef Id="ImportPowerPointCert" />
-    <CustomActionRef Id="ImportRootWordCert" />
-    <CustomActionRef Id="ImportRootExcelCert" />
-    <CustomActionRef Id="ImportRootPowerPointCert" />
   </Package>
 
   <Fragment>
@@ -122,96 +104,5 @@
         <RegistryValue Name="Manifest" Type="string" Value="[ADDIN_POWERPOINT]OfficeAgent.PowerPoint.AddIn.vsto|vstolocal" />
       </RegistryKey>
     </Component>
-
-    <!-- 各アドインのマニフェスト署名用自己署名証明書をLocalMachine\TrustedPublisherへインポートし、
-         初回起動時の「発行元を確認できません」プロンプトを回避する -->
-    <Component Id="TrustCert_Word" Directory="ADDIN_WORD" Guid="9C1D2E3F-4051-4263-8475-6879A0B1C2D3">
-      <File Id="CertFile_Word" Source="$(sys.SOURCEFILEDIR)certs\OfficeAgent.Word.AddIn.cer" KeyPath="yes" />
-    </Component>
-
-    <Component Id="TrustCert_Excel" Directory="ADDIN_EXCEL" Guid="9C1D2E3F-4051-4264-8475-6879A0B1C2D4">
-      <File Id="CertFile_Excel" Source="$(sys.SOURCEFILEDIR)certs\OfficeAgent.Excel.AddIn.cer" KeyPath="yes" />
-    </Component>
-
-    <Component Id="TrustCert_PowerPoint" Directory="ADDIN_POWERPOINT" Guid="9C1D2E3F-4051-4265-8475-6879A0B1C2D5">
-      <File Id="CertFile_PowerPoint" Source="$(sys.SOURCEFILEDIR)certs\OfficeAgent.PowerPoint.AddIn.cer" KeyPath="yes" />
-    </Component>
-  </Fragment>
-
-  <Fragment>
-    <CustomAction Id="SetImportWordCert"
-                  Property="ImportWordCert"
-                  Value="&quot;certutil.exe&quot; -f -addstore TrustedPublisher &quot;[#CertFile_Word]&quot;" />
-    <CustomAction Id="ImportWordCert"
-                  BinaryRef="Wix4UtilCA_X86"
-                  DllEntry="WixQuietExec"
-                  Execute="deferred"
-                  Return="check"
-                  Impersonate="no" />
-
-    <CustomAction Id="SetImportExcelCert"
-                  Property="ImportExcelCert"
-                  Value="&quot;certutil.exe&quot; -f -addstore TrustedPublisher &quot;[#CertFile_Excel]&quot;" />
-    <CustomAction Id="ImportExcelCert"
-                  BinaryRef="Wix4UtilCA_X86"
-                  DllEntry="WixQuietExec"
-                  Execute="deferred"
-                  Return="check"
-                  Impersonate="no" />
-
-    <CustomAction Id="SetImportPowerPointCert"
-                  Property="ImportPowerPointCert"
-                  Value="&quot;certutil.exe&quot; -f -addstore TrustedPublisher &quot;[#CertFile_PowerPoint]&quot;" />
-    <CustomAction Id="ImportPowerPointCert"
-                  BinaryRef="Wix4UtilCA_X86"
-                  DllEntry="WixQuietExec"
-                  Execute="deferred"
-                  Return="check"
-                  Impersonate="no" />
-
-    <CustomAction Id="SetImportRootWordCert"
-                  Property="ImportRootWordCert"
-                  Value="&quot;certutil.exe&quot; -f -addstore Root &quot;[#CertFile_Word]&quot;" />
-    <CustomAction Id="ImportRootWordCert"
-                  BinaryRef="Wix4UtilCA_X86"
-                  DllEntry="WixQuietExec"
-                  Execute="deferred"
-                  Return="check"
-                  Impersonate="no" />
-
-    <CustomAction Id="SetImportRootExcelCert"
-                  Property="ImportRootExcelCert"
-                  Value="&quot;certutil.exe&quot; -f -addstore Root &quot;[#CertFile_Excel]&quot;" />
-    <CustomAction Id="ImportRootExcelCert"
-                  BinaryRef="Wix4UtilCA_X86"
-                  DllEntry="WixQuietExec"
-                  Execute="deferred"
-                  Return="check"
-                  Impersonate="no" />
-
-    <CustomAction Id="SetImportRootPowerPointCert"
-                  Property="ImportRootPowerPointCert"
-                  Value="&quot;certutil.exe&quot; -f -addstore Root &quot;[#CertFile_PowerPoint]&quot;" />
-    <CustomAction Id="ImportRootPowerPointCert"
-                  BinaryRef="Wix4UtilCA_X86"
-                  DllEntry="WixQuietExec"
-                  Execute="deferred"
-                  Return="check"
-                  Impersonate="no" />
-
-    <InstallExecuteSequence>
-      <Custom Action="SetImportWordCert" Before="ImportWordCert" />
-      <Custom Action="ImportWordCert" After="InstallFiles" Condition="NOT Installed" />
-      <Custom Action="SetImportExcelCert" Before="ImportExcelCert" />
-      <Custom Action="ImportExcelCert" After="ImportWordCert" Condition="NOT Installed" />
-      <Custom Action="SetImportPowerPointCert" Before="ImportPowerPointCert" />
-      <Custom Action="ImportPowerPointCert" After="ImportExcelCert" Condition="NOT Installed" />
-      <Custom Action="SetImportRootWordCert" Before="ImportRootWordCert" />
-      <Custom Action="ImportRootWordCert" After="ImportPowerPointCert" Condition="NOT Installed" />
-      <Custom Action="SetImportRootExcelCert" Before="ImportRootExcelCert" />
-      <Custom Action="ImportRootExcelCert" After="ImportRootWordCert" Condition="NOT Installed" />
-      <Custom Action="SetImportRootPowerPointCert" Before="ImportRootPowerPointCert" />
-      <Custom Action="ImportRootPowerPointCert" After="ImportRootExcelCert" Condition="NOT Installed" />
-    </InstallExecuteSequence>
   </Fragment>
 </Wix>
