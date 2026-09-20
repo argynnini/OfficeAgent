@@ -1,0 +1,2267 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 自動生成: reg_to_wix.py で x64.reg から書き起こし。手編集しないこと -->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Fragment>
+    <ComponentGroup Id="MSAgentRegistry_x64" Directory="WindowsFolder">
+      <Component Id="Reg_eb7ddbba11368af0" Guid="9A68ED60-5349-5619-8A32-2481330F383D" Bitness="always64">
+        <RegistryKey Root="HKCR" Key=".aca">
+          <RegistryValue Type="string" Value="Agent.Character.2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_ccce53abb706dc60" Guid="2E2D2AFF-E97C-5523-AF86-5B37E93FFEA4" Bitness="always64">
+        <RegistryKey Root="HKCR" Key=".acf">
+          <RegistryValue Type="string" Value="Agent.Character.2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_52545fa8134912dc" Guid="B776753C-6D22-52BC-9862-9582EF500712" Bitness="always64">
+        <RegistryKey Root="HKCR" Key=".acs">
+          <RegistryValue Type="string" Value="Agent.Character2.2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_d38c376b4080f71c" Guid="3F55374C-C4F0-5098-91D6-F5141B99F440" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Agent.Character.2">
+          <RegistryValue Type="string" Value="Microsoft Agent Character File (HTTP format)" KeyPath="yes" />
+          <RegistryValue Name="FriendlyTypeName" Type="expandable" Value="@%SystemRoot%\MSAgent64\agtui.dll,-303" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_b262b7be13d2cf49" Guid="F2E89F0B-E89D-55B3-8FE7-5423E6D8AEEE" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Agent.Character.2\CLSID">
+          <RegistryValue Type="string" Value="{D45FD300-5C6E-11D1-9EC1-00C04FD7081F}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_06f1ef3894bf06c3" Guid="82B12A16-A3DC-5330-93F6-42857531B288" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Agent.Character.2\DefaultIcon">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentdpv.dll,-201" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_71667d2c9e150dcb" Guid="9796536E-6EC6-595E-8C00-2E0CE946D00A" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Agent.Character.2\shellex">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_bb9601150232113f" Guid="A2129A05-3D71-5DD7-8C08-DB5612F55153" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Agent.Character.2\shellex\PropertySheetHandlers">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_36101687b09258cb" Guid="22E92B6A-CC32-5C07-AD1F-6EB6B347F40D" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Agent.Character.2\shellex\PropertySheetHandlers\CharacterPage">
+          <RegistryValue Type="string" Value="{143A62C8-C33B-11D1-84FE-00C04FA34A14}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_baf451ea7b945813" Guid="3E53058C-35B4-5874-B48D-22090F2FA2F8" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Agent.Character2.2">
+          <RegistryValue Type="string" Value="Microsoft Agent Character File" KeyPath="yes" />
+          <RegistryValue Name="FriendlyTypeName" Type="expandable" Value="@%SystemRoot%\MSAgent64\agtui.dll,-304" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_4584136cb72c1299" Guid="CECA04ED-71BF-59C5-BDAB-749A49C3B087" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Agent.Character2.2\CLSID">
+          <RegistryValue Type="string" Value="{D45FD301-5C6E-11D1-9EC1-00C04FD7081F}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_83c50714452cf94e" Guid="C77E8818-6734-5A38-AFC2-11530C147DD4" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Agent.Character2.2\DefaultIcon">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentdp2.dll,-201" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_9615582bb9b3f055" Guid="A5992682-5875-5368-87FB-C39C882264CC" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Agent.Character2.2\shellex">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_bd2f7349e16f0b06" Guid="BCEB14BD-CFBB-5213-85AA-C8FF39AC6148" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Agent.Character2.2\shellex\PropertySheetHandlers">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_6381ff3934bc3e24" Guid="996720F9-30BB-59F1-A44A-9D48BAA8C199" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Agent.Character2.2\shellex\PropertySheetHandlers\CharacterPage">
+          <RegistryValue Type="string" Value="{143A62C8-C33B-11D1-84FE-00C04FA34A14}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_0609efb3cfba93a6" Guid="40730294-8ECE-59B2-9995-D409840D5EE7" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Agent.Control">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_7815e9cf49370393" Guid="B02E626E-E8D0-5997-9C7E-BB331B76B513" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Agent.Control\CurVer">
+          <RegistryValue Type="string" Value="Agent.Control.2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_ee8089ea7becd482" Guid="D728C832-51E8-5161-9BF8-5C4F44A52629" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Agent.Control.1">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 1.5" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_28869103e95edb79" Guid="9B3A12C5-8512-5C3D-BDC2-B9DF3977649D" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Agent.Control.1\CLSID">
+          <RegistryValue Type="string" Value="{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_d175b5e2445d75b0" Guid="171C2F90-3AF8-5F25-8F21-19289097AA00" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Agent.Control.2">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_e7751e76010ba2c2" Guid="F36D5FE4-49EC-5CFE-8294-EF54C230A280" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Agent.Control.2\CLSID">
+          <RegistryValue Type="string" Value="{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_5f0ac85cb20d73ad" Guid="6BC76360-7F4F-5078-8684-84C09F436AEA" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Agent.Server">
+          <RegistryValue Type="string" Value="Microsoft Agent Server 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_073fe7d44bb1c532" Guid="2CB1768D-C0F8-5FCC-91B2-458FE79EFF8D" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Agent.Server\CurVer">
+          <RegistryValue Type="string" Value="Agent.Server.2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_c0db021e0199be76" Guid="A8F8C278-2D33-517B-8E18-D6A13370B884" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Agent.Server.2">
+          <RegistryValue Type="string" Value="Microsoft Agent Server 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_4318707711453fc8" Guid="89DFAD13-2283-5A8A-AF9E-275D67B52135" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Agent.Server.2\CLSID">
+          <RegistryValue Type="string" Value="{FD0B6205-B0F4-4596-B028-5CDB35D288C1}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_fb20f3511c6c97a7" Guid="953FACC9-5652-5057-B39A-8A59F675C536" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{0FA9F4D5-A173-11D1-AA62-00C04FA34D72}">
+          <RegistryValue Type="string" Value="Microsoft Agent Voice Command Module Class" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_92b5033e84ddd3e9" Guid="FF7A821A-E835-58E3-8845-70DEC987AFFA" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{0FA9F4D5-A173-11D1-AA62-00C04FA34D72}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentsr.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_a49adcaefbebea4b" Guid="C017ABDD-ADEC-57C6-90F9-0B5305C15CB3" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{143A62C8-C33B-11D1-84FE-00C04FA34A14}">
+          <RegistryValue Type="string" Value="Microsoft Agent Character Property Sheet Handler" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_25fbf4bd30b8098f" Guid="D32FF4A6-D30C-50EA-9734-B40735E35988" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{143A62C8-C33B-11D1-84FE-00C04FA34A14}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentpsh.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_b2bdde032619375e" Guid="50ACD51A-B2C1-59BE-B0C7-788274A235AB" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{95A893C3-543A-11D0-AC45-00C04FD97575}">
+          <RegistryValue Type="string" Value="MSLwvTTS Engine Class" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_9c7c5deddfb4a9d1" Guid="C33807E5-387B-59F5-BB92-553221EE8AD1" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{95A893C3-543A-11D0-AC45-00C04FD97575}\InprocServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\msagent64\mslwvtts.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_971e4ab4910b7b6e" Guid="5018CD5A-ADE9-529F-B94E-DD53ACB06769" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{95A893C3-543A-11D0-AC45-00C04FD97575}\TreatAs">
+          <RegistryValue Type="string" Value="{D45FD31C-5C6E-11D1-9EC1-00C04FD7081F}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_d85f9d2b80a2ad3b" Guid="9951DA57-E453-5C90-879B-890301CED262" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{D45FD2FF-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="Microsoft Agent DocFile Provider 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_4d4252babacca2d7" Guid="6ED352AE-9B3A-5D46-8A13-41D43484FDD3" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{D45FD2FF-5C6E-11D1-9EC1-00C04FD7081F}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentdpv.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_efa22be8838d9f37" Guid="C7798F49-D61A-532F-BC1C-47F67EC5E0F8" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{D45FD300-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="Microsoft Agent File Provider 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_21df90d423109ba8" Guid="BA6B58D2-0FB2-5822-8A53-EEC05C078EFC" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{D45FD300-5C6E-11D1-9EC1-00C04FD7081F}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentdpv.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_4fed0f605cf2a3ee" Guid="D3400F9F-98BC-5C75-A42F-EC4BA21F35A2" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{D45FD301-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="Microsoft Agent Flat File Provider 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_a5772e424c03e89a" Guid="0A151016-3644-5FE3-825B-A3C8C652E471" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{D45FD301-5C6E-11D1-9EC1-00C04FD7081F}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentdp2.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_1bccf8b620502061" Guid="C9AB1F24-A382-5834-92A1-E9538E14183D" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 2.0" KeyPath="yes" />
+          <RegistryValue Name="LocalizedString" Type="expandable" Value="@%SystemRoot%\MSAgent64\agtui.dll,-302" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_fadde961263cf6e9" Guid="A37B6800-C3B2-52B6-8784-CE05F43CDFBB" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\Control">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_e206b000e687c0f2" Guid="7C75EC18-78AD-50C8-8523-0D65EC1C52DA" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentctl.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_e8aa946c240a2fc2" Guid="171FFA81-EE1A-5C67-8D0C-708D8B4D4E87" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\MiscStatus">
+          <RegistryValue Type="string" Value="0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_ac6663099e989f7d" Guid="D1A475BE-6DEB-52CF-9096-F254995B35C5" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\MiscStatus\1">
+          <RegistryValue Type="string" Value="148628" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_c295497907a480f8" Guid="ED28049B-6756-5792-B795-89EB8492F595" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\ProgID">
+          <RegistryValue Type="string" Value="Agent.Control.2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_5417755ccead69d7" Guid="1D37A158-93A4-586F-AB7F-B35CF4C00EB3" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\Programmable">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_aeb9b84b9d28da2b" Guid="57AF4CD0-4714-50A0-BD1E-2707BA867417" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\ToolboxBitmap32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentctl.dll, 105" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_5edda7ec46a09adb" Guid="AB96F4C4-B000-586A-BA6D-915625271DA6" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\TypeLib">
+          <RegistryValue Type="string" Value="{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_48182d95c113a843" Guid="CF274515-75D5-5C1B-B794-4E7B06AEB2C4" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\Version">
+          <RegistryValue Type="string" Value="2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_77a6f2373981f439" Guid="E07826D4-D949-5E88-AE70-EE40007478F3" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\VersionIndependentProgID">
+          <RegistryValue Type="string" Value="Agent.Control" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_53c811658404727d" Guid="FCC13351-4C85-5A93-89AB-928A3CAFC0DC" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 1.5" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_e1836e360b8b1071" Guid="95046E43-F725-55EB-9242-FC53B53B80A3" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentctl.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_e5f869915ce97f72" Guid="4705C9F7-DF6D-59E0-89F5-1663D81B903C" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\MiscStatus">
+          <RegistryValue Type="string" Value="0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_2b05bfca9abfda02" Guid="EAF035EA-7BBB-5455-80B5-B56EDE2ACE6A" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\MiscStatus\1">
+          <RegistryValue Type="string" Value="148628" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_76ffedf686d1662a" Guid="2F91B46C-A579-5D06-AFB5-6BEDB7E298A6" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\ProgID">
+          <RegistryValue Type="string" Value="Agent.Control.1" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_81ef06a208003f02" Guid="C89C8751-7048-5682-92EE-5719054B6766" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\Programmable">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_ccb33207659dc91e" Guid="1AD0F99D-66E3-57E2-BF1D-7D60AE0AEC39" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\ToolboxBitmap32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentctl.dll, 105" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_b8edcbf0733b2ee1" Guid="8C80A524-3F9A-57CC-8E09-3479B13B8239" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\TypeLib">
+          <RegistryValue Type="string" Value="{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_72b4d2125b8385fd" Guid="F3A79913-1A30-50C2-ABBD-2A9962528A6F" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\Version">
+          <RegistryValue Type="string" Value="1.5" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_c58343c3384522ca" Guid="CAB30DB9-9F03-58E7-A828-F0D214540F42" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\VersionIndependentProgID">
+          <RegistryValue Type="string" Value="Agent.Control" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_00625b17f5d0980b" Guid="BE224054-6761-5C0C-BF36-B1E98575D92D" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{FD0B6205-B0F4-4596-B028-5CDB35D288C1}">
+          <RegistryValue Type="string" Value="Microsoft Agent Server 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_ecf4d97e5c98100e" Guid="921B7CA1-A58D-5137-84AC-841FBFA19393" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{FD0B6205-B0F4-4596-B028-5CDB35D288C1}\LocalServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentsvr.exe" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_cb053565a93e622b" Guid="885ACDEE-0263-5E41-8D4A-019D5BBB899F" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{FD0B6205-B0F4-4596-B028-5CDB35D288C1}\ProgID">
+          <RegistryValue Type="string" Value="Agent.Server.2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_fa3b5e5b9b46c9c9" Guid="D5CDBC13-2BDE-5A90-9541-41F83F50793B" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{FD0B6205-B0F4-4596-B028-5CDB35D288C1}\Programmable">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_0c5db4c5142c5780" Guid="83D13B0B-EA36-5ECF-AE56-09DC9E45C59A" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="CLSID\{FD0B6205-B0F4-4596-B028-5CDB35D288C1}\VersionIndependentProgID">
+          <RegistryValue Type="string" Value="Agent.Server" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_d45725b826ca0249" Guid="F5E5C134-40A7-513A-A1F2-293E02A02712" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Local Settings\MuiCache\4F\52C64B7E">
+          <RegistryValue Name="@C:\Windows\MSAgent64\agtui.dll,-304" Type="string" Value="Microsoft Agent Character File" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_47e663169a9f19cb" Guid="AC715364-0B3D-5DAF-9C8F-983B85E51C83" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="LWVFile">
+          <RegistryValue Type="string" Value="Microsoft Linguistically Enhanced Sound File" KeyPath="yes" />
+          <RegistryValue Name="LocalizedString" Type="expandable" Value="@%SystemRoot%\MSAgent64\agtui.dll,-305" />
+          <RegistryValue Name="FriendlyTypeName" Type="expandable" Value="@%SystemRoot%\MSAgent\agtui.dll,-305" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_4b929e1ff74f59d4" Guid="80EFE553-A726-512E-AB9F-09836A640585" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="LWVFile\DefaultIcon">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\msagent64\mslwvtts.dll,-133" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_87e4bbb026869098" Guid="DC492CFC-23F9-5FF2-8742-F3D09F74D701" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="TypeLib\{A7B93C73-7B81-11D0-AC5F-00C04FD97575}">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_c35c55987ea9b62c" Guid="CDD108F9-5E1B-5563-BFD4-4352D01D7F48" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="TypeLib\{A7B93C73-7B81-11D0-AC5F-00C04FD97575}\2.0">
+          <RegistryValue Type="string" Value="Microsoft Agent Server 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_ae84d7a286ea7b9a" Guid="6B30937A-AD0B-5224-BF1E-871529AF2A26" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="TypeLib\{A7B93C73-7B81-11D0-AC5F-00C04FD97575}\2.0\0">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_157bfd26e6ef14ec" Guid="8A763234-AB2B-5D7B-8152-6201DA780CBE" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="TypeLib\{A7B93C73-7B81-11D0-AC5F-00C04FD97575}\2.0\0\win32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentsvr.exe" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_0bd6f420befa7450" Guid="C8DB1692-A696-5E26-A52D-0F7A11B04414" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="TypeLib\{A7B93C73-7B81-11D0-AC5F-00C04FD97575}\2.0\FLAGS">
+          <RegistryValue Type="string" Value="0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_640a0c2fea341cef" Guid="D4931ADA-EAE9-5A4E-9C66-04DE5A03698C" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="TypeLib\{D6589123-FC70-11D0-AC94-00C04FD97575}">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_c16dc020c7a9149a" Guid="D4D0A87B-A647-5DB7-8E15-AFA2C8981F28" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="TypeLib\{D6589123-FC70-11D0-AC94-00C04FD97575}\2.0">
+          <RegistryValue Type="string" Value="Microsoft Agent Server Extensions 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_8d95fa4ae274e53a" Guid="2C0866E1-5107-5C2D-945F-394F0574C43D" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="TypeLib\{D6589123-FC70-11D0-AC94-00C04FD97575}\2.0\0">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_faae081b65e4090c" Guid="9CD327CE-2338-5ACA-B88D-FAF8A83F7521" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="TypeLib\{D6589123-FC70-11D0-AC94-00C04FD97575}\2.0\0\win32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentsvr.exe\2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_9f568276ca84d240" Guid="1977A413-EA87-574E-9274-4FE8BEA7FC3C" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="TypeLib\{D6589123-FC70-11D0-AC94-00C04FD97575}\2.0\FLAGS">
+          <RegistryValue Type="string" Value="0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_0dad11681ea61025" Guid="44016019-BF58-5E2B-A48E-125CF156F6C7" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_1bcd2a3b071a7833" Guid="C8C44CE1-5412-5459-BA32-2C860CFC4D0D" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\1.5">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 1.5" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_40960f5c4e477a64" Guid="4D16F356-794A-583E-9F4A-2024EEB99BEC" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\1.5\0">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_0041d14dc2681a5b" Guid="E512F7CD-D0B5-5102-9EAA-5D5FD8FB94FC" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\1.5\0\win32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\AgtCtl15.tlb" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_21c223c357ab956d" Guid="6EF36620-E1C8-5BDC-9A4A-C8B95721743E" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\1.5\FLAGS">
+          <RegistryValue Type="string" Value="4" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_31d86e2724f663a0" Guid="110FB183-74FA-51B8-A704-53CF69084516" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\2.0">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_ce08071902d053d7" Guid="479B9A73-B374-5050-A02E-7E3792C04820" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\2.0\0">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_ff09c3908e8b6dfe" Guid="9BA5A290-141F-5F26-BB47-14E9940A0FE1" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\2.0\0\win32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentctl.dll" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_871291cd6bc8a5a9" Guid="E57D45D1-1B94-5292-B65D-D2752BC2A5B4" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\2.0\FLAGS">
+          <RegistryValue Type="string" Value="0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_9f08571ae119cc2f" Guid="7CDF62CC-321D-5D31-AE39-B2B03818EBBD" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{0FA9F4D5-A173-11D1-AA62-00C04FA34D72}">
+          <RegistryValue Type="string" Value="Microsoft Agent Voice Command Module Class" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_f15df87457019cd5" Guid="B76A8AA7-C393-51FD-83E0-D312D584CB18" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{0FA9F4D5-A173-11D1-AA62-00C04FA34D72}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\agentsr.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_8a6452a66e2b6dec" Guid="BD19C02F-F284-5AAB-B324-4AD115E0FE11" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{143A62C8-C33B-11D1-84FE-00C04FA34A14}">
+          <RegistryValue Type="string" Value="Microsoft Agent Character Property Sheet Handler" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_0c2c1e77555ff476" Guid="4F124956-5585-52E0-8981-817B80062C01" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{143A62C8-C33B-11D1-84FE-00C04FA34A14}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\agentpsh.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_28dfdc308e290afe" Guid="C81C06CC-3752-5A97-9A26-986EB756EAC8" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{95A893C3-543A-11D0-AC45-00C04FD97575}">
+          <RegistryValue Type="string" Value="MSLwvTTS Engine Class" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_a872a12d24b3aaf4" Guid="29C094C8-B11A-557B-A807-05BD5E9947F8" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{95A893C3-543A-11D0-AC45-00C04FD97575}\InprocServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\msagent\mslwvtts.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_2a57fcae03d042f5" Guid="BCC7E8D3-199E-5DCD-B0D3-43C33D52CE41" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{95A893C3-543A-11D0-AC45-00C04FD97575}\TreatAs">
+          <RegistryValue Type="string" Value="{D45FD31C-5C6E-11D1-9EC1-00C04FD7081F}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_d9481effc496d380" Guid="0062BDDB-5348-5F25-A9FD-077BB006DEB7" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{D45FD2FC-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="Microsoft Agent Server 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_02d9a2bc8f79a848" Guid="DA2DF0E3-F088-5D69-B1F8-A35D9453BFC8" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{D45FD2FC-5C6E-11D1-9EC1-00C04FD7081F}\LocalServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\agentsvr.exe" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_6735ca15a3b0a2f2" Guid="75C7B9A1-8F61-5E50-8C82-0A26F2FB4163" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{D45FD2FC-5C6E-11D1-9EC1-00C04FD7081F}\ProgID">
+          <RegistryValue Type="string" Value="Agent.Server.2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_084a8aee01e5983b" Guid="34753C1A-BDBA-555F-8A27-C22BDA9A10ED" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{D45FD2FC-5C6E-11D1-9EC1-00C04FD7081F}\Programmable">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_c85b3e373af33312" Guid="F5003723-8273-5B7B-8C04-5ABECE0CAD51" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{D45FD2FC-5C6E-11D1-9EC1-00C04FD7081F}\VersionIndependentProgID">
+          <RegistryValue Type="string" Value="Agent.Server" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_5bd886269fdb9ef3" Guid="289E1A62-82AD-5059-A095-7DB63F2DEA9A" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{D45FD2FF-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="Microsoft Agent DocFile Provider 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_6a50b2fb567d2953" Guid="21EB4486-73A3-56C5-8136-A2F85B12DD28" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{D45FD2FF-5C6E-11D1-9EC1-00C04FD7081F}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\agentdpv.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_94f9d3ba0cf7e32d" Guid="E50ABB78-189E-5695-80D3-64CBA6E60888" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{D45FD300-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="Microsoft Agent File Provider 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_f8ea67da60c59ff0" Guid="4B8DB570-7546-5054-B444-A4E9836E2C1A" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{D45FD300-5C6E-11D1-9EC1-00C04FD7081F}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\agentdpv.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_14e791e69a16415a" Guid="B2A1ABFD-AB3F-53EE-AEB8-69F78A162B4F" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{D45FD301-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="Microsoft Agent Flat File Provider 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_6f640ffbe79820e1" Guid="0572D0BD-3A34-51AD-A64F-BE9E23424480" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{D45FD301-5C6E-11D1-9EC1-00C04FD7081F}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\agentdp2.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_a6740c54a4a6ce56" Guid="2A355BEC-DB76-588B-A142-72EA70066D11" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 2.0" KeyPath="yes" />
+          <RegistryValue Name="LocalizedString" Type="expandable" Value="@%SystemRoot%\MSAgent\agtui.dll,-302" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_e9662657116ea983" Guid="65E5A9D2-FD9C-5F1E-87B0-34D5C69261B1" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\Control">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_a9f0817b075ab3fd" Guid="5AF147BF-A051-519F-B34B-497715E074E7" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\agentctl.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_b50e7188f501b123" Guid="727DD835-01B0-5F5B-8DF3-0C40EDE630BC" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\MiscStatus">
+          <RegistryValue Type="string" Value="0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_344eb753121bf27e" Guid="C9DDFA31-B1B1-5F50-874C-4771C99EECB9" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\MiscStatus\1">
+          <RegistryValue Type="string" Value="148628" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_6bf1dd901cc97910" Guid="F214CFEF-AF76-56AC-80CC-ACA6DBD3B1B6" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\ProgID">
+          <RegistryValue Type="string" Value="Agent.Control.2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_be7fcd255ed537ff" Guid="9E060259-C24A-526A-A89B-7EC2B18BB551" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\Programmable">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_4d5166dbba47f0b8" Guid="FD4D09F3-8F81-5A6B-B02F-5E46F3259F4F" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\ToolboxBitmap32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\agentctl.dll, 105" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_7bbf5d976dd283e6" Guid="AB3E20E3-2AEE-5499-973C-962331E77DBC" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\TypeLib">
+          <RegistryValue Type="string" Value="{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_c36a42ba4abaa5f7" Guid="CB6D93C9-2F4D-5FCF-83FE-600B0884FED7" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\Version">
+          <RegistryValue Type="string" Value="2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_544c7b9e81b84e09" Guid="E288907A-A82F-55E2-A04E-16D8ABD53E91" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\VersionIndependentProgID">
+          <RegistryValue Type="string" Value="Agent.Control" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_10658c6ab0d729c9" Guid="3058A6C9-1DA0-5EEA-83C8-15801180756A" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{D45FD31C-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="MSLwvTTS 2.0 Engine Class" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_2bd86c939760aa3b" Guid="1A1719EC-05AC-52E2-9BAA-16E60A514683" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{D45FD31C-5C6E-11D1-9EC1-00C04FD7081F}\InprocServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\msagent\mslwvtts.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_ccb085dd41b45925" Guid="5BE148A9-A817-5C9F-8436-952D27C27613" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 1.5" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_bb073a5fc64a63ff" Guid="33E7809C-A842-53D4-ABB5-C8053F5C92B5" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\agentctl.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_def192cfa78ef8b2" Guid="AE87FFB9-6A3D-503F-BA5B-51EAB98DDAB6" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\MiscStatus">
+          <RegistryValue Type="string" Value="0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_e5dd3bf120ba0718" Guid="9B264293-A946-5CD1-A26F-31FEDFB7567E" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\MiscStatus\1">
+          <RegistryValue Type="string" Value="148628" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_4b16947be5ec0769" Guid="490320D8-43BD-5C14-8DAE-9F7AD3A854EB" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\ProgID">
+          <RegistryValue Type="string" Value="Agent.Control.1" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_fc5facc98ad82fd7" Guid="2C92FA97-5356-57D3-9A9F-C24A0D5219D8" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\Programmable">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_6bc350967bd01587" Guid="ED600AE6-8658-51C0-B147-A053058FC1E9" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\ToolboxBitmap32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\agentctl.dll, 105" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_4bfa31199cae2075" Guid="D8447D5A-F694-54C7-A453-48940A38BD3C" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\TypeLib">
+          <RegistryValue Type="string" Value="{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_6f8a51351b873ed0" Guid="5D6F577F-0561-5F78-9D45-48232263E3B9" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\Version">
+          <RegistryValue Type="string" Value="1.5" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_cd4d671ed3ab9a51" Guid="F0677DDD-CFD8-544E-A1B7-535924703001" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\VersionIndependentProgID">
+          <RegistryValue Type="string" Value="Agent.Control" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_60f692215c69054d" Guid="D32BDE00-6D88-5A06-87EE-26D6FF175A4E" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\TypeLib\{A7B93C73-7B81-11D0-AC5F-00C04FD97575}">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_f5a0a99af0f9aa9b" Guid="3D1544D6-E1A0-520F-9F2C-BC1F2612AA16" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\TypeLib\{A7B93C73-7B81-11D0-AC5F-00C04FD97575}\2.0">
+          <RegistryValue Type="string" Value="Microsoft Agent Server 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_43ce4d7cb8214251" Guid="306FE793-49B9-51FF-9405-D6A94DA62244" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\TypeLib\{A7B93C73-7B81-11D0-AC5F-00C04FD97575}\2.0\0">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_48f9f820199366ff" Guid="FA3E73D2-A799-5531-A8EF-71720B095616" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\TypeLib\{A7B93C73-7B81-11D0-AC5F-00C04FD97575}\2.0\0\win32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentsvr.exe" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_df11757219ac1931" Guid="04A310E0-B072-5DA3-B507-24469FA32FBC" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\TypeLib\{A7B93C73-7B81-11D0-AC5F-00C04FD97575}\2.0\FLAGS">
+          <RegistryValue Type="string" Value="0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_ca780b9b37b8ac09" Guid="18B9093C-0120-52B1-A9DD-9442A976363C" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\TypeLib\{D6589123-FC70-11D0-AC94-00C04FD97575}">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_d38bb725804adc01" Guid="3FF46DAC-368B-59AB-BAD1-CD934E709310" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\TypeLib\{D6589123-FC70-11D0-AC94-00C04FD97575}\2.0">
+          <RegistryValue Type="string" Value="Microsoft Agent Server Extensions 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_53e682e1451ef4ae" Guid="A44FD994-3D58-59AF-AEF2-8033F3E92A89" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\TypeLib\{D6589123-FC70-11D0-AC94-00C04FD97575}\2.0\0">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_69c1c11b93416527" Guid="111A9F62-5271-5853-8C95-8FD1DA0ABF25" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\TypeLib\{D6589123-FC70-11D0-AC94-00C04FD97575}\2.0\0\win32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentsvr.exe\2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_028b0774899eca58" Guid="2169950D-5821-56D2-BB2A-7AEA26056BDA" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\TypeLib\{D6589123-FC70-11D0-AC94-00C04FD97575}\2.0\FLAGS">
+          <RegistryValue Type="string" Value="0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_cfe2d817cde168b6" Guid="B49A3D4F-A3D3-5D3F-AD55-739090B0A171" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_baa77f43fbcfaef2" Guid="AA9E68A0-4D47-522B-B878-E766A8E4E870" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\1.5">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 1.5" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_01745ba4d8a6f082" Guid="C75C62E4-6D0B-523F-8774-B7ADD94E87DA" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\1.5\0">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_437dd4feaf781a6f" Guid="228AAB31-4B27-51A4-8481-94911C035C29" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\1.5\0\win32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\AgtCtl15.tlb" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_be4b25648d9518d1" Guid="BCA605B5-2FB3-5902-839C-82F398A6D066" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\1.5\FLAGS">
+          <RegistryValue Type="string" Value="4" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_aa935adcde31e979" Guid="D79167FB-6632-5EFD-AC97-27BCC49EB043" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\2.0">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_4d4f26cca55b9f12" Guid="5B6748EC-878E-5E96-BB8E-CDFF6113D198" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\2.0\0">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_77ba9a5306595e2c" Guid="D1C9E1C6-C9F6-5433-8209-07A80AFF14A1" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\2.0\0\win32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentctl.dll" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_73eceba6ceaae8e6" Guid="4662941C-C540-5AF1-973C-C3FEC7D0A788" Bitness="always64">
+        <RegistryKey Root="HKCR" Key="Wow6432Node\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\2.0\FLAGS">
+          <RegistryValue Type="string" Value="0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_983c91f0e602ce18" Guid="11D0FA2F-F5A2-5BD1-9D39-982946D0A2F7" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\.aca">
+          <RegistryValue Type="string" Value="Agent.Character.2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_071691668f599671" Guid="9E1D4F7F-D118-5AA4-8718-87C61C6ADCF9" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\.acf">
+          <RegistryValue Type="string" Value="Agent.Character.2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_a3dc1bb41216496e" Guid="A2FEE697-C0F1-58DC-A3C3-EFB3347653AD" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\.acs">
+          <RegistryValue Type="string" Value="Agent.Character2.2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_16ad9848934441af" Guid="A6486A40-F972-5CF4-937F-31606C506EAE" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Agent.Character.2">
+          <RegistryValue Type="string" Value="Microsoft Agent Character File (HTTP format)" KeyPath="yes" />
+          <RegistryValue Name="FriendlyTypeName" Type="expandable" Value="@%SystemRoot%\MSAgent64\agtui.dll,-303" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_7ff6840c6bb1fe75" Guid="ECCAE9BC-52A1-54CD-B7F5-EA90AE2F2082" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Agent.Character.2\CLSID">
+          <RegistryValue Type="string" Value="{D45FD300-5C6E-11D1-9EC1-00C04FD7081F}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_8c9ccd054cebd5c5" Guid="473ACDF7-F197-5854-B98E-B0A41151C563" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Agent.Character.2\DefaultIcon">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentdpv.dll,-201" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_edbdc67f4e3e72eb" Guid="3E00ACC6-110E-57DC-9E2A-475F176364E7" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Agent.Character.2\shellex">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_e2e9f3098ea5ec9c" Guid="E93A0BAA-E20C-5501-A60E-BCA3F3882DBE" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Agent.Character.2\shellex\PropertySheetHandlers">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_838254938791fc96" Guid="2AEA61EA-F01D-51A5-803E-A2DF65C7AF48" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Agent.Character.2\shellex\PropertySheetHandlers\CharacterPage">
+          <RegistryValue Type="string" Value="{143A62C8-C33B-11D1-84FE-00C04FA34A14}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_1868f8764641c516" Guid="4E72E8D8-94D9-5005-8200-81A67447FA6F" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Agent.Character2.2">
+          <RegistryValue Type="string" Value="Microsoft Agent Character File" KeyPath="yes" />
+          <RegistryValue Name="FriendlyTypeName" Type="expandable" Value="@%SystemRoot%\MSAgent64\agtui.dll,-304" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_4e680550f79e3083" Guid="4FB0A82C-51A2-5C27-AEA6-967BF96CF798" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Agent.Character2.2\CLSID">
+          <RegistryValue Type="string" Value="{D45FD301-5C6E-11D1-9EC1-00C04FD7081F}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_16a5a78b02e0fb7b" Guid="20989B2B-E64F-5220-822D-027CEAF898D5" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Agent.Character2.2\DefaultIcon">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentdp2.dll,-201" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_cb6c3364268889bd" Guid="EFEC8AA7-E133-56C6-85A7-16E3D94B4526" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Agent.Character2.2\shellex">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_f99d8ccf246476d9" Guid="80AA308E-4C5B-58BE-B066-4D65217EF33D" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Agent.Character2.2\shellex\PropertySheetHandlers">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_a461a65cb5f94f95" Guid="A298C04C-7C88-5F90-A1A1-8218C1B2BE6C" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Agent.Character2.2\shellex\PropertySheetHandlers\CharacterPage">
+          <RegistryValue Type="string" Value="{143A62C8-C33B-11D1-84FE-00C04FA34A14}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_d41d982c189a2217" Guid="0A34796B-22F5-5C19-ACB9-5E8CC68BE612" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Agent.Control">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_49163c570659597e" Guid="56FD8629-2048-519A-8651-16A95E6D9D84" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Agent.Control\CurVer">
+          <RegistryValue Type="string" Value="Agent.Control.2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_7a3d04cff19e32f1" Guid="7B581829-000F-58F8-B81F-29BC15453624" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Agent.Control.1">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 1.5" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_6bf59d066e3dca75" Guid="9925C45F-F574-5987-A994-66D2A1797A5F" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Agent.Control.1\CLSID">
+          <RegistryValue Type="string" Value="{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_843a150e669fc9a2" Guid="021ADE95-6992-5E89-9DC8-73CCB5A4E410" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Agent.Control.2">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_850b7c5793226fbd" Guid="41DFDF47-06F9-5BC6-83CB-C6008F542585" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Agent.Control.2\CLSID">
+          <RegistryValue Type="string" Value="{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_0419924b2afa7860" Guid="11BFD7CB-9CDE-5E95-9BCD-A995B30E7B42" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Agent.Server">
+          <RegistryValue Type="string" Value="Microsoft Agent Server 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_576abc922a0711a6" Guid="FCBA2D0E-289D-531E-9D69-DADE0DFAF563" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Agent.Server\CurVer">
+          <RegistryValue Type="string" Value="Agent.Server.2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_b5f95bea106f2b9c" Guid="303571D9-C271-5993-93C3-D5E35FD42445" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Agent.Server.2">
+          <RegistryValue Type="string" Value="Microsoft Agent Server 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_0cad79e7b5af7214" Guid="7F2A6551-824F-502F-9E6D-4B88E1640098" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Agent.Server.2\CLSID">
+          <RegistryValue Type="string" Value="{FD0B6205-B0F4-4596-B028-5CDB35D288C1}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_f2b1036fdcfa8e89" Guid="8B8BDA2D-A307-567D-879C-27479AF29F3E" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{0FA9F4D5-A173-11D1-AA62-00C04FA34D72}">
+          <RegistryValue Type="string" Value="Microsoft Agent Voice Command Module Class" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_5d065b86071f22f0" Guid="D5CBDDDC-453D-552D-9E84-CC253C016482" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{0FA9F4D5-A173-11D1-AA62-00C04FA34D72}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentsr.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_1e99a50057829129" Guid="B8E892B1-0B6B-58AD-A71A-D81BEBEF0BB8" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{143A62C8-C33B-11D1-84FE-00C04FA34A14}">
+          <RegistryValue Type="string" Value="Microsoft Agent Character Property Sheet Handler" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_aea0cde8b272e6b4" Guid="31842B0E-F7DD-5A66-B7A9-B38B6A0CBBB1" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{143A62C8-C33B-11D1-84FE-00C04FA34A14}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentpsh.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_ebc44448cbc6e734" Guid="1E174E7A-F993-5384-843B-6AFD5C7910AC" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{95A893C3-543A-11D0-AC45-00C04FD97575}">
+          <RegistryValue Type="string" Value="MSLwvTTS Engine Class" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_e64112a5d9b001a2" Guid="9FBFD37B-F85B-5655-B494-D7E81F5FFBA6" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{95A893C3-543A-11D0-AC45-00C04FD97575}\InprocServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\msagent64\mslwvtts.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_a637f57ffd7a0590" Guid="A0DB5FBF-0703-5DD6-A3CF-6963FE01552B" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{95A893C3-543A-11D0-AC45-00C04FD97575}\TreatAs">
+          <RegistryValue Type="string" Value="{D45FD31C-5C6E-11D1-9EC1-00C04FD7081F}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_e65dd0d87a668ee3" Guid="80F910EB-21AD-5D93-9BA2-5A7785263B18" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{D45FD2FF-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="Microsoft Agent DocFile Provider 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_27fc73d93b027c17" Guid="1EFC24F7-CA7B-5B1A-84D8-7594B2C3BE37" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{D45FD2FF-5C6E-11D1-9EC1-00C04FD7081F}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentdpv.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_95b48c6a0c599ab8" Guid="AF54CFC3-7260-5270-A0CF-C09C20957EB2" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{D45FD300-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="Microsoft Agent File Provider 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_bc0dbd06dc61ebde" Guid="5A579037-655F-52B8-8214-18B8D4905B89" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{D45FD300-5C6E-11D1-9EC1-00C04FD7081F}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentdpv.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_12a4a3fa98277074" Guid="1CE09349-AD8A-529A-9497-DA9FE4077AAF" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{D45FD301-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="Microsoft Agent Flat File Provider 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_c483fb6650386d2e" Guid="6F7DCFCB-E752-5DDC-9247-0A88F83BCBC7" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{D45FD301-5C6E-11D1-9EC1-00C04FD7081F}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentdp2.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_e598f5f821887b35" Guid="F5811825-E1F1-506F-BC00-E5B482197411" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 2.0" KeyPath="yes" />
+          <RegistryValue Name="LocalizedString" Type="expandable" Value="@%SystemRoot%\MSAgent64\agtui.dll,-302" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_31b69e11e3c66bc4" Guid="05233CC2-1651-54E7-AC2A-E61C4D0D6B2B" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\Control">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_ee08a8274f21c79d" Guid="F8A13208-39D1-5DDD-90EB-DB41C1607CF2" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentctl.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_6f565397e25b59b0" Guid="D9A9C8E9-8474-52DF-A7DC-C7DB7973D370" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\MiscStatus">
+          <RegistryValue Type="string" Value="0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_aab519efdd3b53db" Guid="97F9FE91-DF48-5893-9E73-A3519D5B5D60" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\MiscStatus\1">
+          <RegistryValue Type="string" Value="148628" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_7459afb0c9c804f8" Guid="F3348CD7-2682-5C24-A311-F513CCD1D15C" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\ProgID">
+          <RegistryValue Type="string" Value="Agent.Control.2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_09e95e701a8829a8" Guid="496B4547-8271-5B52-BA57-4A599DDC61FA" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\Programmable">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_7005bf5195e1217b" Guid="B80660FF-1C93-5C7A-9A27-0E5C29BE3599" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\ToolboxBitmap32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentctl.dll, 105" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_e458069929253ced" Guid="3EE38093-F659-517D-B5F0-0CE6DDBC01FF" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\TypeLib">
+          <RegistryValue Type="string" Value="{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_09668babb43e8311" Guid="8F323A81-34D6-5EED-B65B-89F34F110333" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\Version">
+          <RegistryValue Type="string" Value="2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_43c548232a330115" Guid="34839DA3-1093-563D-AC55-0E6164751A1A" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\VersionIndependentProgID">
+          <RegistryValue Type="string" Value="Agent.Control" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_0f656149a2199601" Guid="EEE2680B-17E1-5A9A-9152-50F56BD2E6F4" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 1.5" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_f575daf9c4156a21" Guid="CB19F7C0-4D20-5341-99C1-828914F14476" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentctl.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_173fa2cab232a5ef" Guid="170C03FB-D4A9-5A7D-BC3E-A1CCF451075B" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\MiscStatus">
+          <RegistryValue Type="string" Value="0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_5e1a35d945972017" Guid="8E614618-FE3D-53E4-9780-E8DA79BD14A9" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\MiscStatus\1">
+          <RegistryValue Type="string" Value="148628" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_35374c7c6abd2bd0" Guid="E579E586-623E-5C6D-B04E-8454DB877CFC" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\ProgID">
+          <RegistryValue Type="string" Value="Agent.Control.1" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_b77e4ee1d3e43f98" Guid="A642C3C2-95C0-5676-884B-FA5EE3B0F362" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\Programmable">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_80a086dedd6ad6df" Guid="7775A1A0-E40F-5704-99A1-18345B5CF574" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\ToolboxBitmap32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentctl.dll, 105" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_34d2f28e10b34344" Guid="29BF0785-8973-5554-9401-A25789E6EAA5" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\TypeLib">
+          <RegistryValue Type="string" Value="{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_096ccfe041711961" Guid="F32A85E6-1B9F-53B8-B318-C126D6191D54" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\Version">
+          <RegistryValue Type="string" Value="1.5" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_739e2248ebb1f6c9" Guid="58551A95-DBC2-54EA-B6BA-BC89C771BEE0" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\VersionIndependentProgID">
+          <RegistryValue Type="string" Value="Agent.Control" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_ee3b2553497324c3" Guid="90D0E610-953E-56C6-9F2E-3BFD21853B3B" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{FD0B6205-B0F4-4596-B028-5CDB35D288C1}">
+          <RegistryValue Type="string" Value="Microsoft Agent Server 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_dab62d3242bb1f84" Guid="28B69203-3F52-5288-8243-4B5E1854658A" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{FD0B6205-B0F4-4596-B028-5CDB35D288C1}\LocalServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentsvr.exe" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_5de9c7dfdc2171d1" Guid="B465AA13-FE09-58CC-9339-DB2075892DEC" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{FD0B6205-B0F4-4596-B028-5CDB35D288C1}\ProgID">
+          <RegistryValue Type="string" Value="Agent.Server.2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_2c310d147a247f77" Guid="47D84A11-CF3E-54F9-A667-405B995B5CE8" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{FD0B6205-B0F4-4596-B028-5CDB35D288C1}\Programmable">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_6f953f9855be8e7b" Guid="3418713B-FD83-5F7B-944B-280575808510" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\CLSID\{FD0B6205-B0F4-4596-B028-5CDB35D288C1}\VersionIndependentProgID">
+          <RegistryValue Type="string" Value="Agent.Server" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_d87e75c305e0f882" Guid="E315780E-7219-5A24-8FC6-7EAF4EF02016" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Local Settings\MuiCache\4F\52C64B7E">
+          <RegistryValue Name="@C:\Windows\MSAgent64\agtui.dll,-304" Type="string" Value="Microsoft Agent Character File" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_e778005e6e54370f" Guid="78A9CE3C-2F95-5DF4-A7B3-3EB2DFD0CF1E" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\LWVFile">
+          <RegistryValue Type="string" Value="Microsoft Linguistically Enhanced Sound File" KeyPath="yes" />
+          <RegistryValue Name="LocalizedString" Type="expandable" Value="@%SystemRoot%\MSAgent64\agtui.dll,-305" />
+          <RegistryValue Name="FriendlyTypeName" Type="expandable" Value="@%SystemRoot%\MSAgent\agtui.dll,-305" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_ee42a98e37690d53" Guid="9E3AAA1C-3CBA-512E-8E55-4D08C951A602" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\LWVFile\DefaultIcon">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\msagent64\mslwvtts.dll,-133" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_4dcfae2ea9131dfa" Guid="C0FA6667-700A-5700-A4AD-0566FC954665" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\TypeLib\{A7B93C73-7B81-11D0-AC5F-00C04FD97575}">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_f43d855f1ef95184" Guid="2633835D-6534-5DB4-AB85-6A0CF9729DDB" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\TypeLib\{A7B93C73-7B81-11D0-AC5F-00C04FD97575}\2.0">
+          <RegistryValue Type="string" Value="Microsoft Agent Server 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_528ac0d37d9aefd8" Guid="F584ADBA-C3EB-52D6-94CD-E58169441947" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\TypeLib\{A7B93C73-7B81-11D0-AC5F-00C04FD97575}\2.0\0">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_25a9c358de029fb2" Guid="9EF7533F-17CE-5B3B-BD79-2EF7F86E0D6E" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\TypeLib\{A7B93C73-7B81-11D0-AC5F-00C04FD97575}\2.0\0\win32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentsvr.exe" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_45884811977f1841" Guid="5E022410-50E3-5320-9F3C-0039B615686F" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\TypeLib\{A7B93C73-7B81-11D0-AC5F-00C04FD97575}\2.0\FLAGS">
+          <RegistryValue Type="string" Value="0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_31bfb96c02f47f2e" Guid="3370AD3F-7358-5AE1-85DC-16D71C51120F" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\TypeLib\{D6589123-FC70-11D0-AC94-00C04FD97575}">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_bf6c10ac03cc2c4e" Guid="3DAFD42C-32D2-5D82-9D48-BC4FAC6E95B4" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\TypeLib\{D6589123-FC70-11D0-AC94-00C04FD97575}\2.0">
+          <RegistryValue Type="string" Value="Microsoft Agent Server Extensions 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_c34e45edcb5f296f" Guid="E68BFB69-4551-51A9-9884-4163A50C681B" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\TypeLib\{D6589123-FC70-11D0-AC94-00C04FD97575}\2.0\0">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_ae509e526f0bf901" Guid="68CFE2E1-ACBD-592E-B404-8AA8498AF675" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\TypeLib\{D6589123-FC70-11D0-AC94-00C04FD97575}\2.0\0\win32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentsvr.exe\2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_dece8a307a017f12" Guid="ABB8F021-B9C8-5F3D-9F22-FF0CEECD0339" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\TypeLib\{D6589123-FC70-11D0-AC94-00C04FD97575}\2.0\FLAGS">
+          <RegistryValue Type="string" Value="0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_962c0a28f13ce246" Guid="DA6016C4-F11B-54E4-93E3-0DD35AE78CF5" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_d208dbd2e3734718" Guid="11C8F430-354B-5058-A8FC-601132857039" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\1.5">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 1.5" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_bfa48aaf925d1835" Guid="B60CD3DE-123E-5FD0-B191-EC1C1C150FED" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\1.5\0">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_5aa302ba66ffa8f7" Guid="07F5061C-A88A-5C76-9087-0BCFB320935A" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\1.5\0\win32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\AgtCtl15.tlb" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_20630a93f8c3b368" Guid="A322F6C8-A847-575A-85F9-DFAB64357A82" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\1.5\FLAGS">
+          <RegistryValue Type="string" Value="4" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_8bf95fd75b6dee27" Guid="43B59991-BE3D-5601-84C8-A6CFBD2C8EF0" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\2.0">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_0e180e54d5fc70d0" Guid="C3BDD144-AC84-5CE7-B6E2-426EF88C5E0A" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\2.0\0">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_e7a08dac6402fc5b" Guid="0AFF64CA-9864-50DF-8086-37F806015D00" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\2.0\0\win32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentctl.dll" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_3e4d3a435c132427" Guid="0B690094-36E8-5297-878E-CA40759D5981" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\2.0\FLAGS">
+          <RegistryValue Type="string" Value="0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_d1b6560c4b73da07" Guid="790CE9E8-4C55-559D-B269-788697622E7F" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{0FA9F4D5-A173-11D1-AA62-00C04FA34D72}">
+          <RegistryValue Type="string" Value="Microsoft Agent Voice Command Module Class" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_07189bf21728a496" Guid="ED7300A1-62A6-572F-9FD8-323AB6E30ECB" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{0FA9F4D5-A173-11D1-AA62-00C04FA34D72}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\agentsr.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_27991dedbe0752aa" Guid="F48F7E77-6410-5C94-8146-364F9E7B5A91" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{143A62C8-C33B-11D1-84FE-00C04FA34A14}">
+          <RegistryValue Type="string" Value="Microsoft Agent Character Property Sheet Handler" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_b67749bce701a609" Guid="FD573668-3D1F-5D59-8A82-6D2B08BF2041" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{143A62C8-C33B-11D1-84FE-00C04FA34A14}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\agentpsh.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_c8dd57e3f57b2919" Guid="4AB7AD0B-28A0-56E2-B8D5-EF224A64940E" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{95A893C3-543A-11D0-AC45-00C04FD97575}">
+          <RegistryValue Type="string" Value="MSLwvTTS Engine Class" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_2c486d727cf66e6a" Guid="F6E1C7C3-8235-5A3B-9C03-B2D9E2B12B5C" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{95A893C3-543A-11D0-AC45-00C04FD97575}\InprocServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\msagent\mslwvtts.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_c24e63dd0d57e725" Guid="6DF3AC8A-2B67-50CA-A5E9-74C97A847EC3" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{95A893C3-543A-11D0-AC45-00C04FD97575}\TreatAs">
+          <RegistryValue Type="string" Value="{D45FD31C-5C6E-11D1-9EC1-00C04FD7081F}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_1d5e3a02a7355f6f" Guid="A24ADC48-BE3E-503C-90C0-AAD00A008C20" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{D45FD2FC-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="Microsoft Agent Server 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_6d201d42cbaf3c1c" Guid="BAD457A4-CEAA-5288-B142-31F8C13E3B35" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{D45FD2FC-5C6E-11D1-9EC1-00C04FD7081F}\LocalServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\agentsvr.exe" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_45f2c11e3525a884" Guid="17028009-98AD-5FFA-8FD7-342DEE8DEDD2" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{D45FD2FC-5C6E-11D1-9EC1-00C04FD7081F}\ProgID">
+          <RegistryValue Type="string" Value="Agent.Server.2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_7bb4e8531cb361df" Guid="73A426C7-3C20-5040-B244-4206A8BB2706" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{D45FD2FC-5C6E-11D1-9EC1-00C04FD7081F}\Programmable">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_e9a9d246ac7e3335" Guid="B57162FC-2A9B-5C7E-82A9-3C8D2E0B2B59" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{D45FD2FC-5C6E-11D1-9EC1-00C04FD7081F}\VersionIndependentProgID">
+          <RegistryValue Type="string" Value="Agent.Server" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_9156196b7b863bbb" Guid="4AA28D3A-59CB-55BC-BACE-014462946D95" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{D45FD2FF-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="Microsoft Agent DocFile Provider 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_259c707f47af89bb" Guid="30EDB5DC-1307-5770-9DA8-21C3837E9FC5" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{D45FD2FF-5C6E-11D1-9EC1-00C04FD7081F}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\agentdpv.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_366112ae01f27d4d" Guid="3B9E7E1D-4391-54AC-8367-A3C38CB864D8" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{D45FD300-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="Microsoft Agent File Provider 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_1ba5450952bb4be4" Guid="9A958F17-E40A-5461-8C0C-93D44F2FC1AF" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{D45FD300-5C6E-11D1-9EC1-00C04FD7081F}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\agentdpv.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_fe4791d87c28dd5a" Guid="727CACE1-B2D0-59D0-A0D6-67659719715B" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{D45FD301-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="Microsoft Agent Flat File Provider 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_a334ec7f17f937c5" Guid="7FB78CC9-4E07-59CB-A777-2E55C86D99FB" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{D45FD301-5C6E-11D1-9EC1-00C04FD7081F}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\agentdp2.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_d067d246d42e56fe" Guid="C7F77C17-F3A8-5A74-B732-C66DC33EFBE6" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 2.0" KeyPath="yes" />
+          <RegistryValue Name="LocalizedString" Type="expandable" Value="@%SystemRoot%\MSAgent\agtui.dll,-302" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_20af25668d528215" Guid="BEB86CA2-28A1-5367-B4DA-CE1913D17C60" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\Control">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_3bf7a124d1edb03e" Guid="543DB952-EFD4-5F68-A84C-C2565DAFF2F9" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\agentctl.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_96361be338ddfe0f" Guid="80D64BEA-9E07-5ED5-B17E-76D05BE1543D" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\MiscStatus">
+          <RegistryValue Type="string" Value="0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_76c28af7bedd5e7b" Guid="C132005B-8169-5FA7-A917-1E83FDEC988B" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\MiscStatus\1">
+          <RegistryValue Type="string" Value="148628" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_e0ed0f85fbf3fac4" Guid="DBA533FC-E315-5C08-800C-A6A377E0E310" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\ProgID">
+          <RegistryValue Type="string" Value="Agent.Control.2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_47b2c8bff34d2777" Guid="9650923C-1F69-5848-A4B3-07670E21C9F4" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\Programmable">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_8faa9d416f8afad5" Guid="DCF2D599-A5CB-5E7B-B464-DF4D58BCEAC8" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\ToolboxBitmap32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\agentctl.dll, 105" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_1aa93c73e2d1a8e0" Guid="DB7F3E8E-0603-58CC-981A-E04C5120E512" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\TypeLib">
+          <RegistryValue Type="string" Value="{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_a9bb0833ae7d8415" Guid="BE415FA7-BE32-5533-87F6-88AE4237D0AC" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\Version">
+          <RegistryValue Type="string" Value="2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_1f062dd33ccc6a91" Guid="BEB68CCA-FF36-5A1D-8429-DA64A17074D2" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\VersionIndependentProgID">
+          <RegistryValue Type="string" Value="Agent.Control" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_f1f5dc6d9e24ba27" Guid="9E5A1DB5-E120-55BE-8BE4-F81A666A1AC5" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{D45FD31C-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="MSLwvTTS 2.0 Engine Class" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_016631632622b388" Guid="9DDEB399-E21F-5C67-8772-DAE74753F160" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{D45FD31C-5C6E-11D1-9EC1-00C04FD7081F}\InprocServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\msagent\mslwvtts.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_952f711c79cc6c9e" Guid="B89A1D5D-7D67-58EB-921B-038598661AF7" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 1.5" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_3ac8fcbc932f5ca9" Guid="127E63D1-ED4D-5A89-9F89-4A4854C852C1" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\agentctl.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_b8fc51367dd00d90" Guid="460B710A-8F4B-528C-9907-A6C41B029B4D" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\MiscStatus">
+          <RegistryValue Type="string" Value="0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_578de37531c95f3a" Guid="F209652B-02DE-5265-BAD6-12D3AEAA4CF3" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\MiscStatus\1">
+          <RegistryValue Type="string" Value="148628" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_03079f43a8be90d4" Guid="1FC954F6-89DE-5F55-8233-42BC338FAD0D" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\ProgID">
+          <RegistryValue Type="string" Value="Agent.Control.1" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_553fddd2f414c423" Guid="828A9183-E1BE-52B1-8561-17979BE93E97" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\Programmable">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_43bad414a942e3c5" Guid="FB9D9B22-CA93-5C0E-B2F6-C6E022AC14E5" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\ToolboxBitmap32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\agentctl.dll, 105" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_d46b704619687f00" Guid="B0B2EBF9-5EB4-5B5A-8C43-A6E27794B8EE" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\TypeLib">
+          <RegistryValue Type="string" Value="{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_d881024f94e4e8cd" Guid="D81085E6-6801-5E8E-9EB6-98C95E217491" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\Version">
+          <RegistryValue Type="string" Value="1.5" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_b31f494ea33c3d69" Guid="1DA61E14-F64F-515C-A7BF-632E1F7CE484" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\VersionIndependentProgID">
+          <RegistryValue Type="string" Value="Agent.Control" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_5253989c61a1971b" Guid="02CE4923-AC27-5202-A42E-63DCDC031356" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\TypeLib\{A7B93C73-7B81-11D0-AC5F-00C04FD97575}">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_9b612d13e156ae43" Guid="7E7F5B1C-CFEF-5E7F-B142-AF5D21375F74" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\TypeLib\{A7B93C73-7B81-11D0-AC5F-00C04FD97575}\2.0">
+          <RegistryValue Type="string" Value="Microsoft Agent Server 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_3211b5f3f6fb7c5c" Guid="78DF983D-3DB5-5890-B3C4-E5ABAD8D5C47" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\TypeLib\{A7B93C73-7B81-11D0-AC5F-00C04FD97575}\2.0\0">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_dacdcdab1a33273f" Guid="7197BB9E-1FA8-5134-9EE8-9B2F929F7C57" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\TypeLib\{A7B93C73-7B81-11D0-AC5F-00C04FD97575}\2.0\0\win32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentsvr.exe" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_ada68f1ceb6415da" Guid="57D19425-CE5D-51EF-8691-41B3F68A81D6" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\TypeLib\{A7B93C73-7B81-11D0-AC5F-00C04FD97575}\2.0\FLAGS">
+          <RegistryValue Type="string" Value="0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_82c261aab657b6c7" Guid="CFA35022-92D4-5911-8E65-C36B9297DC85" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\TypeLib\{D6589123-FC70-11D0-AC94-00C04FD97575}">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_a7f8d07214e786d2" Guid="4F70CF31-B51E-5954-A5C8-84965E6005AF" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\TypeLib\{D6589123-FC70-11D0-AC94-00C04FD97575}\2.0">
+          <RegistryValue Type="string" Value="Microsoft Agent Server Extensions 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_d632105f9b968daf" Guid="46E1C002-608A-5AFB-AAD2-5D6D931CB904" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\TypeLib\{D6589123-FC70-11D0-AC94-00C04FD97575}\2.0\0">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_7c09b43a5c1d9174" Guid="1CF41285-622E-5BCF-A1DC-E1CA28658156" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\TypeLib\{D6589123-FC70-11D0-AC94-00C04FD97575}\2.0\0\win32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentsvr.exe\2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_765d4cacdcdd3964" Guid="583FF6DA-E0CA-5C83-ADCA-62A21B45C30E" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\TypeLib\{D6589123-FC70-11D0-AC94-00C04FD97575}\2.0\FLAGS">
+          <RegistryValue Type="string" Value="0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_55a0cf64b4c0cd5f" Guid="57B7AE81-F88F-5178-96DA-08FA83860517" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_08e6d74ebcf74536" Guid="DA32CAFE-76B4-59D9-B3AC-4CE9A679C7CB" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\1.5">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 1.5" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_6dda0d13dcf8a436" Guid="E65DE451-BB53-537B-847F-EDBF942C3295" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\1.5\0">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_d97e5be59a35f2d1" Guid="A144B157-F934-5FC9-B3E1-4EC690F4A365" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\1.5\0\win32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\AgtCtl15.tlb" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_82f9555200ad8df7" Guid="D17488AD-316F-5B6A-9FFC-93961B9428B1" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\1.5\FLAGS">
+          <RegistryValue Type="string" Value="4" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_cf05240c9272433c" Guid="38A10314-4CA1-5466-930F-0BDD472B161D" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\2.0">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_954a6a06ac931bf1" Guid="F3C43654-ADDF-5AEA-9F69-377B4BC754B4" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\2.0\0">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_c97347bb2d48c30f" Guid="51AEAE38-D0E9-53E3-840B-D6F6382EBB06" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\2.0\0\win32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentctl.dll" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_1d5032c3d5b16d1f" Guid="B75A86AD-E5C1-53FC-AF81-8EA33373F647" Bitness="always64">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Wow6432Node\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\2.0\FLAGS">
+          <RegistryValue Type="string" Value="0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_e2ba1387d0426d62" Guid="EAA2A6A2-B8AD-5FCB-949D-F4527389C3B5" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\.aca">
+          <RegistryValue Type="string" Value="Agent.Character.2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_72bba42bca033c68" Guid="56B0BA27-C65E-5C5D-A361-2F643E515603" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\.acf">
+          <RegistryValue Type="string" Value="Agent.Character.2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_00e9ad08eeb1b970" Guid="F4AF925B-F7C2-5868-B226-61B9597523A2" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\.acs">
+          <RegistryValue Type="string" Value="Agent.Character2.2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_934fb2b9c83ba937" Guid="564C446F-B063-59AC-98F0-51A930B9D629" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Agent.Character.2">
+          <RegistryValue Type="string" Value="Microsoft Agent Character File (HTTP format)" KeyPath="yes" />
+          <RegistryValue Name="FriendlyTypeName" Type="expandable" Value="@%SystemRoot%\MSAgent64\agtui.dll,-303" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_fe458518d4a03261" Guid="DC2B0384-BEC0-51B1-A762-CEE9E08AF050" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Agent.Character.2\CLSID">
+          <RegistryValue Type="string" Value="{D45FD300-5C6E-11D1-9EC1-00C04FD7081F}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_6977b4480ef985f7" Guid="3AD54919-B133-5630-9CAA-314E9F91083B" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Agent.Character.2\DefaultIcon">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentdpv.dll,-201" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_549029ca7d3fbd58" Guid="0A300E3A-86FC-54E0-8760-5209AF869364" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Agent.Character.2\shellex">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_912ad2f4998fd4ab" Guid="A8B2FA3E-C9CC-58E4-8D76-7117338AD73F" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Agent.Character.2\shellex\PropertySheetHandlers">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_f3c5fb1c738df438" Guid="EB5DE79A-D560-57F3-A118-4E1EDF913F6F" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Agent.Character.2\shellex\PropertySheetHandlers\CharacterPage">
+          <RegistryValue Type="string" Value="{143A62C8-C33B-11D1-84FE-00C04FA34A14}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_f13bc6a3923ccedd" Guid="05A19D83-C187-561B-8924-9CC95844FE38" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Agent.Character2.2">
+          <RegistryValue Type="string" Value="Microsoft Agent Character File" KeyPath="yes" />
+          <RegistryValue Name="FriendlyTypeName" Type="expandable" Value="@%SystemRoot%\MSAgent64\agtui.dll,-304" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_f963ad5304679717" Guid="A2204145-2B38-5B9E-A962-46F138F916E3" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Agent.Character2.2\CLSID">
+          <RegistryValue Type="string" Value="{D45FD301-5C6E-11D1-9EC1-00C04FD7081F}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_db4e7851e8be121f" Guid="C934CD05-DB90-5BBA-8131-0D7091C5BF11" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Agent.Character2.2\DefaultIcon">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentdp2.dll,-201" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_83e5d8e3052e77da" Guid="BCC4B659-9305-53F9-B063-7961DE240AD5" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Agent.Character2.2\shellex">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_9836c7524e3e8004" Guid="C708353B-E694-546B-A13C-0C67060EB5D3" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Agent.Character2.2\shellex\PropertySheetHandlers">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_22c96afb53cef8f6" Guid="9D7B3ECB-B8D8-5EA9-B689-8418428E52A0" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Agent.Character2.2\shellex\PropertySheetHandlers\CharacterPage">
+          <RegistryValue Type="string" Value="{143A62C8-C33B-11D1-84FE-00C04FA34A14}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_3be4d6fb36550277" Guid="9826C17B-BB11-5E0A-9725-995CF0B95C6B" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Agent.Control">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_77496e23da450536" Guid="4806EF85-EB8B-5616-B66A-A77D61EEDB67" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Agent.Control\CurVer">
+          <RegistryValue Type="string" Value="Agent.Control.2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_0d501f575c0d1a5e" Guid="0E609770-37D8-5ACA-B750-5883B1A20E48" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Agent.Control.1">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 1.5" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_5fac81889aed1164" Guid="C1B72881-0961-520D-8A41-72FFC3E0D264" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Agent.Control.1\CLSID">
+          <RegistryValue Type="string" Value="{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_d84252d897e90309" Guid="89683276-3547-54EA-B8F2-D8E7C939D37E" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Agent.Control.2">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_b42a36cb1f6115b0" Guid="9A79369E-FC43-5A3F-8CB7-5323E3307F8C" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Agent.Control.2\CLSID">
+          <RegistryValue Type="string" Value="{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_1f88455a2afff70a" Guid="DCCB43D0-3FB5-58E0-ACB8-F2210ECA7673" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Agent.Server">
+          <RegistryValue Type="string" Value="Microsoft Agent Server 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_0e3d9adc8ff44f95" Guid="C67EF2A4-A589-57A0-869B-5C1AD703EC67" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Agent.Server\CurVer">
+          <RegistryValue Type="string" Value="Agent.Server.2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_111a50b6b23f7129" Guid="F48C5C58-621F-55C1-BBDA-1D7BE2616EED" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Agent.Server.2">
+          <RegistryValue Type="string" Value="Microsoft Agent Server 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_32cc1e9c389c773a" Guid="DF62E7A7-EC5B-5F5F-BE87-447AE3343D79" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Agent.Server.2\CLSID">
+          <RegistryValue Type="string" Value="{FD0B6205-B0F4-4596-B028-5CDB35D288C1}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_3808d2a249a14de3" Guid="D4E28391-6CD6-5968-B4FA-1A8FF59FAEF6" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{0FA9F4D5-A173-11D1-AA62-00C04FA34D72}">
+          <RegistryValue Type="string" Value="Microsoft Agent Voice Command Module Class" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_eba160a4d606c72b" Guid="FF7ED558-CFBC-5259-96DD-CE7D2E70733C" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{0FA9F4D5-A173-11D1-AA62-00C04FA34D72}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentsr.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_16bda0d54cbbbf35" Guid="6DDEB743-DF5F-533D-ABC7-D701FA92E942" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{143A62C8-C33B-11D1-84FE-00C04FA34A14}">
+          <RegistryValue Type="string" Value="Microsoft Agent Character Property Sheet Handler" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_80a623eff2d945e1" Guid="4DFB720A-FF4C-5566-A2EF-9656DBB516FB" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{143A62C8-C33B-11D1-84FE-00C04FA34A14}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentpsh.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_9069a52ba2962114" Guid="4C4806C7-4A3D-52E4-941A-C9E58D46D3EC" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{95A893C3-543A-11D0-AC45-00C04FD97575}">
+          <RegistryValue Type="string" Value="MSLwvTTS Engine Class" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_d12b0847aee9888b" Guid="270B09A1-C5A9-50C4-B702-7218385C9359" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{95A893C3-543A-11D0-AC45-00C04FD97575}\InprocServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\msagent64\mslwvtts.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_22b24a976bb699e8" Guid="97CC5E40-AC7B-583E-9FD3-733B60E6057C" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{95A893C3-543A-11D0-AC45-00C04FD97575}\TreatAs">
+          <RegistryValue Type="string" Value="{D45FD31C-5C6E-11D1-9EC1-00C04FD7081F}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_7bde4089d174e37f" Guid="542BA383-49D6-5C0C-B4DC-75A1A4557B78" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{D45FD2FF-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="Microsoft Agent DocFile Provider 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_5492d3c9b9906650" Guid="8C9C1D4F-E07F-5511-A290-025BADBD3502" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{D45FD2FF-5C6E-11D1-9EC1-00C04FD7081F}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentdpv.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_7d3bcf684ed9e22f" Guid="7C66A343-4FDF-549F-B865-2D668A705523" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{D45FD300-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="Microsoft Agent File Provider 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_3d1ce75a08014727" Guid="B4A36997-9837-508F-ABB5-D80E51B49F99" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{D45FD300-5C6E-11D1-9EC1-00C04FD7081F}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentdpv.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_8b5b0e3d89fb19de" Guid="F022BCBB-348F-5F78-8D4C-4C8325E0DB92" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{D45FD301-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="Microsoft Agent Flat File Provider 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_49133aede6d625f2" Guid="5F18F3D9-F548-57D4-BE03-D7154E4217B7" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{D45FD301-5C6E-11D1-9EC1-00C04FD7081F}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentdp2.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_53cfd2376d73eb0c" Guid="29DC6335-6FEC-57C3-90F4-DCF94F7146A6" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 2.0" KeyPath="yes" />
+          <RegistryValue Name="LocalizedString" Type="expandable" Value="@%SystemRoot%\MSAgent64\agtui.dll,-302" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_f9060c6cdd48554d" Guid="779706F0-8B15-5599-B247-E196EB3E6D2A" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\Control">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_e08887ed51f6a7bd" Guid="F9623342-A072-5A2C-AD8E-46426A1CA831" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentctl.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_e306e15e640acd33" Guid="3A12C8B6-21CB-500E-81AE-63CCB27B5248" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\MiscStatus">
+          <RegistryValue Type="string" Value="0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_0b92ff8495138548" Guid="262BFCF1-3378-5C24-B518-11BAFA2EE2CB" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\MiscStatus\1">
+          <RegistryValue Type="string" Value="148628" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_c6d3db0874564811" Guid="A6A4844B-D3B9-50EA-82B9-F53248581D82" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\ProgID">
+          <RegistryValue Type="string" Value="Agent.Control.2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_367e3bdc1936397e" Guid="7632E562-0C9A-5BEF-B75D-D7AA522F3FF9" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\Programmable">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_3a66c4345b68c7be" Guid="D68EFC31-F7B0-5DB7-B4B1-DB60D4C2C6D2" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\ToolboxBitmap32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentctl.dll, 105" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_269a65c479f61228" Guid="C3148B78-BAB9-5351-B6F6-FA6C8E8AC715" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\TypeLib">
+          <RegistryValue Type="string" Value="{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_0a7efa3924a683f4" Guid="37D259F2-4115-5FBE-97FE-888EDB54523E" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\Version">
+          <RegistryValue Type="string" Value="2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_0fad6d3ff56f5ab2" Guid="6CC84D8A-BF15-587D-94F5-7FC7155EF454" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\VersionIndependentProgID">
+          <RegistryValue Type="string" Value="Agent.Control" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_5ba0a91894eaf8b7" Guid="62086EA8-D55A-5AB0-91BA-6EC961EEE1A8" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 1.5" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_22b5c67377bd999e" Guid="1C1D7ABD-074C-59ED-B46F-40C55C767CE3" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentctl.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_66f8069370186571" Guid="59A54126-C380-5EE3-9E5A-C98F6D4D5700" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\MiscStatus">
+          <RegistryValue Type="string" Value="0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_861de68f0f47b9d1" Guid="A6D7A363-6B79-5826-BCFB-F9CDEFFC1CA5" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\MiscStatus\1">
+          <RegistryValue Type="string" Value="148628" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_8e94aa34eb726a68" Guid="F7288CD5-99B4-5669-9AEA-A625122FB0EB" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\ProgID">
+          <RegistryValue Type="string" Value="Agent.Control.1" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_ba9c5d684b6808de" Guid="812B1AAB-872D-5CC3-8761-01D0FCD1F023" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\Programmable">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_f68b34a34ae524a6" Guid="A8A29413-4A4E-54D8-8361-B7EDEB2525A0" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\ToolboxBitmap32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentctl.dll, 105" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_a0cffc6345eae27c" Guid="0C0B2BA1-4665-5C59-8740-C9AABAD78661" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\TypeLib">
+          <RegistryValue Type="string" Value="{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_950cf65ad4745e0d" Guid="8D7D7DE7-36A7-5354-9B88-25408AC5F5A6" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\Version">
+          <RegistryValue Type="string" Value="1.5" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_6a5a1a8aa55d8b7f" Guid="FDE4BD18-34F8-5955-A7CF-112B3DB3A03D" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\VersionIndependentProgID">
+          <RegistryValue Type="string" Value="Agent.Control" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_cd3e8bc1797bdbdb" Guid="5DFA8219-F748-5AF7-9ECD-6A66FC6EAA12" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{FD0B6205-B0F4-4596-B028-5CDB35D288C1}">
+          <RegistryValue Type="string" Value="Microsoft Agent Server 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_ec6c054060c17b6d" Guid="A59F0A70-EA28-502D-A794-B8D80AA42CD8" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{FD0B6205-B0F4-4596-B028-5CDB35D288C1}\LocalServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentsvr.exe" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_a0269b2185e2d6fd" Guid="4871F07D-2802-55DF-9DE3-4661678647C9" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{FD0B6205-B0F4-4596-B028-5CDB35D288C1}\ProgID">
+          <RegistryValue Type="string" Value="Agent.Server.2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_158037b01d1a1827" Guid="A819E8B2-5986-5652-9359-A1876DC4388C" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{FD0B6205-B0F4-4596-B028-5CDB35D288C1}\Programmable">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_f8502388f9eb1ed7" Guid="8518418B-DF58-5BA1-A5A7-1B06CE88968B" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\CLSID\{FD0B6205-B0F4-4596-B028-5CDB35D288C1}\VersionIndependentProgID">
+          <RegistryValue Type="string" Value="Agent.Server" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_451c6a15b230754e" Guid="AE2D47CB-4DD0-59C6-9245-47BC7DE43D59" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Local Settings\MuiCache\4F\52C64B7E">
+          <RegistryValue Name="@C:\Windows\MSAgent64\agtui.dll,-304" Type="string" Value="Microsoft Agent Character File" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_732852d9fffc4498" Guid="6D3F7134-CB61-532D-99C7-F909C6F15BCD" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\LWVFile">
+          <RegistryValue Type="string" Value="Microsoft Linguistically Enhanced Sound File" KeyPath="yes" />
+          <RegistryValue Name="LocalizedString" Type="expandable" Value="@%SystemRoot%\MSAgent64\agtui.dll,-305" />
+          <RegistryValue Name="FriendlyTypeName" Type="expandable" Value="@%SystemRoot%\MSAgent\agtui.dll,-305" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_4b31a84cf03c5654" Guid="5D591427-BC2E-5D9E-96F6-74F30ACBF34D" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\LWVFile\DefaultIcon">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\msagent64\mslwvtts.dll,-133" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_9d23ed3c504a9c40" Guid="327AADEE-CDCC-52F7-86DD-8108F8B98F98" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\TypeLib\{A7B93C73-7B81-11D0-AC5F-00C04FD97575}">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_4e1f1af49c1452c7" Guid="E4E95C91-8804-5B0F-A58A-DCD3EBEB7812" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\TypeLib\{A7B93C73-7B81-11D0-AC5F-00C04FD97575}\2.0">
+          <RegistryValue Type="string" Value="Microsoft Agent Server 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_0dd140df3d2eafd9" Guid="509FC9FC-9C37-5FDC-8D7E-1DD630B4849F" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\TypeLib\{A7B93C73-7B81-11D0-AC5F-00C04FD97575}\2.0\0">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_64a5fb47bd7e0a55" Guid="92BAB17E-B353-53B6-A391-7E8285DE1E52" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\TypeLib\{A7B93C73-7B81-11D0-AC5F-00C04FD97575}\2.0\0\win32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentsvr.exe" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_967b5ea73019dee5" Guid="F7459B21-4E1B-57E0-A04D-4512CE031BC6" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\TypeLib\{A7B93C73-7B81-11D0-AC5F-00C04FD97575}\2.0\FLAGS">
+          <RegistryValue Type="string" Value="0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_ba5f2bd852f2e023" Guid="58A9615B-115B-5414-B336-24CDED285EF9" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\TypeLib\{D6589123-FC70-11D0-AC94-00C04FD97575}">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_72e33980735ccbdc" Guid="840DEC6A-53C2-5FE4-876F-296593A179BE" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\TypeLib\{D6589123-FC70-11D0-AC94-00C04FD97575}\2.0">
+          <RegistryValue Type="string" Value="Microsoft Agent Server Extensions 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_a2cce1108a10b721" Guid="73768846-A046-545D-A04C-FA03AFCA903E" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\TypeLib\{D6589123-FC70-11D0-AC94-00C04FD97575}\2.0\0">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_b0ceea0ca435e81c" Guid="3409607C-1AE3-59E6-9F83-D94920A7E1D5" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\TypeLib\{D6589123-FC70-11D0-AC94-00C04FD97575}\2.0\0\win32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentsvr.exe\2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_55576cfea3c75952" Guid="5D3FF1B6-BDDC-5379-BC3E-3C9AD6549D04" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\TypeLib\{D6589123-FC70-11D0-AC94-00C04FD97575}\2.0\FLAGS">
+          <RegistryValue Type="string" Value="0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_ba9fdfb65b35cf77" Guid="58A1A5A4-0137-5632-81E4-F3D427683A75" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_cd3f29a8d3a25931" Guid="C5869FA9-1211-51E7-9524-65501F064A0A" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\1.5">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 1.5" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_9d4af70551635590" Guid="FBA81FB6-4021-560B-AD63-E424952601DF" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\1.5\0">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_f26cf7d6c9c9667c" Guid="264579AB-F204-566B-8547-12EBB2A5F596" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\1.5\0\win32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\AgtCtl15.tlb" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_cf4d29784ae5a50f" Guid="41D3BF1C-0313-579E-B677-AE869308DA93" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\1.5\FLAGS">
+          <RegistryValue Type="string" Value="4" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_4ceba02d988b393c" Guid="C8AB1A2D-3B25-586E-A513-B566D24171AF" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\2.0">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_0e0d9c75b1794fb4" Guid="9D9B6191-44B1-523C-AD27-6B96686C6B8E" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\2.0\0">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_f0bb735111486990" Guid="8E746117-383D-576F-AACF-FCCAC1625575" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\2.0\0\win32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentctl.dll" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_e46dfca9406da076" Guid="BF4C42FC-CD52-52A6-90EB-37A62510E58B" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\2.0\FLAGS">
+          <RegistryValue Type="string" Value="0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_db866dcbc56e1641" Guid="DCB27AC7-5702-5BBA-9B4E-C50738617688" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{0FA9F4D5-A173-11D1-AA62-00C04FA34D72}">
+          <RegistryValue Type="string" Value="Microsoft Agent Voice Command Module Class" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_20469108e1296cc8" Guid="673B9889-3601-5847-B673-3667A553686C" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{0FA9F4D5-A173-11D1-AA62-00C04FA34D72}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\agentsr.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_7d18fad14afffd08" Guid="D0FCD499-2239-563D-A26C-391BECDF67EA" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{143A62C8-C33B-11D1-84FE-00C04FA34A14}">
+          <RegistryValue Type="string" Value="Microsoft Agent Character Property Sheet Handler" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_84cb7119b7cc36e1" Guid="A721D9D6-DD25-5770-A43D-3FBE701D780A" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{143A62C8-C33B-11D1-84FE-00C04FA34A14}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\agentpsh.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_214c3581c5856889" Guid="691D1D0B-1271-5F75-ACA8-CF99C1EF95A7" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{95A893C3-543A-11D0-AC45-00C04FD97575}">
+          <RegistryValue Type="string" Value="MSLwvTTS Engine Class" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_e4c89116cb25adc0" Guid="354256EC-1755-56A8-ADE8-304B2DB1033A" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{95A893C3-543A-11D0-AC45-00C04FD97575}\InprocServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\msagent\mslwvtts.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_69734a9a47902802" Guid="05F33E77-4A1F-59C4-BAA9-04B2847D9CFE" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{95A893C3-543A-11D0-AC45-00C04FD97575}\TreatAs">
+          <RegistryValue Type="string" Value="{D45FD31C-5C6E-11D1-9EC1-00C04FD7081F}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_d070485ed9992a50" Guid="44AA12D6-A25A-5D1D-ADF4-C20AA2A40F0C" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{D45FD2FC-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="Microsoft Agent Server 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_937be292fd3e9f2c" Guid="B4336E95-36D0-5E80-AAE3-EF088C934B5B" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{D45FD2FC-5C6E-11D1-9EC1-00C04FD7081F}\LocalServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\agentsvr.exe" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_b0d10f2466316d4b" Guid="72ADE015-445F-59DD-97EE-11AE6718A5D9" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{D45FD2FC-5C6E-11D1-9EC1-00C04FD7081F}\ProgID">
+          <RegistryValue Type="string" Value="Agent.Server.2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_1eca15744aeae519" Guid="6C6BE5E6-AF77-571B-84F2-ECC9FC376556" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{D45FD2FC-5C6E-11D1-9EC1-00C04FD7081F}\Programmable">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_f2251996889b862a" Guid="CC90F20C-F5FA-5F2C-816F-385AD00AA27D" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{D45FD2FC-5C6E-11D1-9EC1-00C04FD7081F}\VersionIndependentProgID">
+          <RegistryValue Type="string" Value="Agent.Server" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_3f58adbfa8103a2a" Guid="7AC4026F-5279-5340-B298-74BE57E209AE" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{D45FD2FF-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="Microsoft Agent DocFile Provider 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_d3624c9da23aa6c7" Guid="131F9C98-2C61-51FE-84DD-4987B23EF4A5" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{D45FD2FF-5C6E-11D1-9EC1-00C04FD7081F}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\agentdpv.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_835c4303bbc1bfff" Guid="98C3EECB-930C-5B6E-9437-601D22E00CD8" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{D45FD300-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="Microsoft Agent File Provider 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_3286323105704a63" Guid="E2764809-91F8-59BF-AD0B-9508726A278B" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{D45FD300-5C6E-11D1-9EC1-00C04FD7081F}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\agentdpv.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_a1d1c08b7fbd715a" Guid="621807ED-2AF0-5052-B9E2-F81C7ED1EE34" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{D45FD301-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="Microsoft Agent Flat File Provider 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_4a316ce5dd28447c" Guid="13A717ED-7E6C-5CE5-A546-6991D825068A" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{D45FD301-5C6E-11D1-9EC1-00C04FD7081F}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\agentdp2.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_4e0386b67174262c" Guid="256C0438-20BB-5FBE-9F3F-62D30884519D" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 2.0" KeyPath="yes" />
+          <RegistryValue Name="LocalizedString" Type="expandable" Value="@%SystemRoot%\MSAgent\agtui.dll,-302" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_1e055fca2a343574" Guid="941C7D71-36A3-5645-BA4D-A887CD54CF98" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\Control">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_01dc0e32dbb29a93" Guid="48D354A4-3BE6-5C52-B345-65B1DC03D9FC" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\agentctl.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_248b109e9f3e6435" Guid="26C7B0D2-2424-5718-AB47-DFFCBEBD8927" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\MiscStatus">
+          <RegistryValue Type="string" Value="0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_c8506c01857bde65" Guid="223A2A6B-DF53-5F7D-942F-E0B0C341F1B3" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\MiscStatus\1">
+          <RegistryValue Type="string" Value="148628" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_a34f805a047b2f17" Guid="844A0E2B-5BC4-5729-A3D9-B950AFC8D2ED" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\ProgID">
+          <RegistryValue Type="string" Value="Agent.Control.2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_d6bb2cb338014d21" Guid="86DE25C9-B15C-571C-BB7A-8B7B5A01C1E4" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\Programmable">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_c9f33e42c2ee49da" Guid="4DE32849-701F-529F-BDAC-E85C925DAC99" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\ToolboxBitmap32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\agentctl.dll, 105" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_30354ae4b286b9ec" Guid="6E58B2EA-8779-529B-AFD8-6E64F346BF62" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\TypeLib">
+          <RegistryValue Type="string" Value="{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_01e446f97fe1a8f4" Guid="BD0D853F-23E6-5E4B-A1F0-E747A973FF40" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\Version">
+          <RegistryValue Type="string" Value="2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_9af8a63fbc226720" Guid="0A85697E-392E-5F38-B7CC-B2FDF9DFD50F" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}\VersionIndependentProgID">
+          <RegistryValue Type="string" Value="Agent.Control" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_0c2ac2f7affb065e" Guid="8223AC1B-D8B2-5AEE-9756-59C0AB8CE4FF" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{D45FD31C-5C6E-11D1-9EC1-00C04FD7081F}">
+          <RegistryValue Type="string" Value="MSLwvTTS 2.0 Engine Class" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_db887312b1e01dda" Guid="A5A08453-3DBB-5992-B886-2D3DC57F3C37" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{D45FD31C-5C6E-11D1-9EC1-00C04FD7081F}\InprocServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\msagent\mslwvtts.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_1cd96f773f7f2024" Guid="2AFFFEEB-94B2-5D0F-96ED-57BD0CCAC864" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 1.5" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_be49db338b8f97b2" Guid="E92CB590-32F7-5B71-9625-D3C4275A3198" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\InProcServer32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\agentctl.dll" KeyPath="yes" />
+          <RegistryValue Name="ThreadingModel" Type="string" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_e3d90ac75a068214" Guid="1D1683EF-8ADE-578E-A29A-BD0B859B8F11" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\MiscStatus">
+          <RegistryValue Type="string" Value="0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_3098e1ef70bffd43" Guid="17DDBA0F-C711-56E6-9A0F-D87522B2041B" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\MiscStatus\1">
+          <RegistryValue Type="string" Value="148628" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_3ab2a62db7d813a2" Guid="3291763C-849E-50FC-95CA-F9828A38217D" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\ProgID">
+          <RegistryValue Type="string" Value="Agent.Control.1" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_473230ba336a0e40" Guid="8DDB85DB-BC1E-5C85-BC06-F03DB447FCC0" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\Programmable">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_eda502167f5eb33a" Guid="4ABCC1AC-86DB-51F8-89FD-A46BF3756C7D" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\ToolboxBitmap32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent\agentctl.dll, 105" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_935fb7e63d4f4a29" Guid="68F3EE9F-9FDD-5658-AAFB-B2FC519A071D" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\TypeLib">
+          <RegistryValue Type="string" Value="{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_d6a48f684b344828" Guid="D634F6BF-B37F-5154-B8B4-F84927EDCB3F" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\Version">
+          <RegistryValue Type="string" Value="1.5" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_5e00343e9c61c1bb" Guid="BA4CD755-E814-5387-A505-A3DEB55E5C83" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\CLSID\{F5BE8BD2-7DE6-11D0-91FE-00C04FD701A5}\VersionIndependentProgID">
+          <RegistryValue Type="string" Value="Agent.Control" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_59f0a399bbb60c89" Guid="C9BF1D51-1F4E-552D-8D5F-9CDBC4A65434" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\TypeLib\{A7B93C73-7B81-11D0-AC5F-00C04FD97575}">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_011ac08bcfe3a189" Guid="C785A60C-9188-5942-A484-2F361653B233" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\TypeLib\{A7B93C73-7B81-11D0-AC5F-00C04FD97575}\2.0">
+          <RegistryValue Type="string" Value="Microsoft Agent Server 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_843f4b3856ce9da7" Guid="169CB02C-31B0-58D3-8615-14A47293A814" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\TypeLib\{A7B93C73-7B81-11D0-AC5F-00C04FD97575}\2.0\0">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_5cc06d6890cf919e" Guid="C543B089-A745-527E-B70E-AA2E3A346FE5" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\TypeLib\{A7B93C73-7B81-11D0-AC5F-00C04FD97575}\2.0\0\win32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentsvr.exe" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_d7f70b99737fa008" Guid="2969ADAA-B935-53AD-8535-66070364D7DC" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\TypeLib\{A7B93C73-7B81-11D0-AC5F-00C04FD97575}\2.0\FLAGS">
+          <RegistryValue Type="string" Value="0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_46318ac9c81d5bc4" Guid="EE8B3134-868C-53B1-9CA0-5129939A4C0F" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\TypeLib\{D6589123-FC70-11D0-AC94-00C04FD97575}">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_cd65d9d666a8af47" Guid="A34BC25D-2D80-5452-AB96-BDD2AF3E5E2F" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\TypeLib\{D6589123-FC70-11D0-AC94-00C04FD97575}\2.0">
+          <RegistryValue Type="string" Value="Microsoft Agent Server Extensions 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_ef6398c1fbf25738" Guid="A9941787-A43E-57F6-94CC-8F4D35706B3C" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\TypeLib\{D6589123-FC70-11D0-AC94-00C04FD97575}\2.0\0">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_cf55fa8c362e7a02" Guid="BE828F3D-0897-56B1-A6B3-E247C26D7E56" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\TypeLib\{D6589123-FC70-11D0-AC94-00C04FD97575}\2.0\0\win32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentsvr.exe\2" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_73689796f36cfa8c" Guid="6FA9847A-F08C-5FAF-A302-4DBC6A981F94" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\TypeLib\{D6589123-FC70-11D0-AC94-00C04FD97575}\2.0\FLAGS">
+          <RegistryValue Type="string" Value="0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_49ef5ead988980b1" Guid="010F41DF-66BD-5E61-ABE4-D70B34E26C93" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_32514ebf07fb5bee" Guid="DDB423DA-1203-5D72-A8CF-A87199A338B3" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\1.5">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 1.5" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_79411e6cf8e57586" Guid="9F75A24F-DD02-547C-81B7-8B11C84D077E" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\1.5\0">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_884de6527a3ba277" Guid="07A40403-6EA5-5B51-BD0C-7B9811169FF9" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\1.5\0\win32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\AgtCtl15.tlb" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_92e5d12f76b04e20" Guid="CB92B1C8-4997-5890-9CA5-245971564760" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\1.5\FLAGS">
+          <RegistryValue Type="string" Value="4" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_b869a23689f97504" Guid="E9A874B2-4AC3-5999-9437-66772281165D" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\2.0">
+          <RegistryValue Type="string" Value="Microsoft Agent Control 2.0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_6bb85bb624675a88" Guid="A4E92FE9-0ED0-54BB-84EE-34F79524B5B6" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\2.0\0">
+          <RegistryValue Type="string" Value="" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_d5caa3cd9121a227" Guid="C1996F51-2F8A-5F4E-9241-C2A94BF86E1E" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\2.0\0\win32">
+          <RegistryValue Type="expandable" Value="%SystemRoot%\MSAgent64\agentctl.dll" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="Reg_b2657dc0970c914d" Guid="09F602B0-C5BC-5ED1-8A96-78E9342DFB8D" Bitness="always64">
+        <RegistryKey Root="HKLM" Key="Software\Classes\Wow6432Node\TypeLib\{F5BE8BC2-7DE6-11D0-91FE-00C04FD701A5}\2.0\FLAGS">
+          <RegistryValue Type="string" Value="0" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>

@@ -7,10 +7,12 @@ installer\\vendor\\MSAgent\\x86|x64\\MSAgent_x86|x64.reg を WiX v5 の
 使っていないことを確認済み（DWORD/バイナリ/複数行文字列は無し）。
 
 使い方:
-    python reg_to_wix.py <input.reg> <output.wxs> <ComponentGroupId> <fileref>
+    python reg_to_wix.py <input.reg> <output.wxs> <ComponentGroupId> <fileref> [bitness]
 
   fileref: 生成する各Componentの重複防止のため、GUID生成のシード文字列に使う
            (x64.reg用/x86.reg用で別の値を渡し、同じキーパスでもGUIDが衝突しないようにする)
+  bitness: Component の Bitness 属性値 (例: always64)。省略時は属性なし（パッケージ既定）。
+           x64.reg を変換する際は always64 を指定してx64レジストリハイブに書き込ませること。
 """
 import re
 import sys
@@ -118,7 +120,7 @@ def xml_escape(s: str) -> str:
     return html.escape(s, quote=True)
 
 
-def generate_wxs(sections, group_id: str, fileref: str) -> str:
+def generate_wxs(sections, group_id: str, fileref: str, bitness: str = "") -> str:
     out = []
     out.append('<?xml version="1.0" encoding="utf-8"?>')
     out.append(f'<!-- 自動生成: reg_to_wix.py で {fileref} から書き起こし。手編集しないこと -->')
@@ -133,7 +135,8 @@ def generate_wxs(sections, group_id: str, fileref: str) -> str:
         root = HIVE_MAP[hive]
         comp_id = stable_id("Reg", f"{fileref}|{root}|{keypath}")
         guid = stable_guid(f"{fileref}|{root}|{keypath}")
-        out.append(f'      <Component Id="{comp_id}" Guid="{guid}">')
+        bitness_attr = f' Bitness="{bitness}"' if bitness else ""
+        out.append(f'      <Component Id="{comp_id}" Guid="{guid}"{bitness_attr}>')
         if not values:
             # 値が1つも無い（キー自体の存在だけを主張する）セクション。
             # ForceCreateOnInstallだけだとComponentにKeyPathが無く、囲うDirectoryの
@@ -160,12 +163,13 @@ def generate_wxs(sections, group_id: str, fileref: str) -> str:
 
 
 def main():
-    if len(sys.argv) != 5:
-        print(f"usage: {sys.argv[0]} <input.reg> <output.wxs> <ComponentGroupId> <fileref>", file=sys.stderr)
+    if len(sys.argv) not in (5, 6):
+        print(f"usage: {sys.argv[0]} <input.reg> <output.wxs> <ComponentGroupId> <fileref> [bitness]", file=sys.stderr)
         sys.exit(1)
     in_path, out_path, group_id, fileref = sys.argv[1:5]
+    bitness = sys.argv[5] if len(sys.argv) == 6 else ""
     sections = parse_reg_file(in_path)
-    wxs = generate_wxs(sections, group_id, fileref)
+    wxs = generate_wxs(sections, group_id, fileref, bitness)
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(wxs)
     print(f"{in_path}: {len(sections)} キー -> {out_path} ({group_id})")

@@ -12,8 +12,9 @@
   　として扱おうとしたためWiXの自動GUID生成が衝突していた）。
 
   レジストリ部分は reg_to_wix.py で installer\vendor\MSAgent\x86|x64\MSAgent_x86|x64.reg
-  から自動生成した generated\MSAgentRegistry.x86|x64.wxs を参照する（手編集しないこと。
-  .regを更新したら reg_to_wix.py を再実行して作り直す）。
+  から生成した generated\MSAgentRegistry.x86|x64.wxs を参照する。MSAgentランタイムは
+  不変なのでこのファイルはリポジトリで追跡する（手編集しないこと。.regを更新した
+  場合のみ reg_to_wix.py を再実行して作り直し、コミットすること）。
 
   AgentMPx.dll/AgtIntl.dllとそのCOM登録（AgentMPxIntl.wxs）は上記の.regには含まれておらず、
   msAgentCoreComponents.exe/msAgentCoreComponentsJP.exeが同梱の.infからregsvr32で
@@ -23,7 +24,7 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Package Name="MS Agent Runtime for OfficeAgent"
            Manufacturer="OfficeAgent"
-           Version="1.0.0.0"
+           Version="1.0.1.0"
            UpgradeCode="8F1C2B7E-4A3D-4E9B-9C1A-2B6F7D8E9A10"
            Scope="perMachine">
 
@@ -43,6 +44,24 @@
       <ComponentGroupRef Id="MSAgentMPxIntl_x64" />
     </Feature>
 
+    <!-- 自己登録CA（Fragmentに書いただけではリンカーに除外されるため明示的に取り込む） -->
+    <CustomActionRef Id="Agent32RegAgentPsh" />
+    <CustomActionRef Id="UnAgent32RegAgentPsh" />
+    <CustomActionRef Id="Agent32RegAgentDPv" />
+    <CustomActionRef Id="UnAgent32RegAgentDPv" />
+    <CustomActionRef Id="Agent32RegAgentDP2" />
+    <CustomActionRef Id="UnAgent32RegAgentDP2" />
+    <CustomActionRef Id="Agent32RegSvr" />
+    <CustomActionRef Id="UnAgent32RegSvr" />
+    <CustomActionRef Id="Agent64RegAgentPsh" />
+    <CustomActionRef Id="UnAgent64RegAgentPsh" />
+    <CustomActionRef Id="Agent64RegAgentDPv" />
+    <CustomActionRef Id="UnAgent64RegAgentDPv" />
+    <CustomActionRef Id="Agent64RegAgentDP2" />
+    <CustomActionRef Id="UnAgent64RegAgentDP2" />
+    <CustomActionRef Id="Agent64RegSvr" />
+    <CustomActionRef Id="UnAgent64RegSvr" />
+
     <!-- x86 OSのときだけ: x86用レジストリ -->
     <Feature Id="RuntimeX86Only" Title="MS Agent Runtime (x86専用分)" Level="0">
       <Level Value="1" Condition="NOT VersionNT64" />
@@ -59,5 +78,67 @@
     <ComponentGroup Id="MSAgentFiles_MSAgent64" Directory="WINDOWS_MSAGENT64">
       <Files Include="vendor\MSAgent\x64\MSAgent64\**" />
     </ComponentGroup>
+  </Fragment>
+  <Fragment>
+    <!-- 公式インストーラ(msAgentCoreComponents.exe)のAGT20.INFが行っている自己登録の再現。
+         .reg由来のレジストリ(generated\MSAgentRegistry.*.wxs)には Interface キー
+         （AgentPsh/AgentDPv/AgentDP2のプロキシ/スタブ、AgentSvrの型ライブラリ由来）が
+         含まれていないため、これが無いとAgentSvrとのプロセス間マーシャリングが
+         E_NOINTERFACEで失敗し、Connected=True/Characters.LoadがHRESULT 0x80042502
+         （"Microsoft Agent was unable to start"）になって、アドインが起動しない
+         （install.batで導入した開発機では公式インストーラが登録済みのため再現しない）。
+         32bit版(MSAgent)は32bit regsvr32([SystemFolder])、64bit版(MSAgent64)は
+         64bit regsvr32([System64Folder])で登録する -->
+    <CustomAction Id="Agent32RegAgentPsh" Directory="WINDOWS_MSAGENT" ExeCommand="&quot;[SystemFolder]regsvr32.exe&quot; /s &quot;[WINDOWS_MSAGENT]AgentPsh.dll&quot;"
+                  Execute="deferred" Impersonate="no" Return="check" />
+    <CustomAction Id="UnAgent32RegAgentPsh" Directory="WINDOWS_MSAGENT" ExeCommand="&quot;[SystemFolder]regsvr32.exe&quot; /s /u &quot;[WINDOWS_MSAGENT]AgentPsh.dll&quot;"
+                  Execute="deferred" Impersonate="no" Return="ignore" />
+    <CustomAction Id="Agent32RegAgentDPv" Directory="WINDOWS_MSAGENT" ExeCommand="&quot;[SystemFolder]regsvr32.exe&quot; /s &quot;[WINDOWS_MSAGENT]AgentDPv.dll&quot;"
+                  Execute="deferred" Impersonate="no" Return="check" />
+    <CustomAction Id="UnAgent32RegAgentDPv" Directory="WINDOWS_MSAGENT" ExeCommand="&quot;[SystemFolder]regsvr32.exe&quot; /s /u &quot;[WINDOWS_MSAGENT]AgentDPv.dll&quot;"
+                  Execute="deferred" Impersonate="no" Return="ignore" />
+    <CustomAction Id="Agent32RegAgentDP2" Directory="WINDOWS_MSAGENT" ExeCommand="&quot;[SystemFolder]regsvr32.exe&quot; /s &quot;[WINDOWS_MSAGENT]AgentDP2.dll&quot;"
+                  Execute="deferred" Impersonate="no" Return="check" />
+    <CustomAction Id="UnAgent32RegAgentDP2" Directory="WINDOWS_MSAGENT" ExeCommand="&quot;[SystemFolder]regsvr32.exe&quot; /s /u &quot;[WINDOWS_MSAGENT]AgentDP2.dll&quot;"
+                  Execute="deferred" Impersonate="no" Return="ignore" />
+    <CustomAction Id="Agent32RegSvr" Directory="WINDOWS_MSAGENT" ExeCommand="&quot;[WINDOWS_MSAGENT]AgentSvr.exe&quot; /regserver"
+                  Execute="deferred" Impersonate="no" Return="check" />
+    <CustomAction Id="UnAgent32RegSvr" Directory="WINDOWS_MSAGENT" ExeCommand="&quot;[WINDOWS_MSAGENT]AgentSvr.exe&quot; /unregserver"
+                  Execute="deferred" Impersonate="no" Return="ignore" />
+    <CustomAction Id="Agent64RegAgentPsh" Directory="WINDOWS_MSAGENT64" ExeCommand="&quot;[System64Folder]regsvr32.exe&quot; /s &quot;[WINDOWS_MSAGENT64]AgentPsh.dll&quot;"
+                  Execute="deferred" Impersonate="no" Return="check" />
+    <CustomAction Id="UnAgent64RegAgentPsh" Directory="WINDOWS_MSAGENT64" ExeCommand="&quot;[System64Folder]regsvr32.exe&quot; /s /u &quot;[WINDOWS_MSAGENT64]AgentPsh.dll&quot;"
+                  Execute="deferred" Impersonate="no" Return="ignore" />
+    <CustomAction Id="Agent64RegAgentDPv" Directory="WINDOWS_MSAGENT64" ExeCommand="&quot;[System64Folder]regsvr32.exe&quot; /s &quot;[WINDOWS_MSAGENT64]AgentDPv.dll&quot;"
+                  Execute="deferred" Impersonate="no" Return="check" />
+    <CustomAction Id="UnAgent64RegAgentDPv" Directory="WINDOWS_MSAGENT64" ExeCommand="&quot;[System64Folder]regsvr32.exe&quot; /s /u &quot;[WINDOWS_MSAGENT64]AgentDPv.dll&quot;"
+                  Execute="deferred" Impersonate="no" Return="ignore" />
+    <CustomAction Id="Agent64RegAgentDP2" Directory="WINDOWS_MSAGENT64" ExeCommand="&quot;[System64Folder]regsvr32.exe&quot; /s &quot;[WINDOWS_MSAGENT64]AgentDP2.dll&quot;"
+                  Execute="deferred" Impersonate="no" Return="check" />
+    <CustomAction Id="UnAgent64RegAgentDP2" Directory="WINDOWS_MSAGENT64" ExeCommand="&quot;[System64Folder]regsvr32.exe&quot; /s /u &quot;[WINDOWS_MSAGENT64]AgentDP2.dll&quot;"
+                  Execute="deferred" Impersonate="no" Return="ignore" />
+    <CustomAction Id="Agent64RegSvr" Directory="WINDOWS_MSAGENT64" ExeCommand="&quot;[WINDOWS_MSAGENT64]AgentSvr.exe&quot; /regserver"
+                  Execute="deferred" Impersonate="no" Return="check" />
+    <CustomAction Id="UnAgent64RegSvr" Directory="WINDOWS_MSAGENT64" ExeCommand="&quot;[WINDOWS_MSAGENT64]AgentSvr.exe&quot; /unregserver"
+                  Execute="deferred" Impersonate="no" Return="ignore" />
+
+    <InstallExecuteSequence>
+      <Custom Action="Agent32RegAgentPsh" After="WriteRegistryValues" Condition="NOT Installed AND (&amp;RuntimeCommon=3)" />
+      <Custom Action="Agent32RegAgentDPv" After="Agent32RegAgentPsh" Condition="NOT Installed AND (&amp;RuntimeCommon=3)" />
+      <Custom Action="Agent32RegAgentDP2" After="Agent32RegAgentDPv" Condition="NOT Installed AND (&amp;RuntimeCommon=3)" />
+      <Custom Action="Agent32RegSvr" After="Agent32RegAgentDP2" Condition="NOT Installed AND (&amp;RuntimeCommon=3)" />
+      <Custom Action="Agent64RegAgentPsh" After="Agent32RegSvr" Condition="NOT Installed AND (&amp;RuntimeX64Only=3)" />
+      <Custom Action="Agent64RegAgentDPv" After="Agent64RegAgentPsh" Condition="NOT Installed AND (&amp;RuntimeX64Only=3)" />
+      <Custom Action="Agent64RegAgentDP2" After="Agent64RegAgentDPv" Condition="NOT Installed AND (&amp;RuntimeX64Only=3)" />
+      <Custom Action="Agent64RegSvr" After="Agent64RegAgentDP2" Condition="NOT Installed AND (&amp;RuntimeX64Only=3)" />
+      <Custom Action="UnAgent32RegAgentPsh" Before="RemoveFiles" Condition="REMOVE~=&quot;ALL&quot;" />
+      <Custom Action="UnAgent32RegAgentDPv" Before="RemoveFiles" Condition="REMOVE~=&quot;ALL&quot;" />
+      <Custom Action="UnAgent32RegAgentDP2" Before="RemoveFiles" Condition="REMOVE~=&quot;ALL&quot;" />
+      <Custom Action="UnAgent32RegSvr" Before="RemoveFiles" Condition="REMOVE~=&quot;ALL&quot;" />
+      <Custom Action="UnAgent64RegAgentPsh" Before="RemoveFiles" Condition="REMOVE~=&quot;ALL&quot;" />
+      <Custom Action="UnAgent64RegAgentDPv" Before="RemoveFiles" Condition="REMOVE~=&quot;ALL&quot;" />
+      <Custom Action="UnAgent64RegAgentDP2" Before="RemoveFiles" Condition="REMOVE~=&quot;ALL&quot;" />
+      <Custom Action="UnAgent64RegSvr" Before="RemoveFiles" Condition="REMOVE~=&quot;ALL&quot;" />
+    </InstallExecuteSequence>
   </Fragment>
 </Wix>

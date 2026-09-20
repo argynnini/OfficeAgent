@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  MSAgentランタイム(MSAgentRuntime.msi)とOfficeAgentアドイン本体(OfficeAgentAddins.msi)を
-  1本のセットアップ(OfficeAgentSetup.exe)にまとめるBundle(Burn)。
-  これまで別々に配布していた2本のMSIを、順番にサイレント実行するチェーンとして束ねるだけで、
+  VSTOランタイム(vstor_redist.exe、未導入時のみ)・MSAgentランタイム(MSAgentRuntime.msi)・
+  OfficeAgentアドイン本体(OfficeAgentAddins.msi)を1本のセットアップ(OfficeAgentSetup.exe)に
+  まとめるBundle(Burn)。順番にサイレント実行するチェーンとして束ねるだけで、
   各MSI自体の中身（Feature/Component構成）には手を加えない。
 -->
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
-     xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal">
+     xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
   <Bundle Name="OfficeAgent"
           Manufacturer="OfficeAgent"
           Version="$(var.ProductVersion).0"
@@ -31,7 +32,35 @@
                                                 ShowVersion="yes" />
     </BootstrapperApplication>
 
+    <!-- アドインの.vstoはcompatibleFrameworksで.NET Framework 4.8.1のみを許可しているため、
+         未導入のマシンではOfficeがアドインを読み込めない。導入後に失敗するより先に
+         ここで止めて案内する（Release 533320 = Windows 11同梱の4.8.1、533325 = その他OSの4.8.1）。 -->
+    <util:RegistrySearch Id="NetFxReleaseSearch" Variable="NetFxRelease" Root="HKLM"
+                         Key="SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full" Value="Release"
+                         Result="value" />
+    <bal:Condition Message=".NET Framework 4.8.1 が必要です。先に .NET Framework 4.8.1 をインストールしてから、もう一度実行してください。" Condition="NetFxRelease &gt;= 533320" />
+
+    <!-- VSTOアドインの読み込みには「Visual Studio 2010 Tools for Office ランタイム(VSTOR)」が必要。
+         Visual Studioを入れた開発機や一部のOffice構成には入っているが、クリーンなマシン
+         （Windows Sandbox等）には無く、その場合Officeはアドインを読み込めず、
+         LoadBehaviorが2に落ちたまま何も表示されない（実機で確認）。
+         ランタイム本体のVSTOInstaller.exeが存在するかで導入済みかを判定する。
+         版数までは見ない（.NET向けの拡張が足りない場合は、ランタイムが後から自動で補うため）。 -->
+    <util:FileSearch Id="VstoRuntimeFileSearch" Variable="VstoRuntimeInstalled"
+                     Path="[CommonFilesFolder]Microsoft Shared\VSTO\10.0\VSTOInstaller.exe"
+                     Result="exists" />
+
     <Chain>
+      <!-- VSTOランタイムを最初に導入する（アドインの読み込みに必要）。
+           Permanent="yes"にしているのは、他のVSTOアドインも使うため、OfficeAgentの
+           アンインストールでランタイムまで削除しないようにするため -->
+      <ExePackage Id="VstoRuntime"
+                  SourceFile="$(sys.SOURCEFILEDIR)vendor\VSTOR\vstor_redist.exe"
+                  DetectCondition="VstoRuntimeInstalled"
+                  InstallArguments="/q /norestart"
+                  Permanent="yes"
+                  Vital="yes" />
+
       <!-- MSAgentランタイム（ActiveXコントロール本体）を先に導入する -->
       <MsiPackage SourceFile="$(var.MSAgentRuntime.TargetPath)" />
       <!-- 続けてOfficeAgentのWord/Excel/PowerPointアドイン一式を導入する -->

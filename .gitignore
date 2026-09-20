@@ -15,4 +15,7 @@ installer/*.msi
 installer/*.exe
 installer/*.wixpdb
 installer/*.zip
-installer/wix/generated/
+# installer/wix/generated/ は MSAgent*.reg から自動生成するが内容が不変なので追跡する
+# Office展開ツール(ODT)本体とダウンロードしたOfficeデータ。構成XMLだけ追跡する
+office/setup.exe
+office/*/

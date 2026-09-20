@@ -2,7 +2,8 @@
   <PropertyGroup>
     <OutputName>MSAgentRuntime</OutputName>
     <OutputType>Package</OutputType>
-    <Platforms>AnyCPU</Platforms>
+    <Platform>x64</Platform>
+    <Platforms>x64</Platforms>
     <OutputPath>..\..\</OutputPath>
     <Cultures>ja-JP</Cultures>
   </PropertyGroup>

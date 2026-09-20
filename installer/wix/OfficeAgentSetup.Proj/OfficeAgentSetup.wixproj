@@ -13,10 +13,13 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="WixToolset.BootstrapperApplications.wixext" Version="7.0.0" />
+    <PackageReference Include="WixToolset.Util.wixext" Version="7.0.0" />
   </ItemGroup>
   <ItemGroup>
     <!-- ProjectReference先の$(var.<プロジェクト名>.TargetPath)をBundle.wxsから参照する -->
-    <ProjectReference Include="..\MSAgentRuntime.Proj\MSAgentRuntime.wixproj" />
+    <ProjectReference Include="..\MSAgentRuntime.Proj\MSAgentRuntime.wixproj">
+      <SetPlatform>Platform=x64</SetPlatform>
+    </ProjectReference>
     <ProjectReference Include="..\OfficeAgentAddins.Proj\OfficeAgentAddins.wixproj" />
   </ItemGroup>
 </Project>

@@ -1,4 +1,4 @@
-# MSAgentランタイムとOfficeAgentアドイン(Word/Excel/PowerPoint)を統合した
+﻿# MSAgentランタイムとOfficeAgentアドイン(Word/Excel/PowerPoint)を統合した
 # OfficeAgentSetup.exe をビルドするスクリプト。
 # 初回は WiX Toolset (dotnet global tool) と必要な拡張の導入も行う。
 #
@@ -13,7 +13,7 @@ function Ensure-Wix {
     $wix = Get-Command wix -ErrorAction SilentlyContinue
     if (-not $wix) {
         Write-Host "WiX Toolset (dotnet tool) をインストールします..."
-        dotnet tool install --global wix
+        dotnet tool install --global wix --add-source https://api.nuget.org/v3/index.json
     }
     # WiX v7以降はOSMF EULAの同意が必要（年間売上$10,000超の組織のみ有償、個人利用は無償）。
     # https://wixtoolset.org/osmf/
@@ -28,12 +28,6 @@ function Ensure-Wix {
     }
 }
 
-function Regenerate-RegistryFragments {
-    Write-Host "MSAgent_x64.reg / MSAgent_x86.reg からWiXレジストリ断片を再生成します..."
-    New-Item -ItemType Directory -Force -Path "generated" | Out-Null
-    python3 reg_to_wix.py "vendor/MSAgent/x64/MSAgent_x64.reg" "generated/MSAgentRegistry.x64.wxs" "MSAgentRegistry_x64" "x64.reg"
-    python3 reg_to_wix.py "vendor/MSAgent/x86/MSAgent_x86.reg" "generated/MSAgentRegistry.x86.wxs" "MSAgentRegistry_x86" "x86.reg"
-}
 
 function Get-MSBuildExe {
     # VSTOプロジェクト(ResolveComReference/Microsoft.VisualStudio.Tools.Office.targets)は
@@ -72,5 +66,4 @@ function Build-Setup {
 }
 
 Ensure-Wix
-Regenerate-RegistryFragments
 Build-Setup

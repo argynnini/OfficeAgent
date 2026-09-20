@@ -11,6 +11,9 @@
   出る。これを避けるため、対応する.cer（公開鍵のみ、certs\に配置）を
   LocalMachine\TrustedPublisherストアにインストール時にインポートする
   （certutil.exe -addstore、WixQuietExec経由）。
+  自己署名のためTrustedPublisherだけではチェーン検証が通らず、Rootストアに証明書が
+  無い新規マシンではVSTOがアドインを読み込まない。そのためLocalMachine\Rootにも
+  同じ.cerをインポートする。
 
   DOLPHIN.ACS等の.acsはWord/Excel/PowerPointで重複させず、共通の
   %ProgramFiles%\OfficeAgent\agents\ に1セットだけ配置する
@@ -53,6 +56,9 @@
     <CustomActionRef Id="ImportWordCert" />
     <CustomActionRef Id="ImportExcelCert" />
     <CustomActionRef Id="ImportPowerPointCert" />
+    <CustomActionRef Id="ImportRootWordCert" />
+    <CustomActionRef Id="ImportRootExcelCert" />
+    <CustomActionRef Id="ImportRootPowerPointCert" />
   </Package>
 
   <Fragment>
@@ -163,6 +169,36 @@
                   Return="check"
                   Impersonate="no" />
 
+    <CustomAction Id="SetImportRootWordCert"
+                  Property="ImportRootWordCert"
+                  Value="&quot;certutil.exe&quot; -f -addstore Root &quot;[#CertFile_Word]&quot;" />
+    <CustomAction Id="ImportRootWordCert"
+                  BinaryRef="Wix4UtilCA_X86"
+                  DllEntry="WixQuietExec"
+                  Execute="deferred"
+                  Return="check"
+                  Impersonate="no" />
+
+    <CustomAction Id="SetImportRootExcelCert"
+                  Property="ImportRootExcelCert"
+                  Value="&quot;certutil.exe&quot; -f -addstore Root &quot;[#CertFile_Excel]&quot;" />
+    <CustomAction Id="ImportRootExcelCert"
+                  BinaryRef="Wix4UtilCA_X86"
+                  DllEntry="WixQuietExec"
+                  Execute="deferred"
+                  Return="check"
+                  Impersonate="no" />
+
+    <CustomAction Id="SetImportRootPowerPointCert"
+                  Property="ImportRootPowerPointCert"
+                  Value="&quot;certutil.exe&quot; -f -addstore Root &quot;[#CertFile_PowerPoint]&quot;" />
+    <CustomAction Id="ImportRootPowerPointCert"
+                  BinaryRef="Wix4UtilCA_X86"
+                  DllEntry="WixQuietExec"
+                  Execute="deferred"
+                  Return="check"
+                  Impersonate="no" />
+
     <InstallExecuteSequence>
       <Custom Action="SetImportWordCert" Before="ImportWordCert" />
       <Custom Action="ImportWordCert" After="InstallFiles" Condition="NOT Installed" />
@@ -170,6 +206,12 @@
       <Custom Action="ImportExcelCert" After="ImportWordCert" Condition="NOT Installed" />
       <Custom Action="SetImportPowerPointCert" Before="ImportPowerPointCert" />
       <Custom Action="ImportPowerPointCert" After="ImportExcelCert" Condition="NOT Installed" />
+      <Custom Action="SetImportRootWordCert" Before="ImportRootWordCert" />
+      <Custom Action="ImportRootWordCert" After="ImportPowerPointCert" Condition="NOT Installed" />
+      <Custom Action="SetImportRootExcelCert" Before="ImportRootExcelCert" />
+      <Custom Action="ImportRootExcelCert" After="ImportRootWordCert" Condition="NOT Installed" />
+      <Custom Action="SetImportRootPowerPointCert" Before="ImportRootPowerPointCert" />
+      <Custom Action="ImportRootPowerPointCert" After="ImportRootExcelCert" Condition="NOT Installed" />
     </InstallExecuteSequence>
   </Fragment>
 </Wix>
