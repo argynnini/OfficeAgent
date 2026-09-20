@@ -3,11 +3,18 @@
   <Project Path="src\OfficeAgent.Word.AddIn\OfficeAgent.Word.AddIn.vbproj" Id="0913c2db-4ad0-42d9-8e95-e5ea2ad72c8b" />
   <Project Path="src\OfficeAgent.Excel.AddIn\OfficeAgent.Excel.AddIn.vbproj" Id="8c2cd725-0889-40e6-bdb3-41fc6b86dc5f" />
   <Project Path="src\OfficeAgent.PowerPoint.AddIn\OfficeAgent.PowerPoint.AddIn.vbproj" Id="af15b47a-0839-48ac-ab3a-3888b433cf46" />
+  <Project Path="src\OfficeAgent.Outlook.AddIn\OfficeAgent.Outlook.AddIn.vbproj" Id="a3fc0826-3530-4bc4-b565-70954982ff83" />
+  <Project Path="src\OfficeAgent.Visio.AddIn\OfficeAgent.Visio.AddIn.vbproj" Id="96643485-944a-4e48-b734-2b3f86616072" />
+  <Project Path="src\OfficeAgent.Project.AddIn\OfficeAgent.Project.AddIn.vbproj" Id="cf8bad74-26b1-4f6d-913b-9d60f203d890" />
+  <Folder Name="/Installer/">
+    <Project Path="installer\wix\MSAgentRuntime.Proj\MSAgentRuntime.wixproj" Type="b7dd6f7e-def8-4e67-b5b7-07ef123db6f0">
+      <Platform Project="x64" />
+    </Project>
+    <Project Path="installer\wix\OfficeAgentAddins.Proj\OfficeAgentAddins.wixproj" Type="b7dd6f7e-def8-4e67-b5b7-07ef123db6f0" />
+    <Project Path="installer\wix\OfficeAgentSetup.Proj\OfficeAgentSetup.wixproj" Type="b7dd6f7e-def8-4e67-b5b7-07ef123db6f0" />
+  </Folder>
   <Folder Name="/ソリューション項目/">
     <File Path=".gitignore" />
     <File Path="README.md" />
   </Folder>
-  <Project Path="installer\wix\MSAgentRuntime.Proj\MSAgentRuntime.wixproj" Type="b7dd6f7e-def8-4e67-b5b7-07ef123db6f0" />
-  <Project Path="installer\wix\OfficeAgentAddins.Proj\OfficeAgentAddins.wixproj" Type="b7dd6f7e-def8-4e67-b5b7-07ef123db6f0" />
-  <Project Path="installer\wix\OfficeAgentSetup.Proj\OfficeAgentSetup.wixproj" Type="b7dd6f7e-def8-4e67-b5b7-07ef123db6f0" />
 </Solution>

@@ -63,7 +63,7 @@
 
       <!-- MSAgentランタイム（ActiveXコントロール本体）を先に導入する -->
       <MsiPackage SourceFile="$(var.MSAgentRuntime.TargetPath)" />
-      <!-- 続けてOfficeAgentのWord/Excel/PowerPointアドイン一式を導入する -->
+      <!-- 続けてOfficeAgentのWord/Excel/PowerPoint/Outlook/Visio/Projectアドイン一式を導入する -->
       <MsiPackage SourceFile="$(var.OfficeAgentAddins.TargetPath)" />
     </Chain>
   </Bundle>

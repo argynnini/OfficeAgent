@@ -21,28 +21,29 @@
     <ProjectTypeGuids>{BAA0C2D2-18E2-41B9-852F-F413020CAA33};{F184B08F-C81C-45F6-A57F-5ABD9991F28F}</ProjectTypeGuids>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{AF15B47A-0839-48AC-AB3A-3888B433CF46}</ProjectGuid>
+    <ProjectGuid>{96643485-944A-4E48-B734-2B3F86616072}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>OfficeAgent.PowerPoint.AddIn</RootNamespace>
-    <AssemblyName>OfficeAgent.PowerPoint.AddIn</AssemblyName>
+    <RootNamespace>OfficeAgent.Visio.AddIn</RootNamespace>
+    <AssemblyName>OfficeAgent.Visio.AddIn</AssemblyName>
     <LoadBehavior>3</LoadBehavior>
     <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
     <DefineConstants>VSTO40</DefineConstants>
     <StartupObject>
     </StartupObject>
     <BootstrapperEnabled>true</BootstrapperEnabled>
     <BootstrapperComponentsLocation>HomeSite</BootstrapperComponentsLocation>
     <ResolveComReferenceSilent>true</ResolveComReferenceSilent>
+    <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="OpenAI" Version="2.14.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+  </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.VSTORuntime.4.0">
       <Visible>False</Visible>
       <ProductName>Microsoft Visual Studio 2010 Tools for Office Runtime %28x86 and x64%29</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include=".NETFramework,Version=v4.8.1">
-      <Visible>False</Visible>
-      <ProductName>Microsoft .NET Framework 4.8.1 %28x86 および x64%29</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
@@ -51,16 +52,11 @@
       OfficeApplication
         Add-in host application
     -->
-    <OfficeApplication>PowerPoint</OfficeApplication>
+    <OfficeApplication>Visio</OfficeApplication>
   </PropertyGroup>
   <PropertyGroup>
     <OptionInfer>On</OptionInfer>
-    <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="OpenAI" Version="2.14.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-  </ItemGroup>
   <!--
     This section defines properties that are set when the "Debug" configuration is selected.
 
@@ -85,7 +81,7 @@
     <DebugSymbols>true</DebugSymbols>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DocumentationFile>OfficeAgent.PowerPoint.AddIn.xml</DocumentationFile>
+    <DocumentationFile>OfficeAgent.Visio.AddIn.xml</DocumentationFile>
     <RegisterForComInterop>false</RegisterForComInterop>
     <RemoveIntegerChecks>false</RemoveIntegerChecks>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
@@ -114,7 +110,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DocumentationFile>OfficeAgent.PowerPoint.AddIn.xml</DocumentationFile>
+    <DocumentationFile>OfficeAgent.Visio.AddIn.xml</DocumentationFile>
     <RegisterForComInterop>false</RegisterForComInterop>
     <RemoveIntegerChecks>false</RemoveIntegerChecks>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
@@ -159,7 +155,7 @@
           <Private>False</Private>
           <EmbedInteropTypes>true</EmbedInteropTypes>
         </Reference>
-        <Reference Include="Microsoft.Office.Interop.PowerPoint, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c">
+        <Reference Include="Microsoft.Office.Interop.Visio, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c">
           <Private>False</Private>
           <EmbedInteropTypes>true</EmbedInteropTypes>
         </Reference>
@@ -176,15 +172,11 @@
           <Isolated>False</Isolated>
           <EmbedInteropTypes>true</EmbedInteropTypes>
         </COMReference>
-        <COMReference Include="Microsoft.Office.Interop.PowerPoint">
-          <Guid>{91493440-5A91-11CF-8700-00AA0060263B}</Guid>
-          <VersionMajor>2</VersionMajor>
-          <VersionMinor>11</VersionMinor>
-          <Lcid>0</Lcid>
-          <WrapperTool>tlbimp</WrapperTool>
-          <Isolated>False</Isolated>
+        <Reference Include="Microsoft.Office.Interop.Visio, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c">
+          <HintPath>$(MSBuildProgramFiles32)\Microsoft Visual Studio\Shared\Visual Studio Tools for Office\PIA\Office15\Microsoft.Office.Interop.Visio.dll</HintPath>
           <EmbedInteropTypes>true</EmbedInteropTypes>
-        </COMReference>
+          <Private>False</Private>
+        </Reference>
       </ItemGroup>
     </Otherwise>
   </Choose>
@@ -202,7 +194,7 @@
     <Import Include="System.Text" />
     <Import Include="System.Xml.Linq" />
     <Import Include="Office = Microsoft.Office.Core" />
-    <Import Include="PowerPoint = Microsoft.Office.Interop.PowerPoint" />
+    <Import Include="Visio = Microsoft.Office.Interop.Visio" />
   </ItemGroup>
   <!--
     This section defines the user source files that are part of the project.
@@ -219,17 +211,18 @@
     <Compile Include="ThisAddIn.vb">
       <SubType>Code</SubType>
     </Compile>
-    <None Include="OfficeAgent.PowerPoint.AddIn_TemporaryKey.pfx" />
     <None Include="ThisAddIn.Designer.xml">
       <DependentUpon>ThisAddIn.vb</DependentUpon>
     </None>
     <Compile Include="ThisAddIn.Designer.vb">
       <DependentUpon>ThisAddIn.Designer.xml</DependentUpon>
     </Compile>
+    <None Include="OfficeAgent.Visio.AddIn_TemporaryKey.pfx" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="..\SharedAssemblyInfo.vb">
       <Link>My Project\SharedAssemblyInfo.vb</Link>
     </Compile>
+    <None Include="app.config" />
     <EmbeddedResource Include="My Project\Resources.resx">
       <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.vb</LastGenOutput>
@@ -269,10 +262,10 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>OfficeAgent.PowerPoint.AddIn_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestKeyFile>OfficeAgent.Visio.AddIn_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>6EFEA0A6C8623D1CFDF5E6792460ACEB14529FE0</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>0A728088FD32384164EA84CFD2AD5863DC6B1338</ManifestCertificateThumbprint>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\OfficeAgent.Core\OfficeAgent.Core.vbproj">
@@ -287,9 +280,9 @@
   <ProjectExtensions>
     <VisualStudio>
       <FlavorProperties GUID="{BAA0C2D2-18E2-41B9-852F-F413020CAA33}">
-        <ProjectProperties HostName="PowerPoint" HostPackage="{29A7B9D7-A7F1-4328-8EF0-6B2D1A56B2C1}" OfficeVersion="15.0" VstxVersion="4.0" ApplicationType="PowerPoint" Language="vb" TemplatesPath="" DebugInfoExeName="#Software\Microsoft\Office\16.0\PowerPoint\InstallRoot\Path#powerpnt.exe" AddItemTemplatesGuid="{DCFE8D25-4715-4C33-9EAB-A34A9EBC9544}" />
-        <Host Name="PowerPoint" IconIndex="0">
-          <HostItem Name="ThisAddIn" Code="ThisAddIn.vb" CanonicalName="AddIn" CanActivate="false" IconIndex="1" Blueprint="ThisAddIn.Designer.xml" GeneratedCode="ThisAddIn.Designer.vb" />
+        <ProjectProperties HostName="Visio" HostPackage="{29A7B9D7-A7F1-4328-8EF0-6B2D1A56B2C1}" OfficeVersion="15.0" VstxVersion="4.0" ApplicationType="Visio" Language="vb" TemplatesPath="" DebugInfoExeName="#Software\Microsoft\Office\15.0\Visio\InstallRoot\Path#visio.exe" AddItemTemplatesGuid="{DCFE8D25-4715-4C33-9EAB-A34A9EBC9544}" />
+        <Host Name="Visio" IconIndex="0">
+          <HostItem Name="ThisAddIn" Code="ThisAddIn.vb" CanonicalName="ThisAddIn" CanActivate="false" IconIndex="1" Blueprint="ThisAddIn.Designer.xml" GeneratedCode="ThisAddIn.Designer.vb" />
         </Host>
       </FlavorProperties>
     </VisualStudio>

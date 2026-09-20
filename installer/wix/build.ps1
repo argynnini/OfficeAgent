@@ -1,4 +1,4 @@
-﻿# MSAgentランタイムとOfficeAgentアドイン(Word/Excel/PowerPoint)を統合した
+﻿# MSAgentランタイムとOfficeAgentアドイン(Word/Excel/PowerPoint/Outlook/Visio/Project)を統合した
 # OfficeAgentSetup.exe をビルドするスクリプト。
 # 初回は WiX Toolset (dotnet global tool) と必要な拡張の導入も行う。
 #
@@ -42,7 +42,7 @@ function Get-MSBuildExe {
 function Build-Setup {
     Write-Host "OfficeAgentSetup.exe（MSAgentランタイム＋OfficeAgentアドイン統合インストーラ）をビルドします..."
     # OfficeAgentSetup.wixproj -> (MSAgentRuntime.wixproj, OfficeAgentAddins.wixproj)
-    #   -> OfficeAgentAddins.wixproj -> Word/Excel/PowerPoint AddInのvbproj (ReferenceOutputAssembly=false、
+    #   -> OfficeAgentAddins.wixproj -> Word/Excel/PowerPoint/Outlook/Visio/Project AddInのvbproj (ReferenceOutputAssembly=false、
     #      ビルド順序を強制するためだけの参照)
     # というProjectReferenceの連鎖により、1回のMSBuild呼び出しで正しい順序
     # （VBアドイン→ハーベスト→統合）に自動的にビルドされる。
@@ -60,7 +60,7 @@ function Build-Setup {
     wix msi validate ../OfficeAgentAddins.msi
     if ($LASTEXITCODE -ne 0) { throw "OfficeAgentAddins.msiのICE検証に失敗しました" }
 
-    Write-Host "完了: installer\OfficeAgentSetup.exe （MSAgentランタイム＋Word/Excel/PowerPointアドインを1本でインストール可能）"
+    Write-Host "完了: installer\OfficeAgentSetup.exe （MSAgentランタイム＋Word/Excel/PowerPoint/Outlook/Visio/Projectアドインを1本でインストール可能）"
     Write-Host "注意: 実際のインストール/アンインストール確認は、必ず使い捨てのVM等クリーンな環境で行うこと。"
     Write-Host "      （HKCRへのCOM登録やC:\Windows\MSAgent[64]へのファイル配置、Officeレジストリ変更を伴うため）"
 }

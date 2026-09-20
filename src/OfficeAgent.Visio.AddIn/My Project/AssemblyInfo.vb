@@ -1,0 +1,35 @@
+﻿Imports System.Resources
+Imports System
+Imports System.Reflection
+Imports System.Runtime.InteropServices
+Imports System.Security
+
+' アセンブリに関する一般情報は以下の属性セットを通して制御されます。
+' アセンブリに関連付けられている情報を変更するには、
+' これらの属性値を変更してください。
+
+' アセンブリ属性の値を確認します
+
+<Assembly: AssemblyTitle("OfficeAgent.Visio.AddIn")>
+<Assembly: AssemblyDescription("")>
+<Assembly: AssemblyCompany("")>
+<Assembly: AssemblyProduct("OfficeAgent.Visio.AddIn")>
+<Assembly: AssemblyCopyright("Copyright ©  2026")>
+<Assembly: AssemblyTrademark("")>
+
+' ComVisible を false に設定すると、その型はこのアセンブリ内で COM コンポーネントには
+' 見えなくなります。このアセンブリ内で COM から型にアクセスする必要がある場合は、
+' その型の ComVisible 属性を true に設定してください。
+<Assembly: ComVisible(False)>
+
+'このプロジェクトが COM に公開される場合、次の GUID が typelib の ID になります
+<Assembly: Guid("7682a511-206e-479a-91d7-0bc28cb3d50b")>
+
+' アセンブリバージョンはSharedAssemblyInfo.vb（src直下、共通リンク）で一元管理する
+
+<Assembly: NeutralResourcesLanguage("ja-JP")>
+Friend Module DesignTimeConstants
+    Public Const RibbonTypeSerializer As String = "Microsoft.VisualStudio.Tools.Office.Ribbon.Serialization.RibbonTypeCodeDomSerializer, Microsoft.VisualStudio.Tools.Office.Designer, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"
+    Public Const RibbonBaseTypeSerializer As String = "System.ComponentModel.Design.Serialization.TypeCodeDomSerializer, System.Design"
+    Public Const RibbonDesigner As String = "Microsoft.VisualStudio.Tools.Office.Ribbon.Design.RibbonDesigner, Microsoft.VisualStudio.Tools.Office.Designer, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"
+End Module

@@ -131,9 +131,9 @@ Public Class AgentFloatingForm
     Private _slideShowCurrentSlide As Integer
     Private _slideShowTotalSlides As Integer
 
-    ' Word/Excel/PowerPointの実行ファイル名。キャラクターは複数のOfficeプロセス間で共有されるため、
+    ' Word/Excel/PowerPoint/Outlook/Visio/Projectの実行ファイル名。キャラクターは複数のOfficeプロセス間で共有されるため、
     ' 「自分のプロセスだけ」ではなくこれらのいずれかが起動中かどうかで判定する
-    Private Shared ReadOnly HostProcessNames() As String = {"WINWORD", "EXCEL", "POWERPNT"}
+    Private Shared ReadOnly HostProcessNames() As String = {"WINWORD", "EXCEL", "POWERPNT", "OUTLOOK", "VISIO", "WINPROJ"}
 
     ' コード中に直接名前で埋め込んでいるアニメーション（Greeting/Goodbye/Thinkingなど）は、
     ' カイル（Dolphin）自身のACSに収録された独自名で、Microsoft Agentの標準アニメーション
@@ -1317,8 +1317,8 @@ Public Class AgentFloatingForm
                 _positionBeforeSlideShow = New Drawing.Point(.Left, .Top)
                 Dim targetScreen = ResolveScreenFromHandleFunc(GetSlideShowWindowHandleFunc)
                 Dim mag = GetWindowMag()
-                Dim top = CShort((targetScreen.Bounds.Top + targetScreen.Bounds.Height - .OriginalHeight - 100) / mag)
-                Dim left = CShort((targetScreen.Bounds.Left + targetScreen.Bounds.Width - .OriginalWidth - 50) / mag)
+                Dim top = CShort((targetScreen.Bounds.Top + targetScreen.Bounds.Height) / mag - .OriginalHeight - 100)
+                Dim left = CShort((targetScreen.Bounds.Left + targetScreen.Bounds.Width) / mag - .OriginalWidth - 50)
                 .MoveTo(left, top, 0)
             End With
         Catch ex As Exception
@@ -1390,8 +1390,11 @@ Public Class AgentFloatingForm
             .IdleOn = True
             If Not wasAlreadyVisible Then
                 Dim targetScreen = GetHostScreen()
-                .Top = (targetScreen.Bounds.Top + targetScreen.Bounds.Height - .OriginalHeight - 100) / GetWindowMag()
-                .Left = (targetScreen.Bounds.Left + targetScreen.Bounds.Width - .OriginalWidth - 50) / GetWindowMag()
+                ' OriginalWidth/Heightは論理ピクセルなので、物理ピクセルのBoundsを先に論理ピクセルへ
+                ' 変換してから引く（先に引いてから割ると、高DPIで引く量がmag分縮み右下にずれる）
+                Dim mag = GetWindowMag()
+                .Top = (targetScreen.Bounds.Top + targetScreen.Bounds.Height) / mag - .OriginalHeight - 100
+                .Left = (targetScreen.Bounds.Left + targetScreen.Bounds.Width) / mag - .OriginalWidth - 50
             End If
             .Balloon.FontCharSet = 128
             If Not wasAlreadyVisible Then .Hide(True)

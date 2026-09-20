@@ -14,6 +14,9 @@ Public Module AnimationEvents
         Word
         Excel
         PowerPoint
+        Outlook
+        Visio
+        Project
     End Enum
 
     ' キャラクターIDは.acsファイル名（拡張子を除き大文字化したもの）をそのまま使う。

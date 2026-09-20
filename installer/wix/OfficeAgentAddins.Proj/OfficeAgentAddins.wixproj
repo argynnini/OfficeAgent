@@ -28,5 +28,8 @@
     <ProjectReference Include="..\..\..\src\OfficeAgent.Word.AddIn\OfficeAgent.Word.AddIn.vbproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\..\src\OfficeAgent.Excel.AddIn\OfficeAgent.Excel.AddIn.vbproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\..\src\OfficeAgent.PowerPoint.AddIn\OfficeAgent.PowerPoint.AddIn.vbproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\..\src\OfficeAgent.Outlook.AddIn\OfficeAgent.Outlook.AddIn.vbproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\..\src\OfficeAgent.Visio.AddIn\OfficeAgent.Visio.AddIn.vbproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\..\src\OfficeAgent.Project.AddIn\OfficeAgent.Project.AddIn.vbproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 </Project>

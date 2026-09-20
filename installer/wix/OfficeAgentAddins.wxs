@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  OfficeAgentアドイン本体（Word/Excel/PowerPoint、Milestone 2）のMSI。
+  OfficeAgentアドイン本体（Word/Excel/PowerPoint/Outlook/Visio/Project）のMSI。
   ClickOnceは使わず、%ProgramFiles%\OfficeAgent\<App>\ に直接ファイルを配置し、
   HKCU\Software\Microsoft\Office\<App>\Addins\<ProgId> に
   Manifest=...\<App>.vsto|vstolocal 形式でVSTOアドインとして直接登録する。
@@ -41,6 +41,24 @@
       <ComponentGroupRef Id="AddinFiles_Assets" />
       <ComponentRef Id="AddinRegistry_PowerPoint" />
     </Feature>
+
+    <Feature Id="OutlookAddin" Title="OfficeAgent for Outlook" Level="1">
+      <ComponentGroupRef Id="AddinFiles_Outlook" />
+      <ComponentGroupRef Id="AddinFiles_Assets" />
+      <ComponentRef Id="AddinRegistry_Outlook" />
+    </Feature>
+
+    <Feature Id="VisioAddin" Title="OfficeAgent for Visio" Level="1">
+      <ComponentGroupRef Id="AddinFiles_Visio" />
+      <ComponentGroupRef Id="AddinFiles_Assets" />
+      <ComponentRef Id="AddinRegistry_Visio" />
+    </Feature>
+
+    <Feature Id="ProjectAddin" Title="OfficeAgent for Project" Level="1">
+      <ComponentGroupRef Id="AddinFiles_Project" />
+      <ComponentGroupRef Id="AddinFiles_Assets" />
+      <ComponentRef Id="AddinRegistry_Project" />
+    </Feature>
   </Package>
 
   <Fragment>
@@ -64,6 +82,27 @@
     <ComponentGroup Id="AddinFiles_PowerPoint" Directory="ADDIN_POWERPOINT">
       <Files Include="..\..\src\OfficeAgent.PowerPoint.AddIn\bin\Release\**">
         <Exclude Files="..\..\src\OfficeAgent.PowerPoint.AddIn\bin\Release\*.ACS" />
+      </Files>
+    </ComponentGroup>
+
+    <!-- Outlook本体のビルド出力一式。.acsはagents側に一本化するため除外する -->
+    <ComponentGroup Id="AddinFiles_Outlook" Directory="ADDIN_OUTLOOK">
+      <Files Include="..\..\src\OfficeAgent.Outlook.AddIn\bin\Release\**">
+        <Exclude Files="..\..\src\OfficeAgent.Outlook.AddIn\bin\Release\*.ACS" />
+      </Files>
+    </ComponentGroup>
+
+    <!-- Visio本体のビルド出力一式。.acsはagents側に一本化するため除外する -->
+    <ComponentGroup Id="AddinFiles_Visio" Directory="ADDIN_VISIO">
+      <Files Include="..\..\src\OfficeAgent.Visio.AddIn\bin\Release\**">
+        <Exclude Files="..\..\src\OfficeAgent.Visio.AddIn\bin\Release\*.ACS" />
+      </Files>
+    </ComponentGroup>
+
+    <!-- Project本体のビルド出力一式。.acsはagents側に一本化するため除外する -->
+    <ComponentGroup Id="AddinFiles_Project" Directory="ADDIN_PROJECT">
+      <Files Include="..\..\src\OfficeAgent.Project.AddIn\bin\Release\**">
+        <Exclude Files="..\..\src\OfficeAgent.Project.AddIn\bin\Release\*.ACS" />
       </Files>
     </ComponentGroup>
 
@@ -102,6 +141,33 @@
         <RegistryValue Name="Description" Type="string" Value="OfficeAgentアドイン（PowerPoint用）" />
         <RegistryValue Name="LoadBehavior" Type="integer" Value="3" KeyPath="yes" />
         <RegistryValue Name="Manifest" Type="string" Value="[ADDIN_POWERPOINT]OfficeAgent.PowerPoint.AddIn.vsto|vstolocal" />
+      </RegistryKey>
+    </Component>
+
+    <Component Id="AddinRegistry_Outlook" Directory="ADDIN_OUTLOOK" Guid="7A1B2C3D-4E5F-4084-8A2B-3C4D5E6F7A84">
+      <RegistryKey Root="HKCU" Key="Software\Microsoft\Office\Outlook\Addins\OfficeAgent.Outlook.AddIn">
+        <RegistryValue Name="FriendlyName" Type="string" Value="OfficeAgent" />
+        <RegistryValue Name="Description" Type="string" Value="OfficeAgentアドイン（Outlook用）" />
+        <RegistryValue Name="LoadBehavior" Type="integer" Value="3" KeyPath="yes" />
+        <RegistryValue Name="Manifest" Type="string" Value="[ADDIN_OUTLOOK]OfficeAgent.Outlook.AddIn.vsto|vstolocal" />
+      </RegistryKey>
+    </Component>
+
+    <Component Id="AddinRegistry_Visio" Directory="ADDIN_VISIO" Guid="7A1B2C3D-4E5F-4085-8A2B-3C4D5E6F7A85">
+      <RegistryKey Root="HKCU" Key="Software\Microsoft\Visio\Addins\OfficeAgent.Visio.AddIn">
+        <RegistryValue Name="FriendlyName" Type="string" Value="OfficeAgent" />
+        <RegistryValue Name="Description" Type="string" Value="OfficeAgentアドイン（Visio用）" />
+        <RegistryValue Name="LoadBehavior" Type="integer" Value="3" KeyPath="yes" />
+        <RegistryValue Name="Manifest" Type="string" Value="[ADDIN_VISIO]OfficeAgent.Visio.AddIn.vsto|vstolocal" />
+      </RegistryKey>
+    </Component>
+
+    <Component Id="AddinRegistry_Project" Directory="ADDIN_PROJECT" Guid="7A1B2C3D-4E5F-4086-8A2B-3C4D5E6F7A86">
+      <RegistryKey Root="HKCU" Key="Software\Microsoft\Office\MS Project\Addins\OfficeAgent.Project.AddIn">
+        <RegistryValue Name="FriendlyName" Type="string" Value="OfficeAgent" />
+        <RegistryValue Name="Description" Type="string" Value="OfficeAgentアドイン（Project用）" />
+        <RegistryValue Name="LoadBehavior" Type="integer" Value="3" KeyPath="yes" />
+        <RegistryValue Name="Manifest" Type="string" Value="[ADDIN_PROJECT]OfficeAgent.Project.AddIn.vsto|vstolocal" />
       </RegistryKey>
     </Component>
   </Fragment>
